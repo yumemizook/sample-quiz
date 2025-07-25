@@ -325,8 +325,38 @@
             timerDiv.style.textAlign = "center";
             timerDiv.style.fontSize = "xx-large";
             timerDiv.style.color = "white";
-        } else if (currQuestion < Questions.length) {
+        }else if (currQuestion <= 35) {
             timeToAnswer = 15;
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+                    timeToAnswer -= 0.01;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
+        }else if (currQuestion <= 40) {
+            timeToAnswer = 13;
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+                    timeToAnswer -= 0.01;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
+        } else if (currQuestion < Questions.length) {
+            timeToAnswer = 10;
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
                     timeToAnswer -= 0.01;
