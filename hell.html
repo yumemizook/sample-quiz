@@ -232,7 +232,7 @@
             timerDiv.style.fontSize = "xx-large";
             timerDiv.style.color = "white";
             document.body.style.backgroundImage = "url('hell4.jpg')";
-        } else if (currQuestion <= 20) {
+        }  else if (currQuestion <= 25) {
             timeToAnswer = 8
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
@@ -248,7 +248,7 @@
             timerDiv.style.fontSize = "xx-large";
             timerDiv.style.color = "white";
             document.body.style.backgroundImage = "url('hell5.jpg')";
-        } else if (currQuestion <= 25) {
+        } else if (currQuestion <= 30) {
             timeToAnswer = 6
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
@@ -264,7 +264,7 @@
             timerDiv.style.fontSize = "xx-large";
             timerDiv.style.color = "white";
             document.body.style.backgroundImage = "url('hell6.jpg')";
-        } else if (currQuestion <= 30) {
+        } else if (currQuestion <= 35) {
             timeToAnswer = 4
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
@@ -280,7 +280,7 @@
             timerDiv.style.fontSize = "xx-large";
             timerDiv.style.color = "white";
             document.body.style.backgroundImage = "url('hell7.jpg')";
-        } else if (currQuestion <= 35) {
+        } else if (currQuestion <= 40) {
             timeToAnswer = 3
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
@@ -296,8 +296,8 @@
             timerDiv.style.fontSize = "xx-large";
             timerDiv.style.color = "white";
             document.body.style.backgroundImage = "url('hell8.jpg')";
-        } else if (currQuestion <= 40) {
-            timeToAnswer = 2.5
+        } else if (currQuestion <= 45) {
+            timeToAnswer = 2.5 // The almost final stretch (can people even finish this?)
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
                     timeToAnswer -= 0.01;
@@ -312,22 +312,6 @@
             timerDiv.style.fontSize = "xx-large";
             timerDiv.style.color = "white";
             document.body.style.backgroundImage = "url('hell9.jpg')";
-        } else if (currQuestion <= 45) {
-            timeToAnswer = 2 // The almost final stretch (can people even finish this?)
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-            document.body.style.backgroundImage = "url('hell10.jpg')";
         } else if (currQuestion <= Questions.length) {
             timeToAnswer = 1.5 // Probably TAS territory
             window.answerTimerId = setInterval(() => {
