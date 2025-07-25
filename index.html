@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <div class="status">
+    <span class="name hide"></span>
+    <a login href="signin.html">Login</a>
+    <a signup href="signup.html">Signup</a>
+    <a logout class="hide" href="index.html">Log out</a>
+  </div> 
+  <div class="container">
+    <span style="font-size: xx-large;">Example quiz app </span>
+    <button class="play">Play!</button>
+    <button class="hiscore">High Scores</button>
+  <form>
+    <div class="mode">
+      <label for="mode">Select mode:</label>
+      <select id="mode" name="mode">
+        <option value="easy">Easy</option>
+        <option value="normal" selected>Normal</option>
+        <option value="master">Master</option>
+        <option value="hell">Hell</option>
+      </select>
+      <div class="explain" style="font-size: x-large;"></div>
+    </div>
+  </form>
+  </div>
+</body>
+<script type="module" src="hm.js"></script>
+<script type="module" src="firebase.js"></script>
+</html>

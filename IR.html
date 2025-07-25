@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>High Scores</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+    <div class="status">
+        <span class="name hide"></span>
+        <a login href="signin.html">Login</a>
+        <a signup href="signup.html">Signup</a>
+        <a logout class="hide" href="index.html">Log out</a>
+        <a href="index.html">Home</a>
+    </div>
+    <div class="container2">
+        <div class="normal">
+            <h1>Easy mode:</h1>
+            <div class="scores">
+                <table id="scoreTable">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Score</th>
+                            <th>Time</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+             <div class="hell">
+            <h1>Normal mode:</h1>
+            <div class="scores">
+                <table id="scoreTable2">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Score</th>
+                            <th>Grade</th>
+                            <th>Time</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+             <div class="normal">
+            <h1>Master mode:</h1>
+            <div class="scores">
+                <table id="scoreTable3">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Score</th>
+                            <th>Grade</th>
+                            <th>Time</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+             <div class="hell">
+            <h1>Final mode:</h1>
+            <div class="scores">
+                <table id="scoreTable4">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>Name</th>
+                            <th>Score</th>
+                            <th>Grade</th>
+                            <th>Time</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+<script type="module" src="firebase.js"></script>
+<script type="module" src="IR.js"></script>
+<script type="module" src="hm.js"></script>
+
+</html>

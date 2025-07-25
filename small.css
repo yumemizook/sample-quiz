@@ -1,0 +1,93 @@
+body {
+  color: #fff;
+  background: linear-gradient(to bottom, #000000, #2f2f2f);
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-size: cover;
+  font-family: Arial, sans-serif;
+}
+
+.container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 30px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+  color: #000000;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+form input[type="text"],
+form input[type="password"] {
+  padding: 10px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+form input[type="text"]:focus,
+form input[type="password"]:focus {
+    border-color: #4285f4;
+    outline: none;
+    }
+form input[type="submit"] {
+  background-color: #000000;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  margin-top: 20px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+form input[type="submit"]:hover {
+  background-color: #2f2f2f;
+}
+
+
+#googlelog {
+  background-color: #4285f4;
+  color: #fff;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+}
+
+#googlelog i {
+  margin-right: 10px;
+  font-size: large;
+}
+
+.dum {
+  display: flex;
+}
+
+.dum a {
+  color: rgb(0, 84, 162);
+  text-decoration: none;
+  margin: 10px;
+}
+
+.hide
+{
+    display: none;
+}
+
+a {
+  color: #4285f4;
+  text-decoration: none;
+}
