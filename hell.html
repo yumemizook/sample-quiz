@@ -155,7 +155,7 @@
         }
         const timerDiv = document.querySelector(".timerifinvalid");
         if (quizMinutes >= 15) {
-            timeToAnswer = 2; // Set a short time for invalidated runs
+            timeToAnswer = 1; // Set a short time for invalidated runs
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
                     timeToAnswer -= 0.01;
