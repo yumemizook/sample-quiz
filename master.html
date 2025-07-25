@@ -373,9 +373,10 @@
         }
         document.querySelector(".correctanswer").innerHTML = "";
     }
-
     let quizMinutes = 0; // Global variable to track minutes
     let timer; // Global variable to store the timer interval
+    let grade
+
     function stopWatch() {
         const startTime = Date.now();
         const timeDisplay = document.getElementById("timeelapsed");
@@ -385,6 +386,10 @@
             const seconds = Math.floor((elapsedTime / 1000) % 60);
             quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
             timeDisplay.innerHTML = `${quizMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${miliseconds.toString().padStart(2, '0')}`;
+            if (quizMinutes >= 7  && currQuestion >= 26){ // TGM3 Lv.500 torikan
+                alert("Excellent! ...but let's go better next time")
+                evalScreen();
+            }
             if (quizMinutes >= 10) {
                 timeDisplay.style.color = "yellow";
             }
