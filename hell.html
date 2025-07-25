@@ -297,7 +297,7 @@
             timerDiv.style.color = "white";
             document.body.style.backgroundImage = "url('hell8.jpg')";
         } else if (currQuestion <= 40) {
-            timeToAnswer = 2
+            timeToAnswer = 2.5
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
                     timeToAnswer -= 0.01;
@@ -313,7 +313,7 @@
             timerDiv.style.color = "white";
             document.body.style.backgroundImage = "url('hell9.jpg')";
         } else if (currQuestion <= 45) {
-            timeToAnswer = 1.5 // The almost final stretch (can people even finish this?)
+            timeToAnswer = 2 // The almost final stretch (can people even finish this?)
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
                     timeToAnswer -= 0.01;
@@ -329,7 +329,7 @@
             timerDiv.style.color = "white";
             document.body.style.backgroundImage = "url('hell2.jpg')";
         } else if (currQuestion <= Questions.length) {
-            timeToAnswer = 1 // Probably TAS territory
+            timeToAnswer = 1.5 // Probably TAS territory
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
                     timeToAnswer -= 0.01;
