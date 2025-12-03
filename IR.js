@@ -1,22 +1,18 @@
-import { getDatabase, ref, query, orderByChild, get } from "./firebase.js";
+import { getFirestore, collection, getDocs } from "./firebase.js";
 
-const db = getDatabase();
-const highScoresRef = ref(db, 'scores');
-const masterMode = ref(db, 'scoreshell');
-const easyMode = ref(db, 'scoreseasy');
-const finalMode = ref(db, 'scoresfinal');
-const highScoresQuery = query(highScoresRef, orderByChild('score'));
-const masterModeQuery = query(masterMode, orderByChild('score'));
-const easyModeQuery = query(easyMode, orderByChild('score'));
-const finalModeQuery = query(finalMode, orderByChild('score'));
+const db = getFirestore();
+const highScoresRef = collection(db, 'scoresnormal');
+const masterModeRef = collection(db, 'scoresmaster');
+const easyModeRef = collection(db, 'scoreseasy');
+const finalModeRef = collection(db, 'scoresfinal');
 document.addEventListener("DOMContentLoaded", async () => {
     try {
-        const snapshot = await get(highScoresQuery);
-        const masterSnapshot = await get(masterModeQuery);
-        const easySnapshot = await get(easyModeQuery);
-        const finalSnapshot = await get(finalModeQuery);
-        if (snapshot.exists()) {
-            const highScoresObj = snapshot.val();
+        const snapshot = await getDocs(highScoresRef);
+        const masterSnapshot = await getDocs(masterModeRef);
+        const easySnapshot = await getDocs(easyModeRef);
+        const finalSnapshot = await getDocs(finalModeRef);
+        if (!snapshot.empty) {
+            const highScoresArrRaw = snapshot.docs.map((doc) => doc.data());
             const highScoresList = document.querySelector("#scoreTable2");
             // Convert object to array and sort by score descending
             const parseTime = (timeStr) => {
@@ -24,7 +20,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const parts = timeStr.split(':');
                 return parseInt(parts[0] || 0) * 60000 + parseInt(parts[1] || 0) * 1000 + parseInt(parts[2] || 0) * 10;
             };
-            const highScoresArr = Object.values(highScoresObj).sort((a, b) => {
+            const highScoresArr = highScoresArrRaw.sort((a, b) => {
                 if (a.score !== b.score) {
                     return b.score - a.score; // Sort by score in descending order
                 } else {
@@ -49,8 +45,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 console.warn("Element with ID 'scoreTable' not found.");
             }
         }
-        if (easySnapshot.exists()) {
-            const easyScoresObj = easySnapshot.val();
+        if (!easySnapshot.empty) {
+            const easyScoresArrRaw = easySnapshot.docs.map((doc) => doc.data());
             const easyScoresList = document.querySelector("#scoreTable");
             // Convert object to array and sort by score descending
             const parseTime = (timeStr) => {
@@ -58,7 +54,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const parts = timeStr.split(':');
                 return parseInt(parts[0] || 0) * 60000 + parseInt(parts[1] || 0) * 1000 + parseInt(parts[2] || 0) * 10;
             };
-            const easyScoresArr = Object.values(easyScoresObj).sort((a, b) => {
+            const easyScoresArr = easyScoresArrRaw.sort((a, b) => {
                 if (a.score !== b.score) {
                     return b.score - a.score; // Sort by score in descending order
                 } else {
@@ -82,8 +78,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 console.warn("Element with ID 'scoreTable' not found.");
             }
         }
-        if (finalSnapshot.exists()) {
-            const finalScoresObj = finalSnapshot.val();
+        if (!finalSnapshot.empty) {
+            const finalScoresArrRaw = finalSnapshot.docs.map((doc) => doc.data());
             const finalScoresList = document.querySelector("#scoreTable4");
             // Convert object to array and sort by score descending
             const parseTime = (timeStr) => {
@@ -91,7 +87,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const parts = timeStr.split(':');
                 return parseInt(parts[0] || 0) * 60000 + parseInt(parts[1] || 0) * 1000 + parseInt(parts[2] || 0) * 10;
             };
-            const finalScoresArr = Object.values(finalScoresObj).sort((a, b) => {
+            const finalScoresArr = finalScoresArrRaw.sort((a, b) => {
                 if (a.score !== b.score) {
                     return b.score - a.score; // Sort by score in descending order
                 } else {
@@ -119,8 +115,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             console.log("No final mode high scores available.");
         }
 
-        if (masterSnapshot.exists()) {
-            const masterScoresObj = masterSnapshot.val();
+        if (!masterSnapshot.empty) {
+            const masterScoresArrRaw = masterSnapshot.docs.map((doc) => doc.data());
             const masterScoresList = document.querySelector("#scoreTable3");
             // Convert object to array and sort by score descending
             const parseTime = (timeStr) => {
@@ -128,7 +124,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const parts = timeStr.split(':');
                 return parseInt(parts[0] || 0) * 60000 + parseInt(parts[1] || 0) * 1000 + parseInt(parts[2] || 0) * 10;
             };
-            const masterScoresArr = Object.values(masterScoresObj).sort((a, b) => {
+            const masterScoresArr = masterScoresArrRaw.sort((a, b) => {
                 if (a.score !== b.score) {
                     return b.score - a.score; // Sort by score in descending order
                 } else {

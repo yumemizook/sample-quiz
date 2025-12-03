@@ -1,596 +1,1419 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Master Mode</title>
-    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="index.css" />
     <style>
-        body {
-            background: url("master.jpg") no-repeat center center fixed;
-            background-size: cover;
-        }
+      body {
+        background: url("master.jpg") no-repeat center center fixed;
+        background-size: cover;
+      }
 
-        .container button {
-            width: 100%;
-            padding: 10px;
-            margin-top: 10px;
-            background-color: #ffffff;
-            color: rgb(104, 104, 104);
-            border: none;
-            border-radius: 5px;
-            font-size: 1.2em;
-            cursor: pointer;
-        }
+      .container button {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        background-color: #4a90e2;
+        color: #ffffff;
+        border: none;
+        border-radius: 5px;
+        font-size: 1.2em;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+      
+      .container button:hover {
+        background-color: #357abd;
+      }
 
-        a {
-            text-decoration: none;
-            color: #ffffff;
-            font-size: x-large;
-        }
+      a {
+        text-decoration: none;
+        color: #ffffff;
+        font-size: x-large;
+      }
     </style>
-</head>
+  </head>
 
-<body>
+  <body>
     <div class="status">
-        <span class="name hide"></span>
-        <a login href="signin.html">Login</a>
-        <a signup href="signup.html">Signup</a>
-        <a logout class="hide" href="index.html">Log out</a>
-        <a giveup href="index.html">Give up</a>
+      <span class="name hide"></span>
+      <a login href="signin.html">Login</a>
+      <a signup href="signup.html">Signup</a>
+      <a logout class="hide" href="index.html">Log out</a>
+      <a giveup href="index.html">Give up</a>
     </div>
     <div class="container">
-        <div class="question" id="ques"></div>
-        <div class="options" id="opt"></div>
-        <button onclick="checkAns()" id="btn">SUBMIT</button>
-        <div class="correctanswer"></div>
-        <div class="jum" style="display: flex; justify-content: space-between;">
-            <div id="score"></div>
-            <div id="timeelapsed"></div>
-        </div>
-        <div class="timerifinvalid"></div>
-        <div class="evalscreen" style="display:none"></div>
-        <div id="notification" class="notification hide"></div>
+      <div class="question" id="ques"></div>
+      <div class="options" id="opt"></div>
+      <button onclick="checkAns()" id="btn">SUBMIT</button>
+      <div class="correctanswer"></div>
+      <div class="jum" style="display: flex; justify-content: space-between">
+        <div id="score"></div>
+        <div id="currentgrade" style="font-size: xx-large; color: cyan; font-weight: bold;"></div>
+        <div id="timeelapsed"></div>
+      </div>
+      <div class="timerifinvalid"></div>
+      <div class="evalscreen" style="display: none"></div>
+      <div id="notification" class="notification hide"></div>
     </div>
     <script type="module" src="./IR.js"></script>
     <script type="module" src="./firebase.js"></script>
     <script type="module" src="./hm.js"></script>
-</body>
-<script type="module">
-
-    import { onAuthStateChanged, getDatabase, getAuth } from "./firebase.js";
-    import { ref, push } from "https://www.gstatic.com/firebasejs/9.22.2/firebase-database.js";
+  </body>
+  <script type="module">
+    import { getAuth, getFirestore, collection, addDoc } from "./firebase.js";
     const auth = getAuth();
 
-    let Questions = [];
-    document.querySelector('#btn').addEventListener('click', checkAns);
+    let allQuestions = [];
+    // Add controller indicator to submit button
+    const submitBtn = document.querySelector("#btn");
+    let controllerIndicator = null;
+    let keyboardSubmitIndicator = null;
+    if (submitBtn) {
+      controllerIndicator = document.createElement("img");
+      controllerIndicator.className = "controller-submit-indicator";
+      controllerIndicator.src = "btns/cross.png";
+      controllerIndicator.alt = "A/X Button";
+      controllerIndicator.title = "Press A or X button to submit";
+      controllerIndicator.style.cssText = `
+        display: inline-block;
+        margin-left: 8px;
+        width: 28px;
+        height: 28px;
+        vertical-align: middle;
+        object-fit: contain;
+      `;
+      submitBtn.appendChild(controllerIndicator);
+      
+      // Add keyboard indicator for submit button
+      keyboardSubmitIndicator = document.createElement("span");
+      keyboardSubmitIndicator.className = "keyboard-submit-indicator";
+      keyboardSubmitIndicator.textContent = "Space/Enter";
+      keyboardSubmitIndicator.title = "Press Space or Enter to submit";
+      keyboardSubmitIndicator.style.cssText = `
+        display: inline-block;
+        margin-left: 8px;
+        padding: 4px 8px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: bold;
+        color: white;
+        vertical-align: middle;
+      `;
+      submitBtn.appendChild(keyboardSubmitIndicator);
+    }
+    
+    // Helper function to update button text while preserving controller and keyboard indicators
+    function updateSubmitButtonText(text) {
+      if (submitBtn) {
+        // Remove all children except the controller and keyboard indicators
+        const children = Array.from(submitBtn.childNodes);
+        children.forEach(child => {
+          if (child !== controllerIndicator && child !== keyboardSubmitIndicator) {
+            submitBtn.removeChild(child);
+          }
+        });
+        // Add the new text
+        const textNode = document.createTextNode(text);
+        submitBtn.insertBefore(textNode, controllerIndicator);
+      }
+    }
+    
+    submitBtn.addEventListener("click", checkAns);
     const ques = document.getElementById("ques");
 
     async function fetchQuestions() {
-        try {
-            const response = await fetch('https://opentdb.com/api.php?amount=50&difficulty=medium');
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+      try {
+        // OpenTDB has a 50 question limit per request, so make multiple requests
+        const totalQuestions = 100;
+        const questionsPerRequest = 50;
+        const numRequests = Math.ceil(totalQuestions / questionsPerRequest);
+        const maxRetries = 3; // Maximum retry attempts per request
+
+        allQuestions.length = 0; // Clear any previous questions
+        let failedRequests = 0;
+
+        for (let i = 0; i < numRequests; i++) {
+          // Add delay between API calls to prevent rate limiting (except before first request)
+          if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+          }
+
+          const amount =
+            i === numRequests - 1
+              ? totalQuestions - i * questionsPerRequest
+              : questionsPerRequest;
+
+          let requestSuccess = false;
+          let retryCount = 0;
+
+          // Retry logic for each request
+          while (!requestSuccess && retryCount < maxRetries) {
+            try {
+              const response = await fetch(
+                `https://opentdb.com/api.php?amount=${amount}&difficulty=medium`
+              );
+              
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+              }
+              
+              const data = await response.json();
+              
+              // Check for API error response
+              if (data.response_code && data.response_code !== 0) {
+                throw new Error(`API Error Code: ${data.response_code}`);
+              }
+              
+              if (data.results && data.results.length > 0) {
+                // Validate we got the expected number of questions
+                const receivedCount = data.results.length;
+                if (receivedCount === amount) {
+                  allQuestions.push(...data.results);
+                  requestSuccess = true;
+                } else {
+                  // Got some questions but not all - add what we got and try to get more
+                  allQuestions.push(...data.results);
+                  console.warn(
+                    `Request ${i + 1} returned ${receivedCount} questions instead of ${amount}. Got partial results.`
+                  );
+                  
+                  // If we got at least some questions, consider it a partial success
+                  if (receivedCount > 0) {
+                    requestSuccess = true; // Accept partial results
+                  } else {
+                    throw new Error("No questions returned");
+                  }
+                }
+              } else {
+                throw new Error("No results in response");
+              }
+            } catch (requestError) {
+              retryCount++;
+              if (retryCount < maxRetries) {
+                console.warn(
+                  `Request ${i + 1} attempt ${retryCount} failed: ${requestError.message}. Retrying...`
+                );
+                // Exponential backoff: wait longer between retries
+                await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
+              } else {
+                console.error(
+                  `Request ${i + 1} failed after ${maxRetries} attempts: ${requestError.message}`
+                );
+                failedRequests++;
+              }
             }
-            const data = await response.json();
-            Questions = data.results;
-        } catch (error) {
-            console.log(error);
-            document.querySelector('#btn').innerHTML = "Refresh";
-            document.querySelector('#btn').onclick = () => {
-                location.reload();
-            };
-            ques.innerHTML = `<h5 style='color: red'>${error}</h5>`;
+          }
         }
+
+        // Validate we got questions
+        if (allQuestions.length === 0) {
+          throw new Error("Failed to fetch any questions. Please try again.");
+        }
+
+        // Warn if we got fewer questions than expected
+        if (allQuestions.length < totalQuestions) {
+          console.warn(
+            `Warning: Expected ${totalQuestions} questions but got ${allQuestions.length}. Continuing with available questions.`
+          );
+          
+          // If we're missing too many questions, try to fetch more
+          if (allQuestions.length < totalQuestions * 0.8) {
+            console.warn("Missing more than 20% of questions. Attempting to fetch additional questions...");
+            
+            const missingCount = totalQuestions - allQuestions.length;
+            const additionalRequests = Math.ceil(missingCount / questionsPerRequest);
+            
+            for (let i = 0; i < additionalRequests && allQuestions.length < totalQuestions; i++) {
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              ques.innerHTML = `<h5>Please Wait!! Fetching Additional Questions...</h5>`;
+              const amount = Math.min(questionsPerRequest, totalQuestions - allQuestions.length);
+              
+              try {
+                const response = await fetch(
+                  `https://opentdb.com/api.php?amount=${amount}&difficulty=medium`
+                );
+                
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.results && data.results.length > 0) {
+                    const needed = totalQuestions - allQuestions.length;
+                    const toAdd = data.results.slice(0, needed);
+                    allQuestions.push(...toAdd);
+                    console.log(`Fetched ${toAdd.length} additional questions`);
+                  }
+                }
+              } catch (err) {
+                console.warn(`Failed to fetch additional questions: ${err.message}`);
+                break; // Stop trying if we can't fetch more
+              }
+            }
+          }
+        }
+
+        // Final validation
+        if (allQuestions.length === 0) {
+          throw new Error("Failed to fetch any questions. Please try again.");
+        }
+
+        console.log(`Successfully loaded ${allQuestions.length} out of ${totalQuestions} requested questions.`);
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+        updateSubmitButtonText("Refresh");
+        document.querySelector("#btn").onclick = () => {
+          location.reload();
+        };
+        ques.innerHTML = `<h5 style='color: red'>${
+          error.message || error
+        }</h5>`;
+      }
     }
     let currQuestion = 0;
     let score = 0;
     let elapsedQuestions = 0;
+    let quizAbandoned = false; // Track if quiz was abandoned (gave up)
+    let totalGradePoints = 0; // Track accumulated grade points
+    let previousGrade = ""; // Track previous grade for promotion detection
+    
+    // Gamepad support
+    let gamepadConnected = false;
+    let gamepadPollInterval = null;
+    let lastDpadState = { up: false, down: false, left: false, right: false };
+    let answerOptions = []; // Store current question's answer options for controller support
+
+    // Keyboard support
+    function initKeyboard() {
+      document.addEventListener("keydown", (e) => {
+        // Check if quiz has ended
+        const evalDiv = document.querySelector(".evalscreen");
+        if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
+          return; // Quiz has ended, ignore keyboard input
+        }
+        
+        // Check if questions are loaded
+        if (!allQuestions || allQuestions.length === 0) {
+          return;
+        }
+        
+        // Answer selection: 1, 2, 3, 4
+        if (e.key >= "1" && e.key <= "4") {
+          const index = parseInt(e.key) - 1;
+          if (answerOptions && answerOptions[index]) {
+            answerOptions[index].checked = true;
+            e.preventDefault();
+          }
+        }
+        
+        // Submit: Space or Enter
+        if (e.key === " " || e.key === "Enter") {
+          const submitBtn = document.querySelector("#btn");
+          if (submitBtn && submitBtn.style.display !== "none") {
+            checkAns();
+            e.preventDefault();
+          }
+        }
+      });
+    }
+    
+    initKeyboard();
 
     ques.innerHTML = `<h5>Please Wait!! Loading Questions...</h5>`;
-    document.querySelector('#btn').style.display = "none";
-    
+    document.querySelector("#btn").style.display = "none";
+
     // Handle give up button
     const giveUpBtn = document.querySelector("[giveup]");
     if (giveUpBtn) {
-        giveUpBtn.addEventListener("click", (e) => {
-            e.preventDefault();
-            if (confirm("Are you sure you want to give up? Your current progress will be saved.")) {
-                evalScreen();
-            }
-        });
+      giveUpBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        if (
+          confirm(
+            "Are you sure you want to give up? Your current progress will be saved."
+          )
+        ) {
+          quizAbandoned = true; // Mark quiz as abandoned
+          evalScreen();
+        }
+      });
     }
 
     async function startQuiz() {
-        await fetchQuestions();
-        if (Questions.length === 0) {
-            ques.innerHTML = `<h5 style='color: red'>Unable to fetch data, Please try again!!</h5>`;
-            document.querySelector('#btn').style.display = "block";
-            document.querySelector('#btn').innerHTML = "Refresh";
-            document.querySelector('#btn').onclick = () => {
-                location.reload();
-            };
-        } else {
-            loadQues();
-            stopWatch();
-        }
+      await fetchQuestions();
+      if (allQuestions.length === 0) {
+        ques.innerHTML = `<h5 style='color: red'>Unable to fetch data, Please try again!!</h5>`;
+        document.querySelector("#btn").style.display = "block";
+        updateSubmitButtonText("Refresh");
+        document.querySelector("#btn").onclick = () => {
+          location.reload();
+        };
+      } else {
+        // Initialize grade display
+        totalGradePoints = 0;
+        previousGrade = ""; // Reset previous grade
+        updateGradeDisplay();
+        loadQues();
+        stopWatch();
+      }
     }
     startQuiz();
+    
+    // Update indicator visibility based on controller connection
+    function updateIndicatorVisibility() {
+      const controllerIndicators = document.querySelectorAll(".controller-indicator, .controller-submit-indicator");
+      const keyboardIndicators = document.querySelectorAll(".keyboard-indicator, .keyboard-submit-indicator");
+      
+      if (gamepadConnected) {
+        // Show controller indicators, hide keyboard indicators
+        controllerIndicators.forEach(indicator => {
+          indicator.style.display = "inline-block";
+        });
+        keyboardIndicators.forEach(indicator => {
+          indicator.style.display = "none";
+        });
+      } else {
+        // Show keyboard indicators, hide controller indicators
+        controllerIndicators.forEach(indicator => {
+          indicator.style.display = "none";
+        });
+        keyboardIndicators.forEach(indicator => {
+          indicator.style.display = "inline-block";
+        });
+      }
+    }
+
+    // Gamepad support functions
+    function initGamepad() {
+      window.addEventListener("gamepadconnected", (e) => {
+        gamepadConnected = true;
+        startGamepadPolling();
+        updateIndicatorVisibility();
+      });
+      
+      window.addEventListener("gamepaddisconnected", (e) => {
+        gamepadConnected = false;
+        stopGamepadPolling();
+        updateIndicatorVisibility();
+      });
+      
+      // Check if gamepad is already connected
+      const gamepads = navigator.getGamepads();
+      for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i]) {
+          gamepadConnected = true;
+          startGamepadPolling();
+          break;
+        }
+      }
+      // Update visibility based on initial state
+      updateIndicatorVisibility();
+    }
+    
+    function startGamepadPolling() {
+      if (gamepadPollInterval) return;
+      
+      gamepadPollInterval = setInterval(() => {
+        const gamepads = navigator.getGamepads();
+        for (let i = 0; i < gamepads.length; i++) {
+          const gamepad = gamepads[i];
+          if (gamepad) {
+            handleGamepadInput(gamepad);
+            break; // Only handle first connected gamepad
+          }
+        }
+      }, 50); // Poll every 50ms
+    }
+    
+    function stopGamepadPolling() {
+      if (gamepadPollInterval) {
+        clearInterval(gamepadPollInterval);
+        gamepadPollInterval = null;
+      }
+    }
+    
+    function handleGamepadInput(gamepad) {
+      // D-pad mapping (left d-pad)
+      // Standard gamepad API: axes[9] and axes[10] for d-pad, or buttons 12-15
+      // Some gamepads use buttons, others use axes
+      let dpadUp = false;
+      let dpadDown = false;
+      let dpadLeft = false;
+      let dpadRight = false;
+      
+      // Check button-based d-pad (buttons 12-15: up, down, left, right)
+      if (gamepad.buttons[12]) dpadUp = gamepad.buttons[12].pressed;
+      if (gamepad.buttons[13]) dpadDown = gamepad.buttons[13].pressed;
+      if (gamepad.buttons[14]) dpadLeft = gamepad.buttons[14].pressed;
+      if (gamepad.buttons[15]) dpadRight = gamepad.buttons[15].pressed;
+      
+      // Check hat/axes-based d-pad (axes[9] and axes[10] for some controllers)
+      if (gamepad.axes.length >= 10) {
+        const hatX = gamepad.axes[9];
+        const hatY = gamepad.axes[10];
+        if (hatY < -0.5) dpadUp = true;
+        if (hatY > 0.5) dpadDown = true;
+        if (hatX < -0.5) dpadLeft = true;
+        if (hatX > 0.5) dpadRight = true;
+      }
+      
+      // Handle d-pad input for answer selection (only on press, not hold)
+      if (dpadUp && !lastDpadState.up && answerOptions.length >= 1) {
+        answerOptions[0].checked = true;
+        lastDpadState.up = true;
+      } else if (!dpadUp) {
+        lastDpadState.up = false;
+      }
+      
+      if (dpadRight && !lastDpadState.right && answerOptions.length >= 2) {
+        answerOptions[1].checked = true;
+        lastDpadState.right = true;
+      } else if (!dpadRight) {
+        lastDpadState.right = false;
+      }
+      
+      if (dpadDown && !lastDpadState.down && answerOptions.length >= 3) {
+        answerOptions[2].checked = true;
+        lastDpadState.down = true;
+      } else if (!dpadDown) {
+        lastDpadState.down = false;
+      }
+      
+      if (dpadLeft && !lastDpadState.left && answerOptions.length >= 4) {
+        answerOptions[3].checked = true;
+        lastDpadState.left = true;
+      } else if (!dpadLeft) {
+        lastDpadState.left = false;
+      }
+      
+      // Submit with A button (button 0) or X button (button 2)
+      if ((gamepad.buttons[0] && gamepad.buttons[0].pressed) || 
+          (gamepad.buttons[2] && gamepad.buttons[2].pressed)) {
+        // Only submit once per press
+        if (!window.gamepadSubmitPressed) {
+          window.gamepadSubmitPressed = true;
+          checkAns();
+        }
+      } else {
+        window.gamepadSubmitPressed = false;
+      }
+    }
+    
+    // Initialize gamepad support when page loads
+    initGamepad();
+
+    // Global BGM variables to control playback
+    let bgm1, bgm2, bgm3, bgm4;
+    let currentBGM = null;
+    let currentStage = -1; // Track which stage we're in to avoid restarting
+
+    function playBGM() {
+      // Initialize BGM if not already done
+      if (!bgm1) {
+        bgm1 = new Audio("bgm/stage1.mp3");
+        bgm2 = new Audio("bgm/stage2.mp3");
+        bgm3 = new Audio("bgm/stage3.mp3");
+        bgm4 = new Audio("bgm/stage4.mp3");
+        
+        // Set BGM to loop
+        bgm1.loop = true;
+        bgm2.loop = true;
+        bgm3.loop = true;
+        bgm4.loop = true;
+      }
+
+      // Check if we're on the final question of a stage (stop BGM)
+      if (currQuestion === 49 || currQuestion === 69 || currQuestion === 89) {
+        // Stop current BGM if playing
+        if (currentBGM) {
+          currentBGM.pause();
+          currentBGM.currentTime = 0;
+          currentBGM = null;
+          currentStage = -1; // Reset stage tracking
+        }
+        return; // Don't play any BGM on final questions
+      }
+
+      // Determine which stage we should be in
+      let targetStage;
+      let targetBGM;
+      
+      if (currQuestion < 50) {
+        targetStage = 1;
+        targetBGM = bgm1;
+      } else if (currQuestion < 70) {
+        targetStage = 2;
+        targetBGM = bgm2;
+      } else if (currQuestion < 90) {
+        targetStage = 3;
+        targetBGM = bgm3;
+      } else {
+        targetStage = 4;
+        targetBGM = bgm4;
+      }
+
+      // Only change BGM if we've moved to a different stage
+      if (currentStage !== targetStage) {
+        // Stop current BGM if playing
+        if (currentBGM) {
+          currentBGM.pause();
+          currentBGM.currentTime = 0;
+        }
+
+        // Play the new stage's BGM
+        currentBGM = targetBGM;
+        currentStage = targetStage;
+        currentBGM.play().catch(err => console.log("BGM play failed:", err));
+      }
+      // If we're still in the same stage, do nothing - let the BGM continue playing
+    }
+
+    function stopBGM() {
+      if (currentBGM) {
+        currentBGM.pause();
+        currentBGM.currentTime = 0;
+        currentBGM = null;
+        currentStage = -1; // Reset stage tracking
+      }
+    }
 
     let timeToAnswer;
+    let initialTimeToAnswer; // Track initial time allocated for current question
     function loadQues() {
-        const opt = document.getElementById("opt");
-        let currentQuestion = Questions[currQuestion].question;
-        // Decode HTML entities in the question and answers
-        function decodeHTMLEntities(text) {
-            if (!text) return "";
-            const txt = document.createElement('textarea');
-            txt.innerHTML = text;
-            return txt.value;
+      const opt = document.getElementById("opt");
+      let currentQuestion = allQuestions[currQuestion].question;
+      // Decode HTML entities in the question and answers
+      function decodeHTMLEntities(text) {
+        if (!text) return "";
+        const txt = document.createElement("textarea");
+        txt.innerHTML = text;
+        return txt.value;
+      }
+      currentQuestion = decodeHTMLEntities(currentQuestion);
+      ques.innerHTML = currentQuestion;
+      opt.innerHTML = "";
+      loadScore();
+      const correctAnswer = allQuestions[currQuestion].correct_answer;
+      const incorrectAnswers = allQuestions[currQuestion].incorrect_answers;
+      const options = [correctAnswer, ...incorrectAnswers];
+      options.sort(() => Math.random() - 0.5);
+      
+      // Store options for controller support
+      answerOptions = [];
+      
+      // Controller button mapping: Up, Right, Down, Left
+      const controllerButtonImages = ["btns/up.png", "btns/right.png", "btns/down.png", "btns/left.png"];
+      const controllerLabels = ["D-Pad Up", "D-Pad Right", "D-Pad Down", "D-Pad Left"];
+      
+      options.forEach((option, index) => {
+        const decodedOption = decodeHTMLEntities(option);
+        const choicesdiv = document.createElement("div");
+        const choice = document.createElement("input");
+        const choiceLabel = document.createElement("label");
+        choice.type = "radio";
+        choice.name = "answer";
+        choice.value = decodedOption;
+        choiceLabel.textContent = decodedOption;
+        
+        // Add controller button indicator image
+        const controllerIndicator = document.createElement("img");
+        controllerIndicator.className = "controller-indicator";
+        controllerIndicator.src = controllerButtonImages[index] || "";
+        controllerIndicator.alt = controllerLabels[index] || "";
+        controllerIndicator.title = controllerLabels[index] || "";
+        controllerIndicator.style.cssText = `
+          display: inline-block;
+          margin-right: 8px;
+          width: 32px;
+          height: 32px;
+          vertical-align: middle;
+          object-fit: contain;
+        `;
+        
+        // Add keyboard indicator (1, 2, 3, 4)
+        const keyboardIndicator = document.createElement("span");
+        keyboardIndicator.className = "keyboard-indicator";
+        keyboardIndicator.textContent = (index + 1).toString();
+        keyboardIndicator.title = `Press ${index + 1} to select this answer`;
+        keyboardIndicator.style.cssText = `
+          display: inline-block;
+          margin-right: 8px;
+          padding: 4px 8px;
+          background-color: rgba(255, 255, 255, 0.2);
+          border: 2px solid rgba(255, 255, 255, 0.5);
+          border-radius: 4px;
+          font-size: 16px;
+          font-weight: bold;
+          color: white;
+          vertical-align: middle;
+          min-width: 24px;
+          text-align: center;
+        `;
+        
+        choicesdiv.appendChild(choice);
+        choicesdiv.appendChild(controllerIndicator);
+        choicesdiv.appendChild(keyboardIndicator);
+        choicesdiv.appendChild(choiceLabel);
+        opt.appendChild(choicesdiv);
+        document.querySelector("#btn").style.display = "block";
+        
+        // Set initial visibility based on controller connection state
+        if (gamepadConnected) {
+          controllerIndicator.style.display = "inline-block";
+          keyboardIndicator.style.display = "none";
+        } else {
+          controllerIndicator.style.display = "none";
+          keyboardIndicator.style.display = "inline-block";
         }
-        currentQuestion = decodeHTMLEntities(currentQuestion);
-        ques.innerHTML = currentQuestion;
-        opt.innerHTML = "";
-        loadScore();
-        const correctAnswer = Questions[currQuestion].correct_answer;
-        const incorrectAnswers = Questions[currQuestion].incorrect_answers;
-        const options = [correctAnswer, ...incorrectAnswers];
-        options.sort(() => Math.random() - 0.5);
-        options.forEach((option) => {
-            const decodedOption = decodeHTMLEntities(option);
-            const choicesdiv = document.createElement("div");
-            const choice = document.createElement("input");
-            const choiceLabel = document.createElement("label");
-            choice.type = "radio";
-            choice.name = "answer";
-            choice.value = decodedOption;
-            choiceLabel.textContent = decodedOption;
-            choicesdiv.appendChild(choice);
-            choicesdiv.appendChild(choiceLabel);
-            opt.appendChild(choicesdiv);
-            document.querySelector('#btn').style.display = "block";
-            
-            // Make the div clickable to select the option
-            choicesdiv.addEventListener("click", () => {
-                choice.checked = true;
-            });
+
+        // Make the div clickable to select the option
+        choicesdiv.addEventListener("click", () => {
+          choice.checked = true;
         });
+        
+        // Store reference for controller support
+        answerOptions.push(choice);
+      });
 
-        let answerTimerId; // Store interval ID for answer timer
-        // Clear any previous interval to prevent multiple timers
-        if (window.answerTimerId) {
+      let answerTimerId; // Store interval ID for answer timer
+      // Clear any previous interval to prevent multiple timers
+      if (window.answerTimerId) {
+        clearInterval(window.answerTimerId);
+      }
+      const timerDiv = document.querySelector(".timerifinvalid");
+      if (quizMinutes >= 15) {
+        // Add 2s countdown timer for each question when stopwatch hits 15 minutes
+        timeToAnswer = 2; // 2 seconds for master mode
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
             clearInterval(window.answerTimerId);
-        }
-        const timerDiv = document.querySelector(".timerifinvalid");
-        if (quizMinutes >= 15) {
-            // Add 2s countdown timer for each question when stopwatch hits 15 minutes
-            timeToAnswer = 2; // 2 seconds for master mode
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "red";
-        } else if (currQuestion < 5) {
-            timeToAnswer = 30;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion <= 6) {
-            timeToAnswer = 28;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion <= 8) {
-            timeToAnswer = 25;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion <= 10) {
-            timeToAnswer = 20;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion <= 12) {
-            timeToAnswer = 30;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion <= 13) {
-            timeToAnswer = 27;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion <= 14) {
-            timeToAnswer = 24;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion <= 15) {
-            timeToAnswer = 21;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion <= 18) {
-            timeToAnswer = 19;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion <= 20) {
-            timeToAnswer = 22;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion <= 30) {
-            timeToAnswer = 18;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        }else if (currQuestion <= 35) {
-            timeToAnswer = 15;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        }else if (currQuestion <= 40) {
-            timeToAnswer = 13;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        } else if (currQuestion < Questions.length) {
-            timeToAnswer = 10;
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-        }
-        document.querySelector(".correctanswer").innerHTML = "";
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "red";
+      } else if (currQuestion < 10) {
+        timeToAnswer = 30;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 12) {
+        timeToAnswer = 28;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 16) {
+        timeToAnswer = 25;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 20) {
+        timeToAnswer = 20;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 24) {
+        timeToAnswer = 30;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 26) {
+        timeToAnswer = 27;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 28) {
+        timeToAnswer = 24;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 30) {
+        timeToAnswer = 21;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 36) {
+        timeToAnswer = 19;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 40) {
+        timeToAnswer = 22;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } 
+      else if (currQuestion <= 50) {
+        timeToAnswer = 20;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      }else if (currQuestion <= 60) {
+        timeToAnswer = 18;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 70) {
+        timeToAnswer = 15;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion <= 80) {
+        timeToAnswer = 13;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      } else if (currQuestion < allQuestions.length) {
+        timeToAnswer = 10;
+        initialTimeToAnswer = timeToAnswer; // Store initial time
+        window.answerTimerId = setInterval(() => {
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
+      }
+      document.querySelector(".correctanswer").innerHTML = "";
+      
+      // Update BGM based on current question
+      playBGM();
+      
+      // Update indicator visibility after loading question
+      updateIndicatorVisibility();
     }
     let quizMinutes = 0; // Global variable to track minutes
     let timer; // Global variable to store the timer interval
-    let grade
+    let grade;
 
     function stopWatch() {
-        const startTime = Date.now();
-        const timeDisplay = document.getElementById("timeelapsed");
-        timer = setInterval(() => {
-            const elapsedTime = Date.now() - startTime;
-            const miliseconds = Math.floor((elapsedTime % 1000) / 10);
-            const seconds = Math.floor((elapsedTime / 1000) % 60);
-            quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
-            timeDisplay.innerHTML = `${quizMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${miliseconds.toString().padStart(2, '0')}`;
-            if (quizMinutes >= 7  && currQuestion >= 26){ // TGM3 Lv.500 torikan
-                alert("Excellent! ...but let's go better next time")
-                evalScreen();
-            }
-            if (quizMinutes >= 10) {
-                timeDisplay.style.color = "yellow";
-            }
-            if (quizMinutes >= 12) {
-                timeDisplay.style.color = "orange";
-            }
-            if (quizMinutes >= 15) {
-                alert("You took too long! This run has been invalidated.");
-                timeDisplay.style.color = "red";
-            }
-        }, 10);
-        timeDisplay.style.fontSize = "xx-large";
-        timeDisplay.style.textAlign = "center";
+      const startTime = Date.now();
+      const timeDisplay = document.getElementById("timeelapsed");
+      let lastMinute = -1; // Track last minute to detect changes
+      timer = setInterval(() => {
+        const elapsedTime = Date.now() - startTime;
+        const miliseconds = Math.floor((elapsedTime % 1000) / 10);
+        const seconds = Math.floor((elapsedTime / 1000) % 60);
+        quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+        timeDisplay.innerHTML = `${quizMinutes
+          .toString()
+          .padStart(2, "0")}:${seconds
+          .toString()
+          .padStart(2, "0")}:${miliseconds.toString().padStart(2, "0")}`;
+        
+        // Update grade display when minute changes (especially around 12-minute threshold for GM)
+        if (quizMinutes !== lastMinute) {
+          lastMinute = quizMinutes;
+          updateGradeDisplay();
+        }
+        
+        if (quizMinutes >= 7 && currQuestion >= 50) {
+          // TGM3 Lv.500 torikan
+          alert("Excellent! ...but let's go better next time");
+          evalScreen();
+        }
+        if (quizMinutes >= 10) {
+          timeDisplay.style.color = "yellow";
+        }
+        if (quizMinutes >= 12) {
+          timeDisplay.style.color = "orange";
+        }
+        if (quizMinutes >= 15) {
+          alert("You took too long! This run has been invalidated.");
+          timeDisplay.style.color = "red";
+        }
+      }, 10);
+      timeDisplay.style.fontSize = "xx-large";
+      timeDisplay.style.textAlign = "center";
     }
 
     function loadScore() {
-        const totalScore = document.getElementById("score");
-        totalScore.innerHTML = `${score}`;
-        totalScore.style.fontSize = "xx-large";
-        totalScore.style.color = "pink";
+      const totalScore = document.getElementById("score");
+      totalScore.innerHTML = `${score}`;
+      totalScore.style.fontSize = "xx-large";
+      totalScore.style.color = "pink";
+      // Update grade display in real-time
+      updateGradeDisplay();
     }
-    function evalScreen() {
-        document.getElementById("opt").remove();
-        document.getElementById("ques").remove();
-        document.getElementById("btn").remove();
-        document.getElementById("score").remove();
-        const evalDiv = document.querySelector(".evalscreen");
-        let grade = "";
-        let evalPercent = (score / Questions.length) * 100;
-        if (quizMinutes >= 15) {
-            grade = "Invalid";
-        } else if (evalPercent == 100) {
-            grade = "GM";
-        } else if (evalPercent >= 90) {
-            grade = "MM";
-        } else if (evalPercent >= 80) {
-            grade = "MO";
-        } else if (evalPercent >= 70) {
-            grade = "MV";
-        } else if (evalPercent >= 60) {
-            grade = "MK";
-        } else if (evalPercent >= 50) {
-            grade = "M";
-        } else if (evalPercent >= 40) {
-            grade = "S";
-        } else if (evalPercent >= 30) {
-            grade = "+";
-        } else if (evalPercent >= 20) {
-            grade = "/";
-        } else if (evalPercent >= 10) {
-            grade = "-";
+
+    // Compare two grades to determine if grade was promoted
+    // Returns: 1 if grade1 > grade2, -1 if grade1 < grade2, 0 if equal
+    function compareGrades(grade1, grade2) {
+      if (grade1 === grade2) return 0;
+      if (grade1 === "Invalid") return -1; // Invalid is lowest
+      if (grade2 === "Invalid") return 1;
+      
+      // Grade hierarchy: S9 > S8 > ... > S1 > 1 > 2 > ... > 9
+      const gradeOrder = ["9", "8", "7", "6", "5", "4", "3", "2", "1", "S1", "S2", "S3", "S4", "S5", "S6", "S7", "S8", "S9", "GM"];
+      const index1 = gradeOrder.indexOf(grade1);
+      const index2 = gradeOrder.indexOf(grade2);
+      
+      if (index1 === -1 || index2 === -1) return 0; // Unknown grade
+      return index1 > index2 ? 1 : -1;
+    }
+
+    // Update grade display in real-time based on current totalGradePoints
+    function updateGradeDisplay() {
+      const gradeDisplay = document.getElementById("currentgrade");
+      if (!gradeDisplay) return;
+      
+      let currentGrade = "";
+      
+      // Use grade based on total grade points
+      if (quizMinutes >= 15) {
+        currentGrade = "Invalid";
+      } else {
+        currentGrade = getGradeFromPoints(totalGradePoints);
+        // Check for GM condition (S9 grade with time < 12 minutes)
+        if (currentGrade === "S9" && quizMinutes < 12) {
+          currentGrade = "GM";
         }
-        else {
-            grade = "";
+        // Ensure we always have a grade value
+        if (!currentGrade || currentGrade === "") {
+          currentGrade = "9";
         }
-        // Clear all timers
-        clearInterval(timer);
-        if (window.answerTimerId) {
-            clearInterval(window.answerTimerId);
+      }
+      
+      // Check if grade was promoted (increased)
+      if (previousGrade && previousGrade !== "" && currentGrade !== previousGrade) {
+        if (compareGrades(currentGrade, previousGrade) > 0) {
+          // Grade was promoted! Play sound
+          const gradeUpSound = new Audio("bgm/gradeup.wav");
+          gradeUpSound.play().catch(err => console.log("Grade up sound play failed:", err));
+        }
+      }
+      
+      // Update previous grade
+      previousGrade = currentGrade;
+      gradeDisplay.innerHTML = currentGrade;
+    }
+
+    function internalGrade(){
+        // Validate quiz state
+        if (!allQuestions || allQuestions.length === 0) {
+            console.warn("No questions loaded");
+            return 0;
         }
         
-        const timeElapsedDiv = document.getElementById("timeelapsed");
-        const timerDiv = document.querySelector(".timerifinvalid");
-        timerDiv.style.display = "none";
+        if (currQuestion < 0 || currQuestion >= allQuestions.length) {
+            console.warn("Invalid question index");
+            return 0;
+        }
+        
+        // Get selected answer from DOM
+        const selectedAns = document.querySelector('input[name="answer"]:checked');
+        if (!selectedAns) {
+            // No answer selected, return 0 points
+            return 0;
+        }
+        
+        // Decode HTML entities for comparison
+        function decodeHTMLEntities(text) {
+            if (!text) return "";
+            const txt = document.createElement("textarea");
+            txt.innerHTML = text;
+            return txt.value;
+        }
+        
+        const answerValue = selectedAns.value;
+        const correctAnswer = allQuestions[currQuestion].correct_answer;
+        const decodedAnswerValue = decodeHTMLEntities(answerValue);
+        const decodedCorrectAnswer = decodeHTMLEntities(correctAnswer);
+        
+        // Check if answer is correct
+        const isCorrect = decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer;
+        
+        if (!isCorrect) {
+            // Wrong answer, return 0 points
+            return 0;
+        }
+        
+        // Calculate remaining time factor
+        // Ensure we have valid initial time
+        if (!initialTimeToAnswer || initialTimeToAnswer <= 0) {
+            console.warn("Invalid initial time for question");
+            return 0;
+        }
+        
+        // Get remaining time (clamp to 0 if negative)
+        const remainingTime = Math.max(0, timeToAnswer || 0);
+        
+        // Calculate remaining time ratio (0.0 to 1.0)
+        // More remaining time = higher ratio = better grade
+        const timeRatio = remainingTime * 10 / initialTimeToAnswer;
+        
+        // Base score for each question
+        const quesScore = 500;
+        
+        // Difficulty multiplier based on question number
+        let multiplier;
+        if (currQuestion < 25) {
+            multiplier = 1;
+        } else if (currQuestion < 50) {
+            multiplier = 2;
+        } else if (currQuestion < 75) {
+            multiplier = 3;
+        } else {
+            multiplier = 4;
+        }
+        
+        // Calculate grade points with remaining time as a factor
+        // Formula: baseScore * difficultyMultiplier * timeRatio
+        // This rewards faster answers (more remaining time = higher score)
+        // Time ratio ranges from 0.0 (no time left) to 1.0 (all time remaining)
+        const questionPoints = quesScore * multiplier * timeRatio;
+        
+        
+        return Math.round(questionPoints);
+    }
+    function evalScreen() {
+      // Stop BGM when quiz ends
+      stopBGM();
+      
+      // Hide the give up button when evaluation screen is displayed
+      const giveUpBtn = document.querySelector("[giveup]");
+      if (giveUpBtn) {
+        giveUpBtn.style.display = "none";
+      }
+      
+      document.getElementById("opt").remove();
+      document.getElementById("ques").remove();
+      document.getElementById("btn").remove();
+      document.getElementById("score").remove();
 
+      // Play completion sound only if quiz was not abandoned
+      if (!quizAbandoned) {
+        let completeSound = new Audio("bgm/complete.wav");
+        completeSound.play().catch(err => console.log("Complete sound play failed:", err));
+      }
+      
+      let creditsBGM = new Audio("bgm/credits.mp3");
+      creditsBGM.play();
+      const evalDiv = document.querySelector(".evalscreen");
+      let grade = "";
+      let line = "white";
+      // Use grade based on total grade points
+      if (quizMinutes >= 15) {
+        grade = "Invalid";
+      } else {
+        grade = getGradeFromPoints(totalGradePoints);
+        // Check for GM condition (S9 grade with time < 8 minutes)
+        if (grade === "S9" && quizMinutes < 6) {
+          grade = "GM"; // under 6 minutes for Grand Master (orange line)
+          line = "orange";
+        }
+        if (grade === "S9" && quizMinutes < 8) {
+          grade = "GM"; // under 8 minutes for Grand Master
+          line = "green";
+        }
+        // If no grade from points (too low), show "9"
+        if (!grade) {
+          grade = "9";
+        }
+      }
+      // Clear all timers
+      clearInterval(timer);
+      if (window.answerTimerId) {
+        clearInterval(window.answerTimerId);
+      }
 
-        evalDiv.innerHTML = `<h3>Game Over.</h3>
+      const timeElapsedDiv = document.getElementById("timeelapsed");
+      const timerDiv = document.querySelector(".timerifinvalid");
+      timerDiv.style.display = "none";
+
+      evalDiv.innerHTML = `<h3>Game Over.</h3>
                     <p style="font-size:larger">Your score is:</p>
                     <div class="eval" style="display:flex; justify-content:space-between;">
                     <div id="score" >
-                    <span class="score" style="font-size:4em">${score}</span> <span style="font-size:xx-large">/ ${Questions.length}</span>
+                    <span class="score" style="font-size:4em">${score}</span> <span style="font-size:xx-large">/ ${allQuestions.length}</span>
                     </div>
                     <div id=grade>
-                    <span class="grade" style="font-size:6em">${grade}</span>
+                    <span class="grade" style="font-size:6em; color: ${line}">${grade}</span>
                     </div>
                     </div>
+                    <p style="font-size:medium; margin-top: 10px;">Total Grade Points: ${totalGradePoints.toLocaleString()}</p>
                     <p>Thank you for playing!</p>
                 <button onclick="location.reload()">Play Again</button>
                 <button class="submitsuffering">Submit your suffe- I mean score</button>
                 <button class="home" onclick="location.href='index.html'">Home</button>`;
-        evalDiv.style.display = "block";
-        evalDiv.style.textAlign = "center";
-        // Attach event listener after button is created
-        const user = auth.currentUser;
-        const submitBtn = document.querySelector(".submitsuffering");
-        if (!user) {
-            submitBtn.textContent = "Login to submit score";
-            submitBtn.onclick = () => {
+      evalDiv.style.display = "block";
+      evalDiv.style.textAlign = "center";
+      // Attach event listener after button is created
+      const user = auth.currentUser;
+      const submitBtn = document.querySelector(".submitsuffering");
 
-                location.href = "signin.html";
-            };
-        }
-        if (submitBtn) {
-            let isSubmitting = false;
-            submitBtn.addEventListener("click", async () => {
-                if (isSubmitting || submitBtn.disabled) return;
-                
-                if (!user) return;
-                
-                // Prevent invalid scores from being submitted
-                if (quizMinutes >= 15) {
-                    alert("Invalid run! Scores cannot be submitted for runs that took 15 minutes or longer.");
-                    return;
-                }
-                
-                isSubmitting = true;
-                submitBtn.disabled = true;
-                submitBtn.textContent = "Submitting...";
-                
-                try {
-                    // Use Firebase v9+ modular SDK
-                    const db = getDatabase();
+      if (!submitBtn) {
+        return;
+      }
 
-                    await push(ref(db, 'scoresmaster'), {
-                        name: user.displayName || user.email,
-                        score: score,
-                        grade: grade,
-                        time: document.getElementById("timeelapsed").textContent,
-                        date: new Date().toLocaleString()
-                    });
-                    alert("Score submitted successfully!");
-                    submitBtn.textContent = "Score submitted!";
-                    submitBtn.style.backgroundColor = "cyan";
-                    submitBtn.style.color = "white";
-                    submitBtn.style.cursor = "not-allowed";
-                } catch (error) {
-                    console.error("Error submitting score:", error);
-                    alert("Failed to submit score. Please try again.");
-                    submitBtn.disabled = false;
-                    isSubmitting = false;
-                    submitBtn.textContent = "Submit your suffe- I mean score";
-                }
-            });
+      if (!user) {
+        submitBtn.textContent = "Login to submit score";
+        submitBtn.onclick = () => {
+          location.href = "signin.html";
+        };
+        return;
+      }
+
+      let isSubmitting = false;
+
+      async function submitMasterScore() {
+        if (isSubmitting || submitBtn.disabled) return;
+
+        // Prevent abandoned scores from being submitted
+        if (quizAbandoned) {
+          alert("Abandoned runs cannot be submitted to the leaderboards.");
+          return;
         }
 
+        // Prevent invalid scores from being submitted
+        if (quizMinutes >= 15) {
+          alert(
+            "Invalid run! Scores cannot be submitted for runs that took 15 minutes or longer."
+          );
+          return;
+        }
+
+        isSubmitting = true;
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Submitting...";
+
+        try {
+          const db = getFirestore();
+          const payload = {
+            name: user.displayName || user.email,
+            score: totalGradePoints, // Use total grade points instead of correct answer count
+            grade: grade,
+            time: document.getElementById("timeelapsed").textContent,
+            date: new Date().toLocaleString(),
+          };
+
+          // Global leaderboard entry
+          await addDoc(collection(db, "scoresmaster"), payload);
+          // Per‑player data entry
+          await addDoc(
+            collection(db, "playerData", user.uid, "master"),
+            payload
+          );
+
+          alert("Score submitted successfully!");
+          submitBtn.textContent = "Score submitted!";
+          submitBtn.style.backgroundColor = "cyan";
+          submitBtn.style.color = "white";
+          submitBtn.style.cursor = "not-allowed";
+        } catch (error) {
+          console.error("Error submitting score:", error);
+          alert("Failed to submit score. Please try again.");
+          submitBtn.disabled = false;
+          isSubmitting = false;
+          submitBtn.textContent = "Submit your suffe- I mean score";
+        }
+      }
+
+      // Manual click (kept for UX)
+      submitBtn.addEventListener("click", submitMasterScore);
+
+      // Automatic upload for logged‑in users (only if not abandoned)
+      if (!quizAbandoned) {
+        submitMasterScore();
+      } else {
+        // If abandoned, disable the submit button and show message
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Abandoned runs cannot be submitted";
+        submitBtn.style.cursor = "not-allowed";
+      }
     }
     function nextQuestion() {
-        if (currQuestion < Questions.length - 1) {
-            currQuestion++;
-            loadQues();
-            document.querySelector(".correctanswer").innerHTML = "";
-        } else {
-            evalScreen();
-        }
+      if (currQuestion < allQuestions.length - 1) {
+        currQuestion++;
+        loadQues();
+        document.querySelector(".correctanswer").innerHTML = "";
+        
+        // Update BGM based on current question
+        playBGM();
+      } else {
+        evalScreen();
+      }
     }
 
     function showNotification(message, isSuccess = false) {
-        const notification = document.getElementById("notification");
-        notification.textContent = message;
-        notification.classList.remove("hide", "success");
-        if (isSuccess) {
-            notification.classList.add("success");
-        }
-        setTimeout(() => {
-            notification.classList.add("hide");
-        }, 3000);
+      const notification = document.getElementById("notification");
+      notification.textContent = message;
+      notification.classList.remove("hide", "success");
+      if (isSuccess) {
+        notification.classList.add("success");
+      }
+      setTimeout(() => {
+        notification.classList.add("hide");
+      }, 3000);
     }
 
     function checkAns() {
-        const selectedAns = document.querySelector('input[name="answer"]:checked');
-        if (selectedAns) {
-            const answerValue = selectedAns.value;
-            if (answerValue === Questions[currQuestion].correct_answer) {
-                score++;
-                // Clear the question timer before moving to next question
-                if (window.answerTimerId) {
-                    clearInterval(window.answerTimerId);
-                }
-                showNotification("Correct!", true);
-                nextQuestion();
-            } else {
-                // Don't expose the correct answer
-                showNotification("Wrong! You cannot progress with an incorrect answer.");
-                return;
-            }
-        } else if (Questions.length > 0) {
-            showNotification("Please select an answer.");
+      // Validate quiz state
+      if (!allQuestions || allQuestions.length === 0) {
+        console.warn("No questions loaded");
+        return;
+      }
+      
+      if (currQuestion < 0 || currQuestion >= allQuestions.length) {
+        console.warn("Invalid question index");
+        return;
+      }
+      
+      // Check if quiz has ended (evalScreen is shown)
+      const evalDiv = document.querySelector(".evalscreen");
+      if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
+        return; // Quiz has ended, don't process answers
+      }
+      
+      const selectedAns = document.querySelector(
+        'input[name="answer"]:checked'
+      );
+      
+      if (selectedAns) {
+        const answerValue = selectedAns.value;
+        const correctAnswer = allQuestions[currQuestion].correct_answer;
+        
+        // Decode HTML entities for comparison (answers are stored with entities)
+        function decodeHTMLEntities(text) {
+          if (!text) return "";
+          const txt = document.createElement("textarea");
+          txt.innerHTML = text;
+          return txt.value;
         }
+        
+        const decodedAnswerValue = decodeHTMLEntities(answerValue);
+        const decodedCorrectAnswer = decodeHTMLEntities(correctAnswer);
+        
+        // Compare both decoded and original values to handle encoding differences
+        if (decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer) {
+          score++;
+          // Calculate and accumulate grade points for this question
+          const questionPoints = internalGrade();
+          totalGradePoints += questionPoints;
+          // Update grade display in real-time
+          updateGradeDisplay();
+          // Clear the question timer before moving to next question
+          if (window.answerTimerId) {
+            clearInterval(window.answerTimerId);
+          }
+          showNotification("Correct!", true);
+          nextQuestion();
+        } else {
+          // Don't expose the correct answer
+          showNotification(
+            "Wrong! You cannot progress with an incorrect answer."
+          );
+          return;
+        }
+      } else {
+        showNotification("Please select an answer.");
+      }
     }
 
+    // Convert total grade points to grade (S9 to S1, then 1 to 9)
+    function getGradeFromPoints(points) {
+      // Grade thresholds adjusted for typical progression with timeRatio = 8:
+      // Q10: ~40,000 points → Grade 7
+      // Q20: ~80,000 points → Grade 4
+      // Q30: ~144,000 points → Grade 3
+      // Q40: ~224,000 points → Grade 2
+      // Q50: ~296,000 points → Grade 1
+      // Q60: ~428,000 points → High S1
+      // Q70: ~596,000 points → S3
+      // Q80: ~692,000 points → S7
+      // Q90: ~852,000 points → Mid S8
+      // (Assuming average time remaining, timeRatio = 8)
+      
+      // Grade thresholds (higher points = better grade)
+      // Grades: S9 (highest) -> S1 -> 1 -> 9 (lowest)
+      
+      if (points >= 1000000) return "S9";      // Top tier
+      if (points >= 850000) return "S8";       // Q90 milestone (~852,000, mid S8)
+      if (points >= 760000) return "S7";       // Q80 milestone (~692,000)
+      if (points >= 700000) return "S6";       
+      if (points >= 640000) return "S5";       
+      if (points >= 625000) return "S4";       
+      if (points >= 595000) return "S3";       // Q70 milestone (~596,000)
+      if (points >= 550000) return "S2";       
+      if (points >= 430000) return "S1";       // Q60 milestone (~428,000, high S1)
+      if (points >= 295000) return "1";        // Q50 milestone (~296,000)
+      if (points >= 225000) return "2";        // Q40 milestone (~224,000)
+      if (points >= 145000) return "3";         // Q30 milestone (~144,000)
+      if (points >= 80000) return "4";         // Q20 milestone (~80,000)
+      if (points >= 60000) return "5";         
+      if (points >= 45000) return "6";          
+      if (points >= 40000) return "7";         // Q10 milestone (~40,000)
+      if (points >= 25000) return "8";         
+      if (points >= 0) return "9";             // Lowest grade (any points)
+      return "9"; // Fallback to lowest grade
+    }
 
-</script>
-
+  </script>
 </html>

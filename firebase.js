@@ -1,6 +1,6 @@
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js';
 import { getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-auth.js";
-import { getDatabase,ref, push, orderByChild, query, get } from 'https://www.gstatic.com/firebasejs/9.23.0/firebase-database.js';
+import { getFirestore, collection, addDoc, getDocs, query, where, orderBy } from "https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCcyR-VW3hFroVrG0164QwVO8WYSliGZQA",
@@ -13,7 +13,25 @@ import { getDatabase,ref, push, orderByChild, query, get } from 'https://www.gst
   };
   
 const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-export { app, getAuth, onAuthStateChanged, signOut, signInWithEmailAndPassword, createUserWithEmailAndPassword, GoogleAuthProvider, signInWithPopup, getDatabase, ref, push, orderByChild, query, get };
+export {
+  app,
+  db,
+  getAuth,
+  onAuthStateChanged,
+  signOut,
+  signInWithEmailAndPassword,
+  createUserWithEmailAndPassword,
+  GoogleAuthProvider,
+  signInWithPopup,
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  orderBy,
+};
 export default app;
 export { firebaseConfig };
