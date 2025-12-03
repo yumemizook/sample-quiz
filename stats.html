@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Player Statistics</title>
     <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="status">
@@ -15,7 +16,7 @@
         <a href="index.html">Home</a>
     </div>
     <div class="container2">
-        <div class="normal">
+        <div class="normal stats-card">
             <h1>Your Easy mode stats</h1>
             <div class="scores">
                 <table id="easyStats">
@@ -29,7 +30,7 @@
                 </table>
             </div>
         </div>
-        <div class="hell">
+        <div class="hell stats-card">
             <h1>Your Normal mode stats</h1>
             <div class="scores">
                 <table id="normalStats">
@@ -44,7 +45,7 @@
                 </table>
             </div>
         </div>
-        <div class="normal">
+        <div class="normal stats-card">
             <h1>Your Master mode stats</h1>
             <div class="scores">
                 <table id="masterStats">
@@ -59,7 +60,7 @@
                 </table>
             </div>
         </div>
-        <div class="hell">
+        <div class="hell stats-card">
             <h1>Your Hell mode stats</h1>
             <div class="scores">
                 <table id="hellStats">
@@ -73,6 +74,22 @@
                     </thead>
                 </table>
             </div>
+        </div>
+        <div class="normal stats-card">
+            <h1>Easy Mode Progress</h1>
+            <canvas id="easyChart"></canvas>
+        </div>
+        <div class="hell stats-card">
+            <h1>Normal Mode Progress</h1>
+            <canvas id="normalChart"></canvas>
+        </div>
+        <div class="normal stats-card">
+            <h1>Master Mode Progress</h1>
+            <canvas id="masterChart"></canvas>
+        </div>
+        <div class="hell stats-card">
+            <h1>Hell Mode Progress</h1>
+            <canvas id="hellChart"></canvas>
         </div>
     </div>
 </body>

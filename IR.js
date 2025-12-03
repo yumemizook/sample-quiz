@@ -31,11 +31,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 highScoresArr.forEach((scoreData, index) => {
                     const rank = index + 1;
                     const listItem = document.createElement("tr");
+                    const gradeDisplay = scoreData.grade 
+                        ? `<span class="grade-badge">${scoreData.grade}</span>` 
+                        : "-";
                     listItem.innerHTML = `
                         <td>${rank}</td>
                         <td>${scoreData.name}</td>
-                        <td>${scoreData.score}</td>
-                        <td>${scoreData.grade}</td>
+                        <td class="high-score">${scoreData.score}</td>
+                        <td>${gradeDisplay}</td>
                         <td>${scoreData.time}</td>
                         <td>${scoreData.date}</td>
                     `;
@@ -68,7 +71,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     listItem.innerHTML = `
                         <td>${rank}</td>
                         <td>${scoreData.name}</td>
-                        <td>${scoreData.score}</td>
+                        <td class="high-score">${scoreData.score}</td>
                         <td>${scoreData.time}</td>
                         <td>${scoreData.date}</td>
                     `;
@@ -98,11 +101,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 finalScoresArr.forEach((scoreData, index) => {
                     const rank = index + 1;
                     const listItem = document.createElement("tr");
+                    const gradeDisplay = scoreData.grade 
+                        ? `<span class="grade-badge">${scoreData.grade}</span>` 
+                        : "-";
                     listItem.innerHTML = `
                         <td>${rank}</td>
                         <td>${scoreData.name}</td>
-                        <td>${scoreData.score}</td>
-                        <td>${scoreData.grade}</td>
+                        <td class="high-score">${scoreData.score}</td>
+                        <td>${gradeDisplay}</td>
                         <td>${scoreData.time}</td>
                         <td>${scoreData.date}</td>
                     `;
@@ -135,11 +141,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 masterScoresArr.forEach((scoreData, index) => {
                     const rank = index + 1;
                     const listItem = document.createElement("tr");
+                    const gradeDisplay = scoreData.grade 
+                        ? `<span class="grade-badge">${scoreData.grade}</span>` 
+                        : "-";
                     listItem.innerHTML = `
                         <td>${rank}</td>
                         <td>${scoreData.name}</td>
-                        <td>${scoreData.score}</td>
-                        <td>${scoreData.grade}</td>
+                        <td class="high-score">${scoreData.score}</td>
+                        <td>${gradeDisplay}</td>
                         <td>${scoreData.time}</td>
                         <td>${scoreData.date}</td>
                     `;

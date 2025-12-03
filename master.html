@@ -1031,8 +1031,8 @@
         currentGrade = "Invalid";
       } else {
         currentGrade = getGradeFromPoints(totalGradePoints);
-        // Check for GM condition (S9 grade with time < 12 minutes)
-        if (currentGrade === "S9" && quizMinutes < 12) {
+        // Check for GM condition (S9 grade with time < 8 minutes)
+        if (currentGrade === "S9" && quizMinutes < 8) {
           currentGrade = "GM";
         }
         // Ensure we always have a grade value
