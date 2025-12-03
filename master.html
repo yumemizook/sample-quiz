@@ -199,7 +199,7 @@
                   `Request ${i + 1} attempt ${retryCount} failed: ${requestError.message}. Retrying...`
                 );
                 // Exponential backoff: wait longer between retries
-                await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
+                await new Promise(resolve => setTimeout(resolve, 5000 * retryCount));
               } else {
                 console.error(
                   `Request ${i + 1} failed after ${maxRetries} attempts: ${requestError.message}`
@@ -229,7 +229,7 @@
             const additionalRequests = Math.ceil(missingCount / questionsPerRequest);
             
             for (let i = 0; i < additionalRequests && allQuestions.length < totalQuestions; i++) {
-              await new Promise(resolve => setTimeout(resolve, 2000));
+              await new Promise(resolve => setTimeout(resolve, 5000));
               ques.innerHTML = `<h5>Please Wait!! Fetching Additional Questions...</h5>`;
               const amount = Math.min(questionsPerRequest, totalQuestions - allQuestions.length);
               
@@ -974,7 +974,7 @@
           updateGradeDisplay();
         }
         
-        if (quizMinutes >= 7 && currQuestion >= 50) {
+        if (quizMinutes >= 7 && currQuestion === 50) {
           // TGM3 Lv.500 torikan
           alert("Excellent! ...but let's go better next time");
           evalScreen();
@@ -1148,8 +1148,11 @@
       document.getElementById("btn").remove();
       document.getElementById("score").remove();
 
-      // Play completion sound only if quiz was not abandoned
-      if (!quizAbandoned) {
+      // Check if all questions were completed (in master mode, you can only progress if correct, so completion means all correct)
+      const allQuestionsCompleted = currQuestion >= allQuestions.length - 1;
+      
+      // Play completion sound only if quiz was not abandoned AND all questions were completed
+      if (!quizAbandoned && allQuestionsCompleted) {
         let completeSound = new Audio("bgm/complete.wav");
         completeSound.play().catch(err => console.log("Complete sound play failed:", err));
       }

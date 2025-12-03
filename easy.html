@@ -49,6 +49,7 @@
             <div id="score"></div>
             <div id="timeelapsed"></div>
         </div>
+        <div id="gradePointsDisplay" style="text-align: center; font-size: x-large; color: #adffcd; margin-top: 10px;"></div>
         <div class="timerifinvalid"></div>
         <div class="evalscreen" style="display:none"></div>
         <div id="notification" class="notification hide"></div>
@@ -572,10 +573,29 @@
         scoreDisplay.innerHTML = `${score} / ${currQuestion + 1}`;
         scoreDisplay.style.fontSize = "xx-large";
         scoreDisplay.style.color = "pink";
+        
+        // Update total grade points display
+        const gradePointsDisplay = document.getElementById("gradePointsDisplay");
+        if (gradePointsDisplay) {
+            gradePointsDisplay.innerHTML = `Grade Points: ${totalGradePoints.toLocaleString()}`;
+        }
     }
     function evalScreen(gaveUp = false) {
         // Stop BGM when quiz ends
         stopBGM();
+        
+        // Check if all questions were completed (reached the last question)
+        const allQuestionsCompleted = currQuestion >= Questions.length - 1;
+        
+        // Play completion sound only if quiz was not abandoned AND all questions were completed
+        if (!gaveUp && !quizAbandoned && allQuestionsCompleted) {
+            let completeSound = new Audio("bgm/complete.wav");
+            completeSound.play().catch(err => console.log("Complete sound play failed:", err));
+        }
+        
+        // Play credits BGM (always play, even if abandoned)
+        let creditsBGM = new Audio("bgm/credits.mp3");
+        creditsBGM.play().catch(err => console.log("Credits BGM play failed:", err));
         
         // Hide the give up button when evaluation screen is displayed
         const giveUpBtn = document.querySelector("[giveup]");
@@ -596,9 +616,13 @@
             const fiveMinutes = 5 * 60; // 5 minutes in seconds (300 seconds)
             if (totalElapsedTime < fiveMinutes) {
                 const remainingTime = fiveMinutes - totalElapsedTime; // Time remaining before 5 minutes
-                // Bonus: 100 points per second remaining (scaled appropriately)
                 timeBonus = Math.round(remainingTime * 1253);
                 totalGradePoints += timeBonus;
+                // Update grade points display if it exists
+                const gradePointsDisplay = document.getElementById("gradePointsDisplay");
+                if (gradePointsDisplay) {
+                    gradePointsDisplay.innerHTML = `Grade Points: ${totalGradePoints.toLocaleString()}`;
+                }
             }
         }
         
@@ -679,7 +703,7 @@
                 const db = getFirestore();
                 const payload = {
                     name: user.displayName || user.email,
-                    score: score,
+                    score: totalGradePoints, // Use grade points instead of score
                     time: timeDisplay.textContent,
                     date: new Date().toLocaleString()
                 };
@@ -782,6 +806,7 @@
                 // Calculate and accumulate grade points for this question
                 const questionPoints = internalGrade();
                 totalGradePoints += questionPoints;
+                loadScore(); // Update display with new grade points
                 showNotification("Correct!", true);
             }
             else if (decodedAnswerValue !== decodedCorrectAnswer && answerValue !== correctAnswer) {

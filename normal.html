@@ -25,6 +25,7 @@
             <div id="score"></div>
             <div id="timeelapsed"></div>
         </div>
+        <div id="gradePointsDisplay" style="text-align: center; font-size: x-large; color: pink; margin-top: 10px;"></div>
         <div class="timerifinvalid"></div>
         <div class="evalscreen" style="display:none"></div>
         <div id="notification" class="notification hide"></div>
@@ -51,7 +52,7 @@
         const numRequests = Math.ceil(totalQuestions / questionsPerRequest);
         const maxRetries = 3; // Maximum retry attempts per request
 
-        allQuestions.length = 0; // Clear any previous questions
+        Questions.length = 0; // Clear any previous questions
         let failedRequests = 0;
 
         for (let i = 0; i < numRequests; i++) {
@@ -90,11 +91,11 @@
                 // Validate we got the expected number of questions
                 const receivedCount = data.results.length;
                 if (receivedCount === amount) {
-                  allQuestions.push(...data.results);
+                  Questions.push(...data.results);
                   requestSuccess = true;
                 } else {
                   // Got some questions but not all - add what we got and try to get more
-                  allQuestions.push(...data.results);
+                  Questions.push(...data.results);
                   console.warn(
                     `Request ${i + 1} returned ${receivedCount} questions instead of ${amount}. Got partial results.`
                   );
@@ -128,27 +129,27 @@
         }
 
         // Validate we got questions
-        if (allQuestions.length === 0) {
+        if (Questions.length === 0) {
           throw new Error("Failed to fetch any questions. Please try again.");
         }
 
         // Warn if we got fewer questions than expected
-        if (allQuestions.length < totalQuestions) {
+        if (Questions.length < totalQuestions) {
           console.warn(
-            `Warning: Expected ${totalQuestions} questions but got ${allQuestions.length}. Continuing with available questions.`
+            `Warning: Expected ${totalQuestions} questions but got ${Questions.length}. Continuing with available questions.`
           );
           
           // If we're missing too many questions, try to fetch more
-          if (allQuestions.length < totalQuestions * 0.8) {
+          if (Questions.length < totalQuestions * 0.8) {
             console.warn("Missing more than 20% of questions. Attempting to fetch additional questions...");
             
-            const missingCount = totalQuestions - allQuestions.length;
+            const missingCount = totalQuestions - Questions.length;
             const additionalRequests = Math.ceil(missingCount / questionsPerRequest);
             
-            for (let i = 0; i < additionalRequests && allQuestions.length < totalQuestions; i++) {
+            for (let i = 0; i < additionalRequests && Questions.length < totalQuestions; i++) {
               await new Promise(resolve => setTimeout(resolve, 2000));
               ques.innerHTML = `<h5>Please Wait!! Fetching Additional Questions...</h5>`;
-              const amount = Math.min(questionsPerRequest, totalQuestions - allQuestions.length);
+              const amount = Math.min(questionsPerRequest, totalQuestions - Questions.length);
               
               try {
                 const response = await fetch(
@@ -158,9 +159,9 @@
                 if (response.ok) {
                   const data = await response.json();
                   if (data.results && data.results.length > 0) {
-                    const needed = totalQuestions - allQuestions.length;
+                    const needed = totalQuestions - Questions.length;
                     const toAdd = data.results.slice(0, needed);
-                    allQuestions.push(...toAdd);
+                    Questions.push(...toAdd);
                     console.log(`Fetched ${toAdd.length} additional questions`);
                   }
                 }
@@ -173,15 +174,15 @@
         }
 
         // Final validation
-        if (allQuestions.length === 0) {
+        if (Questions.length === 0) {
           throw new Error("Failed to fetch any questions. Please try again.");
         }
 
-        console.log(`Successfully loaded ${allQuestions.length} out of ${totalQuestions} requested questions.`);
+        console.log(`Successfully loaded ${Questions.length} out of ${totalQuestions} requested questions.`);
       } catch (error) {
         console.error("Error fetching questions:", error);
-        updateSubmitButtonText("Refresh");
-        document.querySelector("#btn").onclick = () => {
+        document.querySelector('#btn').innerHTML = "Refresh";
+        document.querySelector('#btn').onclick = () => {
           location.reload();
         };
         ques.innerHTML = `<h5 style='color: red'>${
@@ -434,22 +435,57 @@
     
     initGamepad();
     
-    // BGM for normal mode
-    let normalBGM = null;
+    // BGM for normal mode (stage 1 for questions 0-49, stage 2 for questions 50+)
+    let normalBGM1 = null;
+    let normalBGM2 = null;
+    let currentBGM = null;
+    let currentStage = -1;
+    
     function playBGM() {
-        if (!normalBGM) {
-            normalBGM = new Audio("bgm/stage1.mp3");
-            normalBGM.loop = true;
+        if (!normalBGM1) {
+            normalBGM1 = new Audio("bgm/stage1.mp3");
+            normalBGM2 = new Audio("bgm/stage2.mp3");
+            normalBGM1.loop = true;
+            normalBGM2.loop = true;
         }
-        if (normalBGM.paused) {
-            normalBGM.play().catch(err => console.log("BGM play failed:", err));
+        
+        // Stop BGM on question 49 (final question of stage 1)
+        if (currQuestion === 49) {
+            if (currentBGM) {
+                currentBGM.pause();
+                currentBGM.currentTime = 0;
+                currentBGM = null;
+                currentStage = -1;
+            }
+            return;
+        }
+        
+        let targetStage, targetBGM;
+        if (currQuestion < 50) {
+            targetStage = 1;
+            targetBGM = normalBGM1;
+        } else {
+            targetStage = 2;
+            targetBGM = normalBGM2;
+        }
+        
+        if (currentStage !== targetStage) {
+            if (currentBGM) {
+                currentBGM.pause();
+                currentBGM.currentTime = 0;
+            }
+            currentBGM = targetBGM;
+            currentStage = targetStage;
+            currentBGM.play().catch(err => console.log("BGM play failed:", err));
         }
     }
     
     function stopBGM() {
-        if (normalBGM) {
-            normalBGM.pause();
-            normalBGM.currentTime = 0;
+        if (currentBGM) {
+            currentBGM.pause();
+            currentBGM.currentTime = 0;
+            currentBGM = null;
+            currentStage = -1;
         }
     }
 
@@ -574,8 +610,8 @@
                 }
             }, 10);
         } else if (currQuestion >= 50) {
-            // Add 20 second timer after question 50
-            timeToAnswer = 20;
+            // Add 60 second timer after question 50
+            timeToAnswer = 60;
             initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
             timerDiv.style.display = "block";
             timerDiv.style.textAlign = "center";
@@ -702,13 +738,35 @@
         totalScore.innerHTML = `${score} / ${currQuestion + 1}`;
         totalScore.style.fontSize = "xx-large";
         totalScore.style.color = "pink";
+        
+        // Update total grade points display
+        const gradePointsDisplay = document.getElementById("gradePointsDisplay");
+        if (gradePointsDisplay) {
+            gradePointsDisplay.innerHTML = `Grade Points: ${totalGradePoints.toLocaleString()}`;
+        }
     }
     function evalScreen(gaveUp = false) {
+        // Stop BGM when quiz ends
+        stopBGM();
+        
         // Hide the give up button when evaluation screen is displayed
         const giveUpBtn = document.querySelector("[giveup]");
         if (giveUpBtn) {
             giveUpBtn.style.display = "none";
         }
+        
+        // Check if all questions were completed (reached the last question)
+        const allQuestionsCompleted = currQuestion >= Questions.length - 1;
+        
+        // Play completion sound only if quiz was not abandoned AND all questions were completed
+        if (!gaveUp && !quizAbandoned && allQuestionsCompleted) {
+            let completeSound = new Audio("bgm/complete.wav");
+            completeSound.play().catch(err => console.log("Complete sound play failed:", err));
+        }
+        
+        // Play credits BGM (always play, even if abandoned)
+        let creditsBGM = new Audio("bgm/credits.mp3");
+        creditsBGM.play().catch(err => console.log("Credits BGM play failed:", err));
         
         const evalDiv = document.querySelector(".evalscreen");
         let grade = "";
@@ -908,6 +966,7 @@
                 // Calculate and accumulate grade points for this question
                 const questionPoints = internalGrade();
                 totalGradePoints += questionPoints;
+                loadScore(); // Update display with new grade points
                 // Clear the question timer before moving to next question
                 if (window.questionTimerId) {
                     clearInterval(window.questionTimerId);

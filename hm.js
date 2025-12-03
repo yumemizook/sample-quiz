@@ -29,11 +29,11 @@ document.querySelector("[logout]").addEventListener("click", async () => {
 let tooltip = document.querySelector(".explain");
 let selectedMode = document.querySelector("#mode").value;
 
-document.querySelector("#mode").addEventListener("change", (event) => {
-    selectedMode = event.target.value;
-    switch (selectedMode) {
+// Function to update tooltip based on selected mode
+function updateTooltip(mode) {
+    switch (mode) {
         case "normal":
-            tooltip.textContent = "Answer 20 questions to score points. The more you answer, the higher your score. There is no time limit, but you can only answer each question once.";
+            tooltip.textContent = "Answer questions to score points. The more you answer, the higher your score. There is no time limit until the end of the first half, but you can only answer each question once.";
             break;
         case "master":
             tooltip.textContent = "Answer questions with a slowly shrinking time limit. Getting a question wrong will not allow you to progress. Can you be the Grand Master?";
@@ -42,11 +42,19 @@ document.querySelector("#mode").addEventListener("change", (event) => {
             tooltip.textContent = "Extremely difficult questions with inhumane time limits. Only the most skilled can hope to be close to beating this mode. Not for the faint of heart.";
             break;
         case "easy":
-            tooltip.textContent = "A mode for beginners. Answer 10 easy questions as fast as you can! Perfect for those new to the game.";
+            tooltip.textContent = "A mode for beginners. Answer 30 easy questions as fast as you can! Perfect for those new to the game.";
             break;
         default:
             tooltip.textContent = "";
     }
+}
+
+// Initialize tooltip on page load
+updateTooltip(selectedMode);
+
+document.querySelector("#mode").addEventListener("change", (event) => {
+    selectedMode = event.target.value;
+    updateTooltip(selectedMode);
 });
 
 document.querySelector(".play").addEventListener("click", () => {

@@ -111,6 +111,7 @@
             <div id="score"></div>
             <div id="timeelapsed"></div>
         </div>
+        <div id="gradeDisplay" style="text-align: center; font-size: xx-large; color: #00ff00; margin-top: 10px;"></div>
         <div class="timerifinvalid"></div>
         <div class="evalscreen" style="display:none"></div>
         <div id="notification" class="notification hide"></div>
@@ -214,7 +215,7 @@
             for (let i = 0; i < numRequests; i++) {
                 // Add delay between API calls to prevent rate limiting (except before first request)
                 if (i > 0) {
-                    await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+                    await new Promise(resolve => setTimeout(resolve, 5000)); // 4 second delay
                 }
                 
                 const amount = i === numRequests - 1 
@@ -261,7 +262,7 @@
     }
     let currQuestion = 0;
     let score = 0;
-    let elapsedQuestions = 0;
+    let elapsedQuestions = 0; // Track number of questions answered
     let totalGradePoints = 0; // Track accumulated grade points
     let questionStartTime = null; // Track when each question starts (for time bonus calculation)
     let timeToAnswer = null; // Track time allocated for current question
@@ -1065,7 +1066,8 @@
             const seconds = Math.floor((elapsedTime / 1000) % 60);
             quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
             timeDisplay.innerHTML = `${quizMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${miliseconds.toString().padStart(2, '0')}`;
-            if ((quizMinutes >= 3 && currQuestion >= 50) || (quizMinutes >= 5 && currQuestion >= 100) || (quizMinutes >= 6 && currQuestion >= 130)) {
+            updateGradeDisplay(); // Update grade display in real-time
+            if ((quizMinutes >= 3 && currQuestion === 50) || (quizMinutes >= 5 && currQuestion === 100) || (quizMinutes >= 6 && currQuestion === 130)) {
                 alert("Excellent! ...but let's go better next time"); // TGM3 torikan line (scaled for 200 questions)
                 evalScreen();
             }
@@ -1084,11 +1086,42 @@
         timeDisplay.style.textAlign = "center";
     }
 
+    // Calculate real-time grade based on current progress
+    function calculateRealTimeGrade() {
+        if (!allQuestions || allQuestions.length === 0) {
+            return "";
+        }
+        
+        let evalPercent = (score / allQuestions.length) * 200;
+        
+        if (quizMinutes >= 15) {
+            return "Invalid";
+        } 
+        else if (evalPercent == 200 && quizMinutes < 5) {
+            return "Grand Master - Infinity";
+        }
+        else if (allQuestions.length > 0) {
+            let ngrade = Math.floor(evalPercent / 10);
+            return ngrade > 0 ? "S" + ngrade : "";
+        } else {
+            return "";
+        }
+    }
+    
+    function updateGradeDisplay() {
+        const gradeDisplay = document.getElementById("gradeDisplay");
+        if (gradeDisplay) {
+            const grade = calculateRealTimeGrade();
+            gradeDisplay.innerHTML = grade ? `Grade: ${grade}` : "";
+        }
+    }
+    
     function loadScore() {
         const totalScore = document.getElementById("score");
         totalScore.innerHTML = `${score}`;
         totalScore.style.fontSize = "xx-large";
         totalScore.style.color = "pink";
+        updateGradeDisplay();
     }
     function evalScreen() {
         // Stop BGM when quiz ends
@@ -1106,10 +1139,19 @@
         document.getElementById("score").remove();
         const evalDiv = document.querySelector(".evalscreen");
         
-        // Check if player completed hell mode (all questions answered correctly, not abandoned)
-        // When evalScreen is called from nextQuestion, currQuestion is at the last question index
-        // We've completed if we answered all questions correctly (score equals total questions)
-        const isCompleted = !quizAbandoned && currQuestion >= allQuestions.length - 1 && score === allQuestions.length && quizMinutes < 15;
+        // Check if player completed hell mode (all 200 questions answered, not abandoned)
+        // We've completed if we answered all 200 questions correctly
+        const isCompleted = !quizAbandoned && elapsedQuestions === 200 && score === 200 && quizMinutes < 15;
+        
+        // Play completion sound only if quiz was not abandoned AND all questions were completed
+        if (!quizAbandoned && isCompleted) {
+            let completeSound = new Audio("bgm/complete.wav");
+            completeSound.play().catch(err => console.log("Complete sound play failed:", err));
+        }
+        
+        // Play credits BGM (always play, even if abandoned)
+        let creditsBGM = new Audio("bgm/credits.mp3");
+        creditsBGM.play().catch(err => console.log("Credits BGM play failed:", err));
         
         // Clear all timers
         clearInterval(timer);
@@ -1168,39 +1210,39 @@
                 })();
             }
             
-            // Credits screen
+            // Credits screen (responsive for mobile devices)
             evalDiv.innerHTML = `
-                <div style="color: #00ff00; font-family: 'Share Tech Mono', 'Courier New', Courier, monospace; background: #000000; padding: 40px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                    <h1 style="font-size: 3em; margin-bottom: 30px; text-align: center;">CREDITS</h1>
-                    <div style="font-size: 1.5em; line-height: 2; text-align: center; max-width: 800px;">
-                        <p style="margin: 20px 0;">Congratulations on completing HELL MODE</p>
-                        <p style="margin: 20px 0;">You have proven yourself worthy</p>
+                <div style="color: #00ff00; font-family: 'Share Tech Mono', 'Courier New', Courier, monospace; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
+                    <h1 style="font-size: clamp(1.5em, 5vw, 3em); margin-bottom: 20px; text-align: center; word-wrap: break-word;">CREDITS</h1>
+                    <div style="font-size: clamp(0.9em, 2.5vw, 1.5em); line-height: 1.8; text-align: center; max-width: 90%; width: 100%; box-sizing: border-box;">
+                        <p style="margin: 15px 0;">Congratulations on completing HELL MODE</p>
+                        <p style="margin: 15px 0;">You have proven yourself worthy</p>
                         <br>
                         <br>
-                        <p style="margin: 20px 0;">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+                        <p style="margin: 15px 0; font-size: clamp(0.7em, 2vw, 1em); word-break: break-all;">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
                         <br>
-                        <p style="margin: 20px 0;">DEVELOPED BY</p>
-                        <p style="margin: 20px 0;">Neneko</p>
+                        <p style="margin: 15px 0;">DEVELOPED BY</p>
+                        <p style="margin: 15px 0;">Neneko</p>
                         <br>
-                        <p style="margin: 20px 0;">SPECIAL THANKS</p>
-                        <p style="margin: 20px 0;">To all the players who dared to enter HELL (how many again?)</p>
+                        <p style="margin: 15px 0;">SPECIAL THANKS</p>
+                        <p style="margin: 15px 0;">To all the players who dared to enter HELL (how many again?)</p>
                         <br>
-                        <p style="margin: 20px 0;">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
+                        <p style="margin: 15px 0; font-size: clamp(0.7em, 2vw, 1em); word-break: break-all;">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
                         <br>
 
                     </div>
                 </div>
             `;
             
-            // After 10 seconds, show grade screen
+            // After 10 seconds, show grade screen (responsive for mobile devices)
             setTimeout(() => {
                 evalDiv.innerHTML = `
-                    <div style="color: #00ff00; font-family: 'Share Tech Mono', 'Courier New', Courier, monospace; background: #000000; padding: 40px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center;">
-                        <h1 style="font-size: 4em; margin-bottom: 50px; text-align: center;">YOU ARE</h1>
-                        <div style="font-size: 6em; margin: 50px 0; text-align: center; font-weight: bold;">
+                    <div style="color: #00ff00; font-family: 'Share Tech Mono', 'Courier New', Courier, monospace; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
+                        <h1 style="font-size: clamp(2em, 6vw, 4em); margin-bottom: 30px; text-align: center; word-wrap: break-word;">YOU ARE</h1>
+                        <div style="font-size: clamp(3em, 10vw, 6em); margin: 30px 0; text-align: center; font-weight: bold; word-wrap: break-word;">
                             ${grade || "N/A"}
                         </div>
-                        <p style="margin: 20px 0; font-size: 0.9em;">Thank you for playing.</p>
+                        <p style="margin: 20px 0; font-size: clamp(0.8em, 2vw, 0.9em);">Thank you for playing.</p>
                     </div>
                 `;
                 
@@ -1368,6 +1410,8 @@
             // Compare both decoded and original values to handle encoding differences
             if (decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer) {
                 score++;
+                elapsedQuestions++; // Track that we've answered a question
+                loadScore(); // Update score and grade display
                 // Clear the question timer before moving to next question
                 if (window.answerTimerId) {
                     clearInterval(window.answerTimerId);
