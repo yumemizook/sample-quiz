@@ -61,6 +61,7 @@
         </div>
         <div class="timerifinvalid"></div>
         <div class="evalscreen" style="display:none"></div>
+        <div id="notification" class="notification hide"></div>
     </div>
     <script type="module" src="./IR.js"></script>
     <script type="module" src="./firebase.js"></script>
@@ -99,6 +100,17 @@
 
     ques.innerHTML = `<h5>Please Wait!! Loading Questions...</h5>`;
     document.querySelector('#btn').style.display = "none";
+    
+    // Handle give up button
+    const giveUpBtn = document.querySelector("[giveup]");
+    if (giveUpBtn) {
+        giveUpBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (confirm("Are you sure you want to give up? Your current progress will be saved.")) {
+                evalScreen();
+            }
+        });
+    }
 
     async function startQuiz() {
         await fetchQuestions();
@@ -120,8 +132,9 @@
     function loadQues() {
         const opt = document.getElementById("opt");
         let currentQuestion = Questions[currQuestion].question;
-        // Decode HTML entities in the question string
+        // Decode HTML entities in the question and answers
         function decodeHTMLEntities(text) {
+            if (!text) return "";
             const txt = document.createElement('textarea');
             txt.innerHTML = text;
             return txt.value;
@@ -135,17 +148,23 @@
         const options = [correctAnswer, ...incorrectAnswers];
         options.sort(() => Math.random() - 0.5);
         options.forEach((option) => {
+            const decodedOption = decodeHTMLEntities(option);
             const choicesdiv = document.createElement("div");
             const choice = document.createElement("input");
             const choiceLabel = document.createElement("label");
             choice.type = "radio";
             choice.name = "answer";
-            choice.value = option;
-            choiceLabel.textContent = option;
+            choice.value = decodedOption;
+            choiceLabel.textContent = decodedOption;
             choicesdiv.appendChild(choice);
             choicesdiv.appendChild(choiceLabel);
             opt.appendChild(choicesdiv);
             document.querySelector('#btn').style.display = "block";
+            
+            // Make the div clickable to select the option
+            choicesdiv.addEventListener("click", () => {
+                choice.checked = true;
+            });
         });
 
         let answerTimerId; // Store interval ID for answer timer
@@ -155,7 +174,8 @@
         }
         const timerDiv = document.querySelector(".timerifinvalid");
         if (quizMinutes >= 15) {
-            timeToAnswer = 1; // Set a short time for invalidated runs
+            // Add 1s countdown timer for each question when stopwatch hits 15 minutes (hell mode)
+            timeToAnswer = 1; // 1 second for hell mode
             window.answerTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
                     timeToAnswer -= 0.01;
@@ -394,8 +414,13 @@
         } else {
             grade = "";
         }
+        // Clear all timers
+        clearInterval(timer);
+        if (window.answerTimerId) {
+            clearInterval(window.answerTimerId);
+        }
+        
         const timeElapsedDiv = document.getElementById("timeelapsed");
-        clearInterval(timer); // Clear the timer interval
         const timerDiv = document.querySelector(".timerifinvalid");
         timerDiv.style.display = "none";
 
@@ -427,30 +452,44 @@
             };
         }
         if (submitBtn) {
+            let isSubmitting = false;
             submitBtn.addEventListener("click", async () => {
+                if (isSubmitting || submitBtn.disabled) return;
+                
+                if (!user) return;
+                
+                // Prevent invalid scores from being submitted
+                if (quizMinutes >= 15) {
+                    alert("Invalid run! Scores cannot be submitted for runs that took 15 minutes or longer.");
+                    return;
+                }
+                
+                isSubmitting = true;
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Submitting...";
+                
+                try {
+                    // Use Firebase v9+ modular SDK
+                    const db = getDatabase();
 
-                if (user) {
-                    try {
-                        // Use Firebase v9+ modular SDK
-                        const db = getDatabase();
-
-                        await push(ref(db, 'scoresfinal'), {
-                            name: user.displayName || user.email,
-                            score: score,
-                            grade: grade,
-                            time: document.getElementById("timeelapsed").textContent,
-                            date: new Date().toLocaleString()
-                        });
-                        alert("Score submitted successfully!");
-                        submitBtn.textContent = "Score submitted!";
-                        submitBtn.disabled = true; // Disable the button after submission
-                        submitBtn.style.backgroundColor = "cyan";
-                        submitBtn.style.color = "white";
-                        submitBtn.style.cursor = "not-allowed";
-                    } catch (error) {
-                        console.error("Error submitting score:", error);
-                        alert("Failed to submit score. Please try again.");
-                    }
+                    await push(ref(db, 'scoresfinal'), {
+                        name: user.displayName || user.email,
+                        score: score,
+                        grade: grade,
+                        time: document.getElementById("timeelapsed").textContent,
+                        date: new Date().toLocaleString()
+                    });
+                    alert("Score submitted successfully!");
+                    submitBtn.textContent = "Score submitted!";
+                    submitBtn.style.backgroundColor = "cyan";
+                    submitBtn.style.color = "white";
+                    submitBtn.style.cursor = "not-allowed";
+                } catch (error) {
+                    console.error("Error submitting score:", error);
+                    alert("Failed to submit score. Please try again.");
+                    submitBtn.disabled = false;
+                    isSubmitting = false;
+                    submitBtn.textContent = "Submit your suffe- I mean score";
                 }
             });
         }
@@ -466,19 +505,37 @@
         }
     }
 
+    function showNotification(message, isSuccess = false) {
+        const notification = document.getElementById("notification");
+        notification.textContent = message;
+        notification.classList.remove("hide", "success");
+        if (isSuccess) {
+            notification.classList.add("success");
+        }
+        setTimeout(() => {
+            notification.classList.add("hide");
+        }, 3000);
+    }
+
     function checkAns() {
         const selectedAns = document.querySelector('input[name="answer"]:checked');
         if (selectedAns) {
             const answerValue = selectedAns.value;
             if (answerValue === Questions[currQuestion].correct_answer) {
                 score++;
+                // Clear the question timer before moving to next question
+                if (window.answerTimerId) {
+                    clearInterval(window.answerTimerId);
+                }
+                showNotification("Correct!", true);
                 nextQuestion();
             } else {
-                alert(`Wrong!`);
+                // Don't expose the correct answer
+                showNotification("Wrong! You cannot progress with an incorrect answer.");
                 return;
             }
         } else if (Questions.length > 0) {
-            alert("Please select an answer.");
+            showNotification("Please select an answer.");
         }
     }
 

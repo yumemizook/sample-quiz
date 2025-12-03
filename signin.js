@@ -27,8 +27,10 @@ await signInWithEmailAndPassword(auth, email, password)
         case "auth/invalid-email":
         case "auth/invalid-login-credentials":
             alert("Invalid email or password. Please double check and try again.");
+            break;
         case "auth/user-not-found":
             alert("No account found with this email. Check for typos or create a new account.");
+            break;
         case "auth/too-many-requests":
             alert("Too many failed attempts. You have been rate limited. Please try again later.");
             break;

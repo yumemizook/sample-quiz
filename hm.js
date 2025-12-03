@@ -4,12 +4,12 @@ const auth = getAuth();
 const displayNameContainer = document.querySelector(".name");
 document.addEventListener("DOMContentLoaded", () => {
     onAuthStateChanged(auth, (user) => {
-        if (user) {
+        if (user && displayNameContainer) {
             displayNameContainer.textContent = user.displayName || user.email || "-no credentials-disabled account-";
             displayNameContainer.classList.remove("hide");
-            document.querySelector("[login]").classList.add("hide");
-            document.querySelector("[signup]").classList.add("hide");
-            document.querySelector("[logout]").classList.remove("hide");
+            document.querySelector("[login]")?.classList.add("hide");
+            document.querySelector("[signup]")?.classList.add("hide");
+            document.querySelector("[logout]")?.classList.remove("hide");
         }
     });
 });
@@ -61,7 +61,13 @@ document.querySelector(".play").addEventListener("click", () => {
     }
 });
 
+document.querySelector(".hiscore").addEventListener("click", () => {
+    window.location.href = "IR.html";
+});
 
-    document.querySelector(".hiscore").addEventListener("click", () => {
-        window.location.href = "IR.html";
+const statsBtn = document.querySelector(".stats");
+if (statsBtn) {
+    statsBtn.addEventListener("click", () => {
+        window.location.href = "stats.html";
     });
+}

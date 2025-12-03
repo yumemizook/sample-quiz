@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Statistics</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="status">
+        <span class="name hide"></span>
+        <a login href="signin.html">Login</a>
+        <a signup href="signup.html">Signup</a>
+        <a logout class="hide" href="index.html">Log out</a>
+        <a href="index.html">Home</a>
+    </div>
+    <div class="container2">
+        <div class="normal">
+            <h1>Your Easy mode stats</h1>
+            <div class="scores">
+                <table id="easyStats">
+                    <thead>
+                        <tr>
+                            <th>Games played</th>
+                            <th>Best score</th>
+                            <th>Average score</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="hell">
+            <h1>Your Normal mode stats</h1>
+            <div class="scores">
+                <table id="normalStats">
+                    <thead>
+                        <tr>
+                            <th>Games played</th>
+                            <th>Best score</th>
+                            <th>Average score</th>
+                            <th>Best grade</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="normal">
+            <h1>Your Master mode stats</h1>
+            <div class="scores">
+                <table id="masterStats">
+                    <thead>
+                        <tr>
+                            <th>Games played</th>
+                            <th>Best score</th>
+                            <th>Average score</th>
+                            <th>Best grade</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+        <div class="hell">
+            <h1>Your Hell mode stats</h1>
+            <div class="scores">
+                <table id="hellStats">
+                    <thead>
+                        <tr>
+                            <th>Games played</th>
+                            <th>Best score</th>
+                            <th>Average score</th>
+                            <th>Best grade</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</body>
+<script type="module" src="firebase.js"></script>
+<script type="module" src="stats.js"></script>
+<script type="module" src="hm.js"></script>
+
+</html>
+
+

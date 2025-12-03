@@ -43,6 +43,7 @@ signupForm.addEventListener("submit", async (e) => {
             alert(
               "This email is already in use. If you are the owner of this email, try resetting your password."
             );
+            break;
           case "auth/invalid-email":
             alert(
               "The email address is not valid. Please enter a valid email address."

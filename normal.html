@@ -27,6 +27,7 @@
         </div>
         <div class="timerifinvalid"></div>
         <div class="evalscreen" style="display:none"></div>
+        <div id="notification" class="notification hide"></div>
     </div>
     <script type="module" src="./IR.js"></script>
     <script type="module" src="./firebase.js"></script>
@@ -65,6 +66,24 @@
 
     ques.innerHTML = `<h5>Please Wait!! Loading Questions...</h5>`;
     document.querySelector('#btn').style.display = "none";
+    
+    // Handle give up button
+    const giveUpBtn = document.querySelector("[giveup]");
+    if (giveUpBtn) {
+        giveUpBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (confirm("Are you sure you want to give up? Your current progress will be saved.")) {
+                // Hide the question when giving up
+                const ques = document.getElementById("ques");
+                const opt = document.getElementById("opt");
+                const btn = document.getElementById("btn");
+                if (ques) ques.style.display = "none";
+                if (opt) opt.style.display = "none";
+                if (btn) btn.style.display = "none";
+                evalScreen(true); // Pass true to indicate player gave up
+            }
+        });
+    }
 
     async function startQuiz() {
         await fetchQuestions();
@@ -85,8 +104,9 @@
     function loadQues() {
         const opt = document.getElementById("opt");
         let currentQuestion = Questions[currQuestion].question;
-        // Decode HTML entities in the question string
+        // Decode HTML entities in the question and answers
         function decodeHTMLEntities(text) {
+            if (!text) return "";
             const txt = document.createElement('textarea');
             txt.innerHTML = text;
             return txt.value;
@@ -100,34 +120,50 @@
         const options = [correctAnswer, ...incorrectAnswers];
         options.sort(() => Math.random() - 0.5);
         options.forEach((option) => {
+            const decodedOption = decodeHTMLEntities(option);
             const choicesdiv = document.createElement("div");
             const choice = document.createElement("input");
             const choiceLabel = document.createElement("label");
             choice.type = "radio";
             choice.name = "answer";
-            choice.value = option;
-            choiceLabel.textContent = option;
+            choice.value = decodedOption;
+            choiceLabel.textContent = decodedOption;
             choicesdiv.appendChild(choice);
             choicesdiv.appendChild(choiceLabel);
             opt.appendChild(choicesdiv);
             document.querySelector('#btn').style.display = "block";
+            
+            // Make the div clickable to select the option
+            choicesdiv.addEventListener("click", () => {
+                choice.checked = true;
+            });
         });
+        // Clear any existing question timer
+        if (window.questionTimerId) {
+            clearInterval(window.questionTimerId);
+        }
+        
+        // Add countdown timer for each question when stopwatch hits 15 minutes
         if (quizMinutes >= 15) {
-            let timeToAnswer = 2;
+            let timeToAnswer = 2; // 2 seconds for normal mode
             const timerDiv = document.querySelector(".timerifinvalid");
-            setInterval(() => {
-                if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    nextQuestion();
-                    timeToAnswer = 2;
-                }
-            }, 10);
             timerDiv.style.display = "block";
             timerDiv.style.textAlign = "center";
             timerDiv.style.fontSize = "xx-large";
             timerDiv.style.color = "red";
+            
+            window.questionTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+                    timeToAnswer -= 0.01;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.questionTimerId);
+                    nextQuestion();
+                }
+            }, 10);
+        } else {
+            const timerDiv = document.querySelector(".timerifinvalid");
+            timerDiv.style.display = "none";
         }
         document.querySelector(".correctanswer").innerHTML = "";
     }
@@ -164,7 +200,7 @@
         totalScore.style.fontSize = "xx-large";
         totalScore.style.color = "pink";
     }
-    function evalScreen() {
+    function evalScreen(gaveUp = false) {
         const evalDiv = document.querySelector(".evalscreen");
         let grade = "";
         let evalPercent = (score / Questions.length) * 100;
@@ -187,13 +223,20 @@
         } else {
             grade = "F";
         }
+        // Clear all timers
+        clearInterval(timer);
+        if (window.questionTimerId) {
+            clearInterval(window.questionTimerId);
+        }
+        
         const timeElapsedDiv = document.getElementById("timeelapsed");
-        clearInterval(timer); // Clear the timer interval
         const timerDiv = document.querySelector(".timerifinvalid");
         timerDiv.style.display = "none";
 
+        // Change title based on whether player gave up
+        const title = gaveUp ? "Quiz Abandoned" : "Quiz Completed!";
 
-        evalDiv.innerHTML = `<h3>Quiz Completed!</h3>
+        evalDiv.innerHTML = `<h3>${title}</h3>
                     <p style="font-size:larger">Your score is:</p>
                     <div class="eval" style="display:flex; justify-content:space-between;">
                     <div id="score" >
@@ -220,30 +263,44 @@
             };
         }
         if (submitBtn) {
+            let isSubmitting = false;
             submitBtn.addEventListener("click", async () => {
+                if (isSubmitting || submitBtn.disabled) return;
+                
+                if (!user) return;
+                
+                // Prevent invalid scores from being submitted
+                if (quizMinutes >= 15) {
+                    alert("Invalid run! Scores cannot be submitted for runs that took 15 minutes or longer.");
+                    return;
+                }
+                
+                isSubmitting = true;
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Submitting...";
+                
+                try {
+                    // Use Firebase v9+ modular SDK
+                    const db = getDatabase();
 
-                if (user) {
-                    try {
-                        // Use Firebase v9+ modular SDK
-                        const db = getDatabase();
-
-                        await push(ref(db, 'scores'), {
-                            name: user.displayName || user.email,
-                            score: score,
-                            grade: grade,
-                            time: document.getElementById("timeelapsed").textContent,
-                            date: new Date().toLocaleString()
-                        });
-                        alert("Score submitted successfully!");
-                        submitBtn.textContent = "Score submitted!";
-                        submitBtn.disabled = true; // Disable the button after submission
-                        submitBtn.style.backgroundColor = "cyan";
-                        submitBtn.style.color = "white";
-                        submitBtn.style.cursor = "not-allowed";
-                    } catch (error) {
-                        console.error("Error submitting score:", error);
-                        alert("Failed to submit score. Please try again.");
-                    }
+                    await push(ref(db, 'scores'), {
+                        name: user.displayName || user.email,
+                        score: score,
+                        grade: grade,
+                        time: document.getElementById("timeelapsed").textContent,
+                        date: new Date().toLocaleString()
+                    });
+                    alert("Score submitted successfully!");
+                    submitBtn.textContent = "Score submitted!";
+                    submitBtn.style.backgroundColor = "cyan";
+                    submitBtn.style.color = "white";
+                    submitBtn.style.cursor = "not-allowed";
+                } catch (error) {
+                    console.error("Error submitting score:", error);
+                    alert("Failed to submit score. Please try again.");
+                    submitBtn.disabled = false;
+                    isSubmitting = false;
+                    submitBtn.textContent = "Submit your suffe- I mean score";
                 }
             });
         }
@@ -263,6 +320,18 @@
         }
     }
 
+    function showNotification(message, isSuccess = false) {
+        const notification = document.getElementById("notification");
+        notification.textContent = message;
+        notification.classList.remove("hide", "success");
+        if (isSuccess) {
+            notification.classList.add("success");
+        }
+        setTimeout(() => {
+            notification.classList.add("hide");
+        }, 3000);
+    }
+
     function checkAns() {
         const selectedAns = document.querySelector('input[name="answer"]:checked');
         if (!selectedAns && quizMinutes >= 15) {
@@ -274,13 +343,15 @@
             const answerValue = selectedAns.value;
             if (answerValue === Questions[currQuestion].correct_answer) {
                 score++;
+                showNotification("Correct!", true);
             }
             else {
-                alert(`Wrong! The correct answer is: ${Questions[currQuestion].correct_answer}`);
+                // Don't expose the correct answer to prevent cheating
+                showNotification("Wrong! Try again next time.");
             }
             nextQuestion();
         } else if (!selectedAns && Questions.length > 0) {
-            alert("Please select an answer.");
+            showNotification("Please select an answer.");
         }
     }
 
