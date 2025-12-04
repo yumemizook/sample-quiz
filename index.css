@@ -78,6 +78,102 @@ body::before {
     backdrop-filter: blur(10px);
 }
 
+/* Override container positioning when inside flex wrapper (master/hell modes) */
+.absolutecontainer,
+body > div[style*="display: flex"][style*="align-items: flex-start"] {
+    position: relative;
+    min-height: 100vh;
+}
+
+.absolutecontainer > .container,
+body > div[style*="display: flex"][style*="align-items: flex-start"] > .container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    max-width: 800px;
+}
+
+/* Position grade display to the left of container, aligned with container's top */
+.absolutecontainer > #gradeDisplayLeft,
+body > div[style*="display: flex"][style*="align-items: flex-start"] > #gradeDisplayLeft {
+    position: absolute;
+    left: calc(50% - 560px); /* Center - half container width - larger gap */
+    /* Top position will be set by JavaScript to align with container top */
+}
+
+div[style*="display: flex"] > .container {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    max-width: 800px;
+}
+
+/* Grade display on left side for master and hell modes */
+#gradeDisplayLeft {
+    transition: opacity 0.3s ease;
+}
+
+/* Grade text border styling */
+#gradeText {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Next grade threshold display */
+#nextGradeThreshold {
+    max-width: 60px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    text-align: center;
+}
+
+@media (max-width: 1024px) {
+    /* Stack grade display above container on smaller screens */
+    .absolutecontainer > #gradeDisplayLeft {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        margin-bottom: 15px;
+    }
+    
+    body > div[style*="display: flex"][style*="align-items: flex-start"] {
+        flex-direction: column !important;
+        align-items: center !important;
+        gap: 15px !important;
+        padding: 0 10px !important;
+        box-sizing: border-box !important;
+    }
+    
+    /* Make container responsive on smaller screens with reduced margins */
+    .absolutecontainer > .container,
+    div[style*="display: flex"] > .container {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        width: 98% !important;
+        max-width: 98% !important;
+        margin: 0 auto !important;
+    }
+}
+
+@media (max-width: 768px) {
+    #gradeDisplayLeft {
+        font-size: 2.5em !important;
+    }
+    
+    #gradeText {
+        padding: 8px !important;
+    }
+}
+
 /* Menu Screen Styles */
 .menu-container {
     max-width: 1000px;
@@ -217,6 +313,24 @@ body.mode-hell .mode-selection-title {
 
 .mode-card.active::before {
     transform: scaleX(1);
+}
+
+/* Keyboard/Controller focus styling */
+.mode-card.keyboard-focus {
+    outline: 3px solid #ffff00;
+    outline-offset: 3px;
+    transform: translateY(-5px);
+    border-color: rgba(255, 255, 0, 0.8);
+    box-shadow: 0 8px 20px rgba(255, 255, 0, 0.4);
+    z-index: 10;
+}
+
+.menu-btn.keyboard-focus {
+    outline: 3px solid #ffff00;
+    outline-offset: 3px;
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 255, 0, 0.4);
+    z-index: 10;
 }
 
 /* Mode-specific active card styling */
@@ -415,7 +529,7 @@ body.mode-hell .play-btn:hover {
 
 .secondary-actions {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(3, 1fr);
     gap: 15px;
 }
 
@@ -1046,6 +1160,29 @@ td:first-child {
     border-color: rgba(255, 255, 255, 0.6);
     border-bottom: 2px solid transparent;
     margin-bottom: -2px;
+}
+
+/* Input filter buttons */
+.input-filter-btn {
+    padding: 8px 16px;
+    background-color: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.input-filter-btn:hover {
+    background-color: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.input-filter-btn.active {
+    background-color: rgba(255, 255, 255, 0.3);
+    border-color: rgba(255, 255, 255, 0.6);
+    font-weight: bold;
 }
 
 .tab-content {

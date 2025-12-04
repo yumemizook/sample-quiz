@@ -62,6 +62,19 @@ document.addEventListener("DOMContentLoaded", () => {
             selectedMode = card.dataset.mode;
             // Update background and styling
             updateModeStyling(selectedMode);
+            
+            // Sync navigation focus with clicked card
+            const cardIndex = Array.from(modeCards).indexOf(card);
+            if (cardIndex !== -1) {
+                // Sync navigation focus (menuNavigation.js should be loaded)
+                import("./menuNavigation.js").then(module => {
+                    if (module.syncModeSelection) {
+                        module.syncModeSelection(cardIndex);
+                    }
+                }).catch(() => {
+                    // Navigation module not loaded yet, ignore
+                });
+            }
         });
     });
 
@@ -94,6 +107,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (statsBtn) {
         statsBtn.addEventListener("click", () => {
             window.location.href = "stats.html";
+        });
+    }
+
+    // Handle wiki button
+    const wikiBtn = document.querySelector(".wiki");
+    if (wikiBtn) {
+        wikiBtn.addEventListener("click", () => {
+            window.location.href = "wiki.html"; // Change this URL to your wiki page
         });
     }
 });

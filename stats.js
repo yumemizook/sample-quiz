@@ -145,6 +145,20 @@ function summarizeScores(list, hasGrade = false, isHellMode = false, isMasterMod
     return { games, bestScore, avgScore, bestGrade };
 }
 
+// Store raw data lists for filtering
+let allEasyList = [];
+let allNormalList = [];
+let allMasterList = [];
+let allHellList = [];
+
+// Current filter state
+const currentFilter = {
+    easy: 'all',
+    normal: 'all',
+    master: 'all',
+    hell: 'all'
+};
+
 // Tab switching functionality
 function initTabs() {
     const tabButtons = document.querySelectorAll('.tab-button');
@@ -168,9 +182,361 @@ function initTabs() {
     });
 }
 
+// Initialize input filter buttons
+function initInputFilters() {
+    const filterButtons = document.querySelectorAll('.input-filter-btn');
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            const inputType = button.getAttribute('data-input');
+            const mode = button.getAttribute('data-mode');
+            
+            // Update active state
+            document.querySelectorAll(`.input-filter-btn[data-mode="${mode}"]`).forEach(btn => {
+                btn.classList.remove('active');
+            });
+            button.classList.add('active');
+            
+            // Update filter state
+            currentFilter[mode] = inputType;
+            
+            // Re-render the stats for this mode
+            renderModeStats(mode);
+        });
+    });
+}
+
+// Filter scores by input type
+function filterScores(scores, inputType) {
+    if (inputType === 'all') {
+        return scores;
+    }
+    return scores.filter(score => score.inputType === inputType);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize tabs
     initTabs();
+    
+    const nameSpan = document.querySelector(".name");
+    const statsContainer = document.querySelector(".container2");
+
+    onAuthStateChanged(auth, async (user) => {
+    if (!user) {
+        if (nameSpan) {
+            nameSpan.textContent = "Log in to see your stats";
+            nameSpan.classList.remove("hide");
+        }
+            // Hide the stats container when logged out
+            if (statsContainer) {
+                statsContainer.style.display = "none";
+            }
+            // Show login/signup links, hide logout
+            document.querySelector("[login]")?.classList.remove("hide");
+            document.querySelector("[signup]")?.classList.remove("hide");
+            document.querySelector("[logout]")?.classList.add("hide");
+        return;
+    }
+
+    const displayName = user.displayName || user.email;
+    if (nameSpan) {
+        nameSpan.textContent = displayName;
+        nameSpan.classList.remove("hide");
+        document.querySelector("[login]")?.classList.add("hide");
+        document.querySelector("[signup]")?.classList.add("hide");
+        document.querySelector("[logout]")?.classList.remove("hide");
+    }
+        // Show the stats container when logged in
+        if (statsContainer) {
+            statsContainer.style.display = "";
+        }
+
+    try {
+            // Read per‑player data from Firestore subcollections
+            const uid = user.uid;
+        const [easySnap, normalSnap, masterSnap, hellSnap] = await Promise.all([
+                getDocs(collection(db, "playerData", uid, "easy")),
+                getDocs(collection(db, "playerData", uid, "normal")),
+                getDocs(collection(db, "playerData", uid, "master")),
+                getDocs(collection(db, "playerData", uid, "hell")),
+            ]);
+
+            const listFromSnap = (snap) => {
+                if (snap.empty) return [];
+                return snap.docs.map((doc) => doc.data());
+            };
+
+            // Store raw data lists
+            allEasyList = listFromSnap(easySnap);
+            allNormalList = listFromSnap(normalSnap);
+            allMasterList = listFromSnap(masterSnap);
+            allHellList = listFromSnap(hellSnap);
+
+            // Render all modes
+            renderModeStats('easy');
+            renderModeStats('normal');
+            renderModeStats('master');
+            renderModeStats('hell');
+        } catch (error) {
+            console.error("Error loading player stats:", error);
+        }
+    });
+});
+
+// Render stats for a specific mode based on current filter
+function renderModeStats(mode) {
+    let dataList = [];
+    let hasGrade = false;
+    let isMaster = false;
+    let isHell = false;
+    
+    switch(mode) {
+        case 'easy':
+            dataList = filterScores(allEasyList, currentFilter.easy);
+            hasGrade = false;
+            isMaster = false;
+            break;
+        case 'normal':
+            dataList = filterScores(allNormalList, currentFilter.normal);
+            hasGrade = true;
+            isMaster = false;
+            break;
+        case 'master':
+            dataList = filterScores(allMasterList, currentFilter.master);
+            hasGrade = true;
+            isMaster = true;
+            break;
+        case 'hell':
+            dataList = filterScores(allHellList, currentFilter.hell);
+            hasGrade = true;
+            isHell = true;
+            break;
+    }
+    
+    // Calculate stats
+    const stats = summarizeScores(dataList, hasGrade, isHell, isMaster);
+    
+    // Get table IDs
+    const statsTableId = `${mode}Stats`;
+    const historyTableId = `${mode}History`;
+    const chartId = `${mode}Chart`;
+    
+    // Fill stats table
+    const fillRow = (tableId, stats, hasGrade = false, isMaster = false, dataList = []) => {
+        const table = document.querySelector(`#${tableId}`);
+        if (!table) return;
+        // Clear existing rows first
+        const existingRows = table.querySelectorAll("tbody tr");
+        existingRows.forEach(row => row.remove());
+        // Create tbody if it doesn't exist
+        let tbody = table.querySelector("tbody");
+        if (!tbody) {
+            tbody = document.createElement("tbody");
+            table.appendChild(tbody);
+        }
+        const row = document.createElement("tr");
+        // Format score for master mode (total grade points) with commas
+        const formatScore = (score) => {
+            if (score === "-") return "-";
+            if (isMaster && typeof score === "number") {
+                return score.toLocaleString();
+            }
+            return score;
+        };
+        // Format grade for display (convert "Grand Master - Infinity" to "GM-∞")
+        const formatGrade = (grade) => {
+            if (!grade || grade === "-") return "-";
+            if (grade === "Grand Master - Infinity") return "GM-∞";
+            return grade;
+        };
+        
+        // Get line color for grade display (from stored data or default)
+        const getLineColor = (gradeData) => {
+            if (!gradeData || !gradeData.line) return "white";
+            const lineColor = gradeData.line;
+            // Map line colors: white, orange, green
+            if (lineColor === "orange") return "#ff8800";
+            if (lineColor === "green") return "#00ff00";
+            return "#ffffff"; // white
+        };
+        
+        if (hasGrade) {
+            // Find the entry with the best grade to get its line color
+            let bestGradeEntry = null;
+            if (stats.bestGrade && stats.bestGrade !== "-" && dataList.length > 0) {
+                // Find entry with matching grade
+                bestGradeEntry = dataList.find(s => {
+                    const grade = s.grade || "";
+                    return grade === stats.bestGrade || 
+                           (stats.bestGrade === "GM-∞" && grade === "Grand Master - Infinity");
+                });
+            }
+            
+            const lineColor = bestGradeEntry ? getLineColor(bestGradeEntry) : "#ffffff";
+            const gradeDisplay = stats.bestGrade && stats.bestGrade !== "-" 
+                ? `<span class="grade-badge" style="color: ${lineColor}">${formatGrade(stats.bestGrade)}</span>` 
+                : "-";
+            row.innerHTML = `
+                <td>${stats.games}</td>
+                <td class="${stats.bestScore !== "-" ? "high-score" : ""}">${formatScore(stats.bestScore)}</td>
+                <td>${formatScore(stats.avgScore)}</td>
+                <td>${gradeDisplay}</td>
+            `;
+        } else {
+            row.innerHTML = `
+                <td>${stats.games}</td>
+                <td class="${stats.bestScore !== "-" ? "high-score" : ""}">${formatScore(stats.bestScore)}</td>
+                <td>${formatScore(stats.avgScore)}</td>
+            `;
+        }
+        tbody.appendChild(row);
+    };
+    
+    fillRow(statsTableId, stats, hasGrade, isMaster, dataList);
+    
+    // Fill history table
+    const fillHistoryTable = (tableId, dataList, hasGrade = false, isMaster = false) => {
+            const table = document.querySelector(`#${tableId}`);
+            if (!table) return;
+        
+        // Clear existing rows
+        const tbody = table.querySelector("tbody");
+        if (tbody) {
+            tbody.innerHTML = "";
+        } else {
+            const newTbody = document.createElement("tbody");
+            table.appendChild(newTbody);
+        }
+        
+        if (!dataList || dataList.length === 0) {
+            // Show "no scores" message
+            const tbody = table.querySelector("tbody");
+            if (tbody) {
+                const colspan = hasGrade ? 5 : 4;
+                tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 20px; color: rgba(255, 255, 255, 0.7);">No scores available yet</td></tr>`;
+            }
+            return;
+        }
+        
+        // Sort by date (newest first), then by grade/score if same date
+        const sortedList = [...dataList].sort((a, b) => {
+            const dateA = a.date ? new Date(a.date) : new Date(0);
+            const dateB = b.date ? new Date(b.date) : new Date(0);
+            const dateDiff = dateB - dateA; // Newest first
+            
+            if (dateDiff !== 0) return dateDiff;
+            
+            // If same date, sort by grade (best first) with line color tiebreaker
+            if (hasGrade && a.grade && b.grade) {
+                let gradeComp = 0;
+                if (isMaster) {
+                    gradeComp = compareMasterGrades(a.grade, b.grade, a.line || "white", b.line || "white");
+                } else {
+                    // For normal/hell mode, use appropriate comparison
+                    gradeComp = compareHellGrades(a.grade, b.grade, a.line || "white", b.line || "white");
+                }
+                if (gradeComp !== 0) return -gradeComp; // Reverse for descending
+            }
+            
+            // If still equal, sort by score (highest first)
+            return (b.score || 0) - (a.score || 0);
+        });
+        
+        // Format functions
+        const formatScore = (score) => {
+            if (score === undefined || score === null) return "-";
+            if (isMaster && typeof score === "number") {
+                return score.toLocaleString();
+            }
+            return score;
+        };
+        
+        const formatGrade = (grade) => {
+            if (!grade || grade === "-") return "-";
+            if (grade === "Grand Master - Infinity") return "GM-∞";
+            return grade;
+        };
+        
+        const getLineColor = (entry) => {
+            if (!entry || !entry.line) return "#ffffff";
+            const lineColor = entry.line;
+            if (lineColor === "orange") return "#ff8800";
+            if (lineColor === "green") return "#00ff00";
+            return "#ffffff"; // white
+        };
+        
+        // Format input type with icon
+        const formatInputType = (inputType) => {
+            if (!inputType || inputType === 'unknown') return "❓";
+            if (inputType === 'controller') return "🎮";
+            if (inputType === 'keyboard') return "⌨️";
+            if (inputType === 'mobile') return "📱";
+            return "❓";
+        };
+        
+        // Add rows (limit to most recent 50 entries)
+        sortedList.slice(0, 50).forEach((entry) => {
+            const row = document.createElement("tr");
+            const dateStr = entry.date ? new Date(entry.date).toLocaleDateString('en-US', { 
+                month: 'short', 
+                day: 'numeric', 
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : "Unknown";
+            const inputTypeDisplay = formatInputType(entry.inputType);
+            
+            if (hasGrade) {
+                const gradeDisplay = entry.grade 
+                    ? `<span class="grade-badge" style="color: ${getLineColor(entry)}">${formatGrade(entry.grade)}</span>` 
+                    : "-";
+                row.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td class="${entry.score ? "high-score" : ""}">${formatScore(entry.score)}</td>
+                    <td>${gradeDisplay}</td>
+                    <td>${entry.time || "-"}</td>
+                    <td>${inputTypeDisplay}</td>
+                `;
+            } else {
+                row.innerHTML = `
+                    <td>${dateStr}</td>
+                    <td class="${entry.score ? "high-score" : ""}">${formatScore(entry.score)}</td>
+                    <td>${entry.time || "-"}</td>
+                    <td>${inputTypeDisplay}</td>
+                `;
+            }
+            
+            const tbody = table.querySelector("tbody");
+            if (tbody) {
+                tbody.appendChild(row);
+            }
+        });
+    };
+    
+    fillHistoryTable(historyTableId, dataList, hasGrade, isMaster);
+    
+    // Update chart
+    const chartColors = {
+        easy: "#adffcd",
+        normal: "#dbffff",
+        master: "#dbffff",
+        hell: "#ffbaba"
+    };
+    const chartLabels = {
+        easy: "Easy Mode",
+        normal: "Normal Mode",
+        master: "Master Mode",
+        hell: "Hell Mode"
+    };
+    createChart(chartId, dataList, chartLabels[mode], chartColors[mode]);
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    // Initialize tabs
+    initTabs();
+    
+    // Initialize input filters
+    initInputFilters();
     
     const nameSpan = document.querySelector(".name");
     const statsContainer = document.querySelector(".container2");
@@ -220,213 +586,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 return snap.docs.map((doc) => doc.data());
             };
 
-            const easyList = listFromSnap(easySnap);
-            const normalList = listFromSnap(normalSnap);
-            const masterList = listFromSnap(masterSnap);
-            const hellList = listFromSnap(hellSnap);
+            // Store raw data lists
+            allEasyList = listFromSnap(easySnap);
+            allNormalList = listFromSnap(normalSnap);
+            allMasterList = listFromSnap(masterSnap);
+            allHellList = listFromSnap(hellSnap);
 
-            const easyStats = summarizeScores(easyList, false);
-            const normalStats = summarizeScores(normalList, true);
-            // For master mode, use totalGradePoints (stored as score) instead of answer count
-            const masterStats = summarizeScores(masterList, true, false, true); // Pass true for isMasterMode
-            const hellStats = summarizeScores(hellList, true, true); // Pass true for isHellMode
-
-            const fillRow = (tableId, stats, hasGrade = false, isMaster = false, dataList = []) => {
-                const table = document.querySelector(`#${tableId}`);
-                if (!table) return;
-                // Clear existing rows first
-                const existingRows = table.querySelectorAll("tbody tr");
-                existingRows.forEach(row => row.remove());
-                // Create tbody if it doesn't exist
-                let tbody = table.querySelector("tbody");
-                if (!tbody) {
-                    tbody = document.createElement("tbody");
-                    table.appendChild(tbody);
-                }
-                const row = document.createElement("tr");
-                // Format score for master mode (total grade points) with commas
-                const formatScore = (score) => {
-                    if (score === "-") return "-";
-                    if (isMaster && typeof score === "number") {
-                        return score.toLocaleString();
-                    }
-                    return score;
-                };
-                // Format grade for display (convert "Grand Master - Infinity" to "GM-∞")
-                const formatGrade = (grade) => {
-                    if (!grade || grade === "-") return "-";
-                    if (grade === "Grand Master - Infinity") return "GM-∞";
-                    return grade;
-                };
-                
-                // Get line color for grade display (from stored data or default)
-                const getLineColor = (gradeData) => {
-                    if (!gradeData || !gradeData.line) return "white";
-                    const lineColor = gradeData.line;
-                    // Map line colors: white, orange, green
-                    if (lineColor === "orange") return "#ff8800";
-                    if (lineColor === "green") return "#00ff00";
-                    return "#ffffff"; // white
-                };
-                
-                if (hasGrade) {
-                    // Find the entry with the best grade to get its line color
-                    let bestGradeEntry = null;
-                    if (stats.bestGrade && stats.bestGrade !== "-" && dataList.length > 0) {
-                        // Find entry with matching grade
-                        bestGradeEntry = dataList.find(s => {
-                            const grade = s.grade || "";
-                            return grade === stats.bestGrade || 
-                                   (stats.bestGrade === "GM-∞" && grade === "Grand Master - Infinity");
-                        });
-                    }
-                    
-                    const lineColor = bestGradeEntry ? getLineColor(bestGradeEntry) : "#ffffff";
-                    const gradeDisplay = stats.bestGrade && stats.bestGrade !== "-" 
-                        ? `<span class="grade-badge" style="color: ${lineColor}">${formatGrade(stats.bestGrade)}</span>` 
-                        : "-";
-                    row.innerHTML = `
-                        <td>${stats.games}</td>
-                        <td class="${stats.bestScore !== "-" ? "high-score" : ""}">${formatScore(stats.bestScore)}</td>
-                        <td>${formatScore(stats.avgScore)}</td>
-                        <td>${gradeDisplay}</td>
-                    `;
-                } else {
-                    row.innerHTML = `
-                        <td>${stats.games}</td>
-                        <td class="${stats.bestScore !== "-" ? "high-score" : ""}">${formatScore(stats.bestScore)}</td>
-                        <td>${formatScore(stats.avgScore)}</td>
-                    `;
-                }
-                tbody.appendChild(row);
-            };
-
-            // Function to fill history table with all player entries
-            const fillHistoryTable = (tableId, dataList, hasGrade = false, isMaster = false) => {
-                const table = document.querySelector(`#${tableId}`);
-                if (!table) return;
-                
-                // Clear existing rows
-                const tbody = table.querySelector("tbody");
-                if (tbody) {
-                    tbody.innerHTML = "";
-                } else {
-                    const newTbody = document.createElement("tbody");
-                    table.appendChild(newTbody);
-                }
-                
-                if (!dataList || dataList.length === 0) {
-                    // Show "no scores" message
-                    const tbody = table.querySelector("tbody");
-                    if (tbody) {
-                        const colspan = hasGrade ? 4 : 3;
-                        tbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 20px; color: rgba(255, 255, 255, 0.7);">No scores available yet</td></tr>`;
-                    }
-                    return;
-                }
-                
-                // Sort by date (newest first), then by grade/score if same date
-                const sortedList = [...dataList].sort((a, b) => {
-                    const dateA = a.date ? new Date(a.date) : new Date(0);
-                    const dateB = b.date ? new Date(b.date) : new Date(0);
-                    const dateDiff = dateB - dateA; // Newest first
-                    
-                    if (dateDiff !== 0) return dateDiff;
-                    
-                    // If same date, sort by grade (best first) with line color tiebreaker
-                    if (hasGrade && a.grade && b.grade) {
-                        let gradeComp = 0;
-                        if (isMaster) {
-                            gradeComp = compareMasterGrades(a.grade, b.grade, a.line || "white", b.line || "white");
-                        } else {
-                            // For normal/hell mode, use appropriate comparison
-                            gradeComp = compareHellGrades(a.grade, b.grade, a.line || "white", b.line || "white");
-                        }
-                        if (gradeComp !== 0) return -gradeComp; // Reverse for descending
-                    }
-                    
-                    // If still equal, sort by score (highest first)
-                    return (b.score || 0) - (a.score || 0);
-                });
-                
-                // Format functions
-                const formatScore = (score) => {
-                    if (score === undefined || score === null) return "-";
-                    if (isMaster && typeof score === "number") {
-                        return score.toLocaleString();
-                    }
-                    return score;
-                };
-                
-                const formatGrade = (grade) => {
-                    if (!grade || grade === "-") return "-";
-                    if (grade === "Grand Master - Infinity") return "GM-∞";
-                    return grade;
-                };
-                
-                const getLineColor = (entry) => {
-                    if (!entry || !entry.line) return "#ffffff";
-                    const lineColor = entry.line;
-                    if (lineColor === "orange") return "#ff8800";
-                    if (lineColor === "green") return "#00ff00";
-                    return "#ffffff"; // white
-                };
-                
-                // Add rows (limit to most recent 50 entries)
-                sortedList.slice(0, 50).forEach((entry) => {
-                    const row = document.createElement("tr");
-                    const dateStr = entry.date ? new Date(entry.date).toLocaleDateString('en-US', { 
-                        month: 'short', 
-                        day: 'numeric', 
-                        year: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit'
-                    }) : "Unknown";
-                    
-                    if (hasGrade) {
-                        const gradeDisplay = entry.grade 
-                            ? `<span class="grade-badge" style="color: ${getLineColor(entry)}">${formatGrade(entry.grade)}</span>` 
-                            : "-";
-                        row.innerHTML = `
-                            <td>${dateStr}</td>
-                            <td class="${entry.score ? "high-score" : ""}">${formatScore(entry.score)}</td>
-                            <td>${gradeDisplay}</td>
-                            <td>${entry.time || "-"}</td>
-                        `;
-                    } else {
-                        row.innerHTML = `
-                            <td>${dateStr}</td>
-                            <td class="${entry.score ? "high-score" : ""}">${formatScore(entry.score)}</td>
-                            <td>${entry.time || "-"}</td>
-                        `;
-                    }
-                    
-                    if (tbody) {
-                        tbody.appendChild(row);
-                    }
-                });
-            };
-
-            fillRow("easyStats", easyStats, false, false, easyList);
-            fillRow("normalStats", normalStats, true, false, normalList);
-            fillRow("masterStats", masterStats, true, true, masterList); // Master mode uses total grade points
-            fillRow("hellStats", hellStats, true, false, hellList);
-
-            // Fill player history tables
-            fillHistoryTable("easyHistory", easyList, false, false);
-            fillHistoryTable("normalHistory", normalList, true, false);
-            fillHistoryTable("masterHistory", masterList, true, true);
-            fillHistoryTable("hellHistory", hellList, true, false);
-
-            // Create charts for each mode
-            createChart("easyChart", easyList, "Easy Mode", "#adffcd");
-            createChart("normalChart", normalList, "Normal Mode", "#dbffff");
-            createChart("masterChart", masterList, "Master Mode", "#dbffff");
-            createChart("hellChart", hellList, "Hell Mode", "#ffbaba");
-        } catch (error) {
-            console.error("Error loading player stats:", error);
-        }
-    });
+            // Render all modes
+            renderModeStats('easy');
+            renderModeStats('normal');
+            renderModeStats('master');
+            renderModeStats('hell');
+    } catch (error) {
+        console.error("Error loading player stats:", error);
+    }
+});
 });
 
 // Function to create a chart showing score progression over time

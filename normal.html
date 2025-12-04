@@ -38,6 +38,21 @@
 
     import { getAuth, getFirestore, collection, addDoc } from "./firebase.js";
     const auth = getAuth();
+    
+    // Detect mobile device
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+               (window.matchMedia && window.matchMedia("(max-width: 768px)").matches);
+    }
+    
+    // Track input type used during the quiz
+    let inputType = null; // 'controller', 'keyboard', or 'mobile'
+    
+    // Detect initial input type
+    const isMobile = isMobileDevice();
+    if (isMobile) {
+        inputType = 'mobile';
+    }
 
     let Questions = [];
     document.querySelector('#btn').addEventListener('click', checkAns);
@@ -209,7 +224,7 @@
     const submitBtn = document.querySelector("#btn");
     let controllerIndicator = null;
     let keyboardSubmitIndicator = null;
-    if (submitBtn) {
+    if (submitBtn && !isMobile) {
         controllerIndicator = document.createElement("img");
         controllerIndicator.className = "controller-submit-indicator";
         controllerIndicator.src = "btns/cross.png";
@@ -253,6 +268,10 @@
             }
             if (!Questions || Questions.length === 0) {
                 return;
+            }
+            // Set input type to keyboard when keyboard is used
+            if (!isMobile) {
+                inputType = 'keyboard';
             }
             if (e.key >= "1" && e.key <= "4") {
                 const index = parseInt(e.key) - 1;
@@ -311,6 +330,19 @@
     
     // Update indicator visibility based on controller connection
     function updateIndicatorVisibility() {
+        // Hide all indicators on mobile
+        if (isMobile) {
+            const controllerIndicators = document.querySelectorAll(".controller-indicator, .controller-submit-indicator");
+            const keyboardIndicators = document.querySelectorAll(".keyboard-indicator, .keyboard-submit-indicator");
+            controllerIndicators.forEach(indicator => {
+                indicator.style.display = "none";
+            });
+            keyboardIndicators.forEach(indicator => {
+                indicator.style.display = "none";
+            });
+            return;
+        }
+        
         const controllerIndicators = document.querySelectorAll(".controller-indicator, .controller-submit-indicator");
         const keyboardIndicators = document.querySelectorAll(".keyboard-indicator, .keyboard-submit-indicator");
         
@@ -335,6 +367,7 @@
     function initGamepad() {
         window.addEventListener("gamepadconnected", (e) => {
             gamepadConnected = true;
+            inputType = 'controller';
             startGamepadPolling();
             updateIndicatorVisibility();
         });
@@ -349,6 +382,7 @@
         for (let i = 0; i < gamepads.length; i++) {
             if (gamepads[i]) {
                 gamepadConnected = true;
+                inputType = 'controller';
                 startGamepadPolling();
                 break;
             }
@@ -822,6 +856,12 @@
         // Change title based on whether player gave up
         const title = gaveUp ? "Quiz Abandoned" : "Quiz Completed!";
 
+        // Get input type icon
+        let inputTypeIcon = "❓";
+        if (inputType === 'controller') inputTypeIcon = "🎮";
+        else if (inputType === 'keyboard') inputTypeIcon = "⌨️";
+        else if (inputType === 'mobile') inputTypeIcon = "📱";
+        
         evalDiv.innerHTML = `<h3>${title}</h3>
                     <p style="font-size:larger">Your score is:</p>
                     <div class="eval" style="display:flex; justify-content:space-between;">
@@ -832,6 +872,7 @@
                     <span class="grade" style="font-size:6em">${grade}</span>
                     </div>
                     </div>
+                    <p style="font-size: 1.2em; margin-top: 10px;">Input: ${inputTypeIcon} ${inputType || 'unknown'}</p>
                     <p>Thank you for playing!</p>
                 <button onclick="location.reload()">Play Again</button>
                 <button class="submitsuffering">Submit your suffe- I mean score</button>
@@ -885,7 +926,8 @@
                     score: score,
                     grade: grade,
                     time: document.getElementById("timeelapsed").textContent,
-                    date: new Date().toLocaleString()
+                    date: new Date().toLocaleString(),
+                    inputType: inputType || 'unknown'
                 };
 
                 // Global leaderboard entry

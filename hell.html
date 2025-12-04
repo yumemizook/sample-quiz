@@ -100,23 +100,28 @@
         <a logout class="hide" href="index.html">Log out</a>
         <a giveup href="index.html">Give up</a>
     </div>
-    <div class="container">
+    <div style="display: flex; align-items: flex-start; gap: 20px;">
+      <div id="gradeDisplayLeft" style="font-size: 4em; color: white; font-weight: bold; white-space: nowrap; padding: 20px; min-width: 120px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div id="gradeText" style="line-height: 1; border: 3px solid; border-radius: 0; padding: 10px; box-sizing: border-box;"></div>
+      </div>
+      <div class="container" style="width: 800px; max-width: 800px;">
         <div class="question" id="ques"></div>
         <div class="options" id="opt"></div>
         <button onclick="checkAns()" id="btn">SUBMIT</button>
         <div class="correctanswer"></div>
         <div class="jum" style="display: flex; justify-content: space-between;">
             <div id="score"></div>
-            <div id="currentgrade" style="font-size: xx-large; color: #00ff00; font-weight: bold;"></div>
+            <div id="currentgrade" style="font-size: x-large; color: #00ff00; font-weight: bold;"></div>
             <div id="timeelapsed"></div>
         </div>
         <div class="timerifinvalid"></div>
-            <div id="thresholdScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #00ff00;">
+            <div id="thresholdScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #ffffff;">
             <h1 style="font-size: 3em; margin-bottom: 30px; text-align: center;">Excellent!</h1>
             <p style="font-size: 1.5em; text-align: center; margin: 20px 0;">...but let's go better next time</p>
         </div>
         <div class="evalscreen" style="display:none"></div>
         <div id="notification" class="notification hide"></div>
+      </div>
     </div>
     <script type="module" src="./IR.js"></script>
     <script type="module" src="./firebase.js"></script>
@@ -126,6 +131,21 @@
 
     import { getAuth, getFirestore, collection, addDoc } from "./firebase.js";
     const auth = getAuth();
+    
+    // Detect mobile device
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+               (window.matchMedia && window.matchMedia("(max-width: 768px)").matches);
+    }
+    
+    // Track input type used during the quiz
+    let inputType = null; // 'controller', 'keyboard', or 'mobile'
+    
+    // Detect initial input type
+    const isMobile = isMobileDevice();
+    if (isMobile) {
+        inputType = 'mobile';
+    }
 
     let allQuestions = [];
     
@@ -135,11 +155,11 @@
     let lastDpadState = { up: false, down: false, left: false, right: false };
     let answerOptions = []; // Store current question's answer options for controller support
     
-    // Add controller and keyboard indicators to submit button
+    // Add controller and keyboard indicators to submit button (hide on mobile)
     const submitBtn = document.querySelector("#btn");
     let controllerIndicator = null;
     let keyboardSubmitIndicator = null;
-    if (submitBtn) {
+    if (submitBtn && !isMobile) {
         controllerIndicator = document.createElement("img");
         controllerIndicator.className = "controller-submit-indicator";
         controllerIndicator.src = "btns/cross.png";
@@ -177,6 +197,11 @@
     // Keyboard support
     function initKeyboard() {
         document.addEventListener("keydown", (e) => {
+            // Track keyboard input type
+            if (!inputType || inputType === 'mobile') {
+                inputType = 'keyboard';
+            }
+            
             const evalDiv = document.querySelector(".evalscreen");
             if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
                 return;
@@ -226,12 +251,12 @@
                 
                 try {
                     const response = await fetch(`https://opentdb.com/api.php?amount=${amount}&difficulty=hard&type=multiple`);
-                    if (!response.ok) {
+            if (!response.ok) {
                         console.warn(`Request ${i + 1} failed with status ${response.status}`);
                         failedRequests++;
                         continue;
-                    }
-                    const data = await response.json();
+            }
+            const data = await response.json();
                     if (data.results && data.results.length > 0) {
                         allQuestions.push(...data.results);
                     } else {
@@ -302,8 +327,19 @@
     }
     startQuiz();
     
-    // Update indicator visibility based on controller connection
+    // Add window resize listener to realign grade display
+    let resizeTimeout;
+    window.addEventListener("resize", () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            alignGradeDisplay();
+        }, 100);
+    });
+    
+    // Update indicator visibility based on controller connection (hide on mobile)
     function updateIndicatorVisibility() {
+        if (isMobile) return; // Don't show indicators on mobile
+        
         const controllerIndicators = document.querySelectorAll(".controller-indicator, .controller-submit-indicator");
         const keyboardIndicators = document.querySelectorAll(".keyboard-indicator, .keyboard-submit-indicator");
         
@@ -328,6 +364,9 @@
     function initGamepad() {
         window.addEventListener("gamepadconnected", (e) => {
             gamepadConnected = true;
+            if (!inputType || inputType === 'keyboard') {
+                inputType = 'controller';
+            }
             startGamepadPolling();
             updateIndicatorVisibility();
         });
@@ -342,6 +381,9 @@
         for (let i = 0; i < gamepads.length; i++) {
             if (gamepads[i]) {
                 gamepadConnected = true;
+                if (!inputType || inputType === 'keyboard') {
+                    inputType = 'controller';
+                }
                 startGamepadPolling();
                 break;
             }
@@ -591,14 +633,14 @@
                 choiceLabel.style.color = "#00ff00";
             }
             
-            // Add controller button indicator
+            // Add controller button indicator (hide on mobile)
             const controllerIndicator = document.createElement("img");
             controllerIndicator.className = "controller-indicator";
             controllerIndicator.src = controllerButtonImages[index] || "";
             controllerIndicator.alt = controllerLabels[index] || "";
             controllerIndicator.title = controllerLabels[index] || "";
             controllerIndicator.style.cssText = `
-                display: inline-block;
+                display: ${isMobile ? 'none' : 'inline-block'};
                 margin-right: 8px;
                 width: 32px;
                 height: 32px;
@@ -606,13 +648,13 @@
                 object-fit: contain;
             `;
             
-            // Add keyboard indicator
+            // Add keyboard indicator (hide on mobile)
             const keyboardIndicator = document.createElement("span");
             keyboardIndicator.className = "keyboard-indicator";
             keyboardIndicator.textContent = (index + 1).toString();
             keyboardIndicator.title = `Press ${index + 1} to select this answer`;
             keyboardIndicator.style.cssText = `
-                display: inline-block;
+                display: ${isMobile ? 'none' : 'inline-block'};
                 margin-right: 8px;
                 padding: 4px 8px;
                 background-color: rgba(255, 255, 255, 0.2);
@@ -627,19 +669,22 @@
             `;
             
             choicesdiv.appendChild(choice);
-            choicesdiv.appendChild(controllerIndicator);
-            choicesdiv.appendChild(keyboardIndicator);
+            if (!isMobile) {
+                choicesdiv.appendChild(controllerIndicator);
+                choicesdiv.appendChild(keyboardIndicator);
+            }
             choicesdiv.appendChild(choiceLabel);
             opt.appendChild(choicesdiv);
-            document.querySelector('#btn').style.display = "block";
             
-            // Set initial visibility
-            if (gamepadConnected) {
-                controllerIndicator.style.display = "inline-block";
-                keyboardIndicator.style.display = "none";
-            } else {
-                controllerIndicator.style.display = "none";
-                keyboardIndicator.style.display = "inline-block";
+            // Set initial visibility (only if not mobile)
+            if (!isMobile) {
+                if (gamepadConnected) {
+                    controllerIndicator.style.display = "inline-block";
+                    keyboardIndicator.style.display = "none";
+                } else {
+                    controllerIndicator.style.display = "none";
+                    keyboardIndicator.style.display = "inline-block";
+                }
             }
             
             // Make the div clickable to select the option
@@ -650,6 +695,11 @@
             // Store reference for controller support
             answerOptions.push(choice);
         });
+        
+        document.querySelector('#btn').style.display = "block";
+        
+        // Align grade display after question loads (container content may have changed)
+        setTimeout(() => alignGradeDisplay(), 0);
 
         let answerTimerId; // Store interval ID for answer timer
         // Clear any previous interval to prevent multiple timers
@@ -1068,6 +1118,12 @@
             const seconds = Math.floor((elapsedTime / 1000) % 60);
             quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
             timeDisplay.innerHTML = `${quizMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${miliseconds.toString().padStart(2, '0')}`;
+            
+            // Apply ModernDOS font after question 100
+            if (currQuestion >= 100) {
+                timeDisplay.style.fontFamily = "'ModernDOS', 'Courier New', Courier, monospace";
+            }
+            
             updateGradeDisplay(); // Update grade display in real-time
             
             // Only check timer thresholds after specific questions have been answered
@@ -1171,8 +1227,9 @@
     let previousGrade = ""; // Track previous grade for promotion detection
     
     function updateGradeDisplay() {
-        // Update timer bar grade display
-        const currentGradeDisplay = document.getElementById("currentgrade");
+        // Update left side grade display and timer bar grade points display
+        const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+        const gradePointsDisplay = document.getElementById("currentgrade");
         
         const grade = calculateRealTimeGrade();
         
@@ -1183,7 +1240,7 @@
             const gradeNum2 = parseInt(previousGrade.replace("S", "").replace("Grand Master - Infinity", "999")) || 0;
             if (gradeNum1 > gradeNum2 || (grade.includes("Grand Master") && !previousGrade.includes("Grand Master"))) {
                 // Grade was promoted! Play sound
-                const gradeUpSound = new Audio("bgm/gradeup.wav");
+                const gradeUpSound = new Audio("bgm/sectionchange.wav");
                 gradeUpSound.play().catch(err => console.log("Grade up sound play failed:", err));
             }
         }
@@ -1193,17 +1250,91 @@
             previousGrade = grade;
         }
         
-        // Update timer bar display
-        if (currentGradeDisplay) {
-            currentGradeDisplay.innerHTML = grade || "";
+        // Get text color (white normally, gold after question 50)
+        let textColor = "#ffffff"; // White
+        if (currQuestion >= 50) {
+            textColor = "#ffd700"; // Gold after question 50
         }
+        
+        // Get background and border colors
+        const bgColor = getGradeBackgroundColorHell(grade);
+        const borderColor = getGradeBorderColorHell(grade);
+        
+        // Apply ModernDOS font to all text elements after question 100
+        const modernDosFont = "'ModernDOS', 'Courier New', Courier, monospace";
+        if (currQuestion >= 100) {
+            const scoreEl = document.getElementById("score");
+            if (scoreEl) {
+                scoreEl.style.fontFamily = modernDosFont;
+            }
+            
+            const timeElapsedEl = document.getElementById("timeelapsed");
+            if (timeElapsedEl) {
+                timeElapsedEl.style.fontFamily = modernDosFont;
+            }
+        }
+        
+        // Apply styling to grade display
+        const gradeText = document.getElementById("gradeText");
+        if (gradeText) {
+            gradeText.textContent = grade || "";
+            gradeText.style.color = textColor;
+            gradeText.style.backgroundColor = bgColor;
+            gradeText.style.borderColor = borderColor;
+            
+            // Apply ModernDOS font after question 100
+            if (currQuestion >= 100) {
+                gradeText.style.fontFamily = modernDosFont;
+            }
+            
+            // Make grade display box square (width = height)
+            // Force a reflow to get accurate height
+            void gradeText.offsetHeight;
+            const height = gradeText.offsetHeight;
+            gradeText.style.width = height + "px";
+            gradeText.style.minWidth = height + "px";
+            gradeText.style.maxWidth = height + "px";
+        }
+
+        // Display grade points in the old position (timer bar)
+        if (gradePointsDisplay) {
+            gradePointsDisplay.innerHTML = totalGradePoints.toLocaleString() || "0";
+            gradePointsDisplay.style.color = "#00ff00";
+            
+            // Apply ModernDOS font after question 100
+            if (currQuestion >= 100) {
+                gradePointsDisplay.style.fontFamily = modernDosFont;
+            }
+        }
+        
+        // Align grade display with container top after all updates
+        alignGradeDisplay();
     }
     
+    // Separate function to align grade display with container top
+    function alignGradeDisplay() {
+        requestAnimationFrame(() => {
+            const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+            const container = document.querySelector(".container");
+            if (gradeDisplayLeft && container) {
+                const containerRect = container.getBoundingClientRect();
+                const wrapperRect = container.parentElement ? container.parentElement.getBoundingClientRect() : { top: 0 };
+                gradeDisplayLeft.style.top = (containerRect.top - wrapperRect.top - 20) + "px";
+            }
+        });
+    }
+
     function loadScore() {
         const totalScore = document.getElementById("score");
         totalScore.innerHTML = `${score}`;
         totalScore.style.fontSize = "xx-large";
         totalScore.style.color = "pink";
+        
+        // Apply ModernDOS font after question 100
+        if (currQuestion >= 100) {
+            totalScore.style.fontFamily = "'ModernDOS', 'Courier New', Courier, monospace";
+        }
+        
         updateGradeDisplay();
     }
     function evalScreen() {
@@ -1242,10 +1373,14 @@
             clearInterval(window.answerTimerId);
         }
         
-        // Hide grade display when quiz is finished or abandoned
-        const gradeDisplay = document.getElementById("currentgrade");
-        if (gradeDisplay) {
-            gradeDisplay.style.display = "none";
+        // Hide grade displays when quiz is finished or abandoned
+        const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+        const gradePointsDisplay = document.getElementById("currentgrade");
+        if (gradeDisplayLeft) {
+            gradeDisplayLeft.style.display = "none";
+        }
+        if (gradePointsDisplay) {
+            gradePointsDisplay.style.display = "none";
         }
         
         const timeElapsedDiv = document.getElementById("timeelapsed");
@@ -1288,6 +1423,7 @@
                             time: timeElapsedDiv ? timeElapsedDiv.textContent : 'N/A',
                             date: new Date().toLocaleString(),
                             line: line,
+                            inputType: inputType || 'unknown',
                         };
 
                         // Global leaderboard entry
@@ -1352,20 +1488,22 @@
         } else {
             // Regular evaluation screen
             const gradeScreenFont = currQuestion >= 100 ? "'ModernDOS', 'Courier New', Courier, monospace" : "inherit";
-            evalDiv.innerHTML = `<h3>Game Over.</h3>
+            
+        evalDiv.innerHTML = `<h3>Game Over.</h3>
                         <p style="font-size:larger; font-family: ${gradeScreenFont}">Your score is:</p>
-                        <div class="eval" style="display:flex; justify-content:space-between;">
-                        <div id="score" >
+                    <div class="eval" style="display:flex; justify-content:space-between;">
+                    <div id="score" >
                         <span class="score" style="font-size:4em">${score}</span> <span style="font-size:xx-large">/ ${allQuestions.length}</span>
-                        </div>
-                        <div id=grade>
+                    </div>
+                    <div id=grade>
                         <span class="grade" style="font-size:6em; color: ${line}">${grade}</span>
-                        </div>
-                        </div>
-                        <p>Thank you for playing!</p>
-                    <button onclick="location.reload()">Play Again</button>
-                    <button class="submitsuffering">Submit your suffe- I mean score</button>
-                    <button class="home" onclick="location.href='index.html'">Home</button>`;
+                    </div>
+                    </div>
+                    <p style="font-size:medium; margin-top: 10px; font-family: ${gradeScreenFont}">Grade Points: ${totalGradePoints.toLocaleString()}</p>
+                    <p>Thank you for playing!</p>
+                <button onclick="location.reload()">Play Again</button>
+                <button class="submitsuffering">Submit your suffe- I mean score</button>
+                <button class="home" onclick="location.href='index.html'">Home</button>`;
         }
         
         evalDiv.style.display = "block";
@@ -1373,27 +1511,27 @@
         
         // Only show submit button and handle submission for non-completed runs
         if (!isCompleted) {
-            // Attach event listener after button is created
-            const user = auth.currentUser;
-            const submitBtn = document.querySelector(".submitsuffering");
+        // Attach event listener after button is created
+        const user = auth.currentUser;
+        const submitBtn = document.querySelector(".submitsuffering");
 
             if (!submitBtn) {
                 return;
             }
 
-            if (!user) {
-                submitBtn.textContent = "Login to submit score";
-                submitBtn.onclick = () => {
-                    location.href = "signin.html";
-                };
+        if (!user) {
+            submitBtn.textContent = "Login to submit score";
+            submitBtn.onclick = () => {
+                location.href = "signin.html";
+            };
                 return;
-            }
+        }
 
             let isSubmitting = false;
 
             async function submitHellScore() {
                 if (isSubmitting || submitBtn.disabled) return;
-
+                
                 // Prevent abandoned scores from being submitted
                 if (quizAbandoned) {
                     alert("Abandoned runs cannot be submitted to the leaderboards.");
@@ -1402,17 +1540,17 @@
                     submitBtn.style.cursor = "not-allowed";
                     return;
                 }
-
+                
                 // Prevent invalid scores from being submitted
                 if (quizMinutes >= 15) {
                     alert("Invalid run! Scores cannot be submitted for runs that took 15 minutes or longer.");
                     return;
                 }
-
+                
                 isSubmitting = true;
                 submitBtn.disabled = true;
                 submitBtn.textContent = "Submitting...";
-
+                
                 try {
                     const db = getFirestore();
                     const payload = {
@@ -1420,7 +1558,8 @@
                         score: score,
                         grade: grade,
                         time: document.getElementById("timeelapsed").textContent,
-                        date: new Date().toLocaleString()
+                        date: new Date().toLocaleString(),
+                        inputType: inputType || 'unknown',
                     };
 
                     // Global leaderboard entry
@@ -1510,6 +1649,9 @@
             if (decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer) {
                 score++;
                 elapsedQuestions++; // Track that we've answered a question
+                // Calculate and accumulate grade points for this question
+                const questionPoints = internalGrade();
+                totalGradePoints += questionPoints;
                 loadScore(); // Update score and grade display
                 // Clear the question timer before moving to next question
                 if (window.answerTimerId) {

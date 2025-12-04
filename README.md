@@ -1,12 +1,69 @@
-Basically a simple quiz website with working Internet Ranking and score saving using Firebase and OpenTDB.
+# Icy's Quiz Challenge
 
-<h1>Features</h1>
-<h6>4 modes to choose from:</h6>
-* Easy: 10 questions, no time limit, easiest questions
-* Normal: 20 questions, no time limit, varying difficulty
-* Master: 50 questions with a rapidly shrinking time limit.
-* Hell: Not designed to be beaten by humans.
+A TGM-style quiz game featuring multiple difficulty modes, time limits, grade systems, and leaderboards.
 
-<h6> Working leaderboards for each mode</h6>
-<h6> Anti-stall mechanism (15 mins before the kill timer kicks in)</h6>
-<h6>Changing backgrounds in Hell mode.</h6>
+## Features
+
+- **4 Game Modes:**
+  - 🌱 **Easy**: 30 questions, easy difficulty, no time pressure
+  - ⭐ **Normal**: 100 questions, medium difficulty, timer after Q50
+  - 👑 **Master**: 100 questions with shrinking timers and TGM-style grading
+  - 🔥 **Hell**: 200 questions with extreme difficulty and time pressure
+
+- **Scoring & Leaderboards:**
+  - Global leaderboards for each mode
+  - Personal statistics and history tracking
+  - Input type tracking (keyboard/controller/mobile)
+  - Filter scores by input method
+
+- **Controls:**
+  - Keyboard support (1-4 for answers, Space/Enter to submit)
+  - Gamepad/Controller support
+  - Mobile touch controls
+
+- **Additional Features:**
+  - Real-time grade calculation
+  - Anti-stall mechanism (15-minute time limit)
+  - Background music and sound effects
+  - Progressive visual changes in Hell mode
+  - Comprehensive wiki documentation
+
+## Getting Started
+
+1. Open `index.html` in a web browser
+2. Sign up or log in to save your scores
+3. Select a game mode and start playing!
+
+## Technologies
+
+- HTML5
+- CSS3
+- JavaScript (ES6+)
+- Firebase (for authentication and score storage)
+- OpenTDB API (for quiz questions)
+
+## Game Modes
+
+### Easy Mode
+Perfect for beginners - 30 easy questions with no per-question timer.
+
+### Normal Mode
+Standard challenge - 100 medium difficulty questions with a 60-second timer per question after Q50.
+
+### Master Mode
+Expert level - 100 questions with rapidly shrinking timers and a comprehensive grade system (9-1, S1-S9, GM).
+
+### Hell Mode
+Ultimate challenge - 200 hard questions with extreme time pressure. Features progressive visual changes and special credits screen for Grand Master - Infinity grade.
+
+## Documentation
+
+See `wiki.html` for complete game documentation including:
+- Detailed scoring systems
+- Time limit tables
+- Grade requirements
+- Tips and strategies
+
+## License
+
+This project is for educational purposes.

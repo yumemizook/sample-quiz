@@ -44,19 +44,25 @@
       <a logout class="hide" href="index.html">Log out</a>
       <a giveup href="index.html">Give up</a>
     </div>
-    <div class="container">
+    <div class="absolutecontainer" style="display: flex; align-items: flex-start; gap: 20px;">
+      <div id="gradeDisplayLeft" style="font-size: 4em; color: white; font-weight: bold; white-space: nowrap; padding: 20px; min-width: 120px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+        <div id="gradeText" style="line-height: 1; border: 3px solid; border-radius: 0; padding: 10px; box-sizing: border-box;"></div>
+        <div id="nextGradeThreshold" style="font-size: 0.3em; margin-top: 10px; width: 60px; opacity: 0.8; font-weight: normal;"></div>
+      </div>
+      <div class="container" style="width: 800px; max-width: 800px;">
       <div class="question" id="ques"></div>
       <div class="options" id="opt"></div>
       <button onclick="checkAns()" id="btn">SUBMIT</button>
       <div class="correctanswer"></div>
       <div class="jum" style="display: flex; justify-content: space-between">
         <div id="score"></div>
-        <div id="currentgrade" style="font-size: xx-large; color: cyan; font-weight: bold;"></div>
+        <div id="currentgrade" style="font-size: x-large; color: cyan; font-weight: bold;"></div>
         <div id="timeelapsed"></div>
       </div>
       <div class="timerifinvalid"></div>
       <div class="evalscreen" style="display: none"></div>
       <div id="notification" class="notification hide"></div>
+      </div>
     </div>
     <script type="module" src="./IR.js"></script>
     <script type="module" src="./firebase.js"></script>
@@ -65,6 +71,21 @@
   <script type="module">
     import { getAuth, getFirestore, collection, addDoc } from "./firebase.js";
     const auth = getAuth();
+    
+    // Detect mobile device
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+               (window.matchMedia && window.matchMedia("(max-width: 768px)").matches);
+    }
+    
+    // Track input type used during the quiz
+    let inputType = null; // 'controller', 'keyboard', or 'mobile'
+    
+    // Detect initial input type
+    const isMobile = isMobileDevice();
+    if (isMobile) {
+        inputType = 'mobile';
+    }
 
     let allQuestions = [];
     // Add controller indicator to submit button
@@ -288,6 +309,11 @@
     // Keyboard support
     function initKeyboard() {
       document.addEventListener("keydown", (e) => {
+        // Track keyboard input type
+        if (!inputType || inputType === 'mobile') {
+            inputType = 'keyboard';
+        }
+        
         // Check if quiz has ended
         const evalDiv = document.querySelector(".evalscreen");
         if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
@@ -360,8 +386,19 @@
     }
     startQuiz();
     
-    // Update indicator visibility based on controller connection
+    // Add window resize listener to realign grade display
+    let resizeTimeout;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(() => {
+        alignGradeDisplay();
+      }, 100);
+    });
+    
+    // Update indicator visibility based on controller connection (hide on mobile)
     function updateIndicatorVisibility() {
+      if (isMobile) return; // Don't show indicators on mobile
+      
       const controllerIndicators = document.querySelectorAll(".controller-indicator, .controller-submit-indicator");
       const keyboardIndicators = document.querySelectorAll(".keyboard-indicator, .keyboard-submit-indicator");
       
@@ -388,6 +425,9 @@
     function initGamepad() {
       window.addEventListener("gamepadconnected", (e) => {
         gamepadConnected = true;
+        if (!inputType || inputType === 'keyboard') {
+            inputType = 'controller';
+        }
         startGamepadPolling();
         updateIndicatorVisibility();
       });
@@ -403,6 +443,9 @@
       for (let i = 0; i < gamepads.length; i++) {
         if (gamepads[i]) {
           gamepadConnected = true;
+          if (!inputType || inputType === 'keyboard') {
+              inputType = 'controller';
+          }
           startGamepadPolling();
           break;
         }
@@ -592,6 +635,12 @@
       }
       currentQuestion = decodeHTMLEntities(currentQuestion);
       ques.innerHTML = currentQuestion;
+      
+      // Apply gold color to question text after question 50
+      if (currQuestion >= 50) {
+        ques.style.color = "#ffd700";
+      }
+      
       opt.innerHTML = "";
       loadScore();
       const correctAnswer = allQuestions[currQuestion].correct_answer;
@@ -616,14 +665,19 @@
         choice.value = decodedOption;
         choiceLabel.textContent = decodedOption;
         
-        // Add controller button indicator image
+        // Apply gold color to option labels after question 50
+        if (currQuestion >= 50) {
+          choiceLabel.style.color = "#ffd700";
+        }
+        
+        // Add controller button indicator image (hide on mobile)
         const controllerIndicator = document.createElement("img");
         controllerIndicator.className = "controller-indicator";
         controllerIndicator.src = controllerButtonImages[index] || "";
         controllerIndicator.alt = controllerLabels[index] || "";
         controllerIndicator.title = controllerLabels[index] || "";
         controllerIndicator.style.cssText = `
-          display: inline-block;
+          display: ${isMobile ? 'none' : 'inline-block'};
           margin-right: 8px;
           width: 32px;
           height: 32px;
@@ -631,13 +685,13 @@
           object-fit: contain;
         `;
         
-        // Add keyboard indicator (1, 2, 3, 4)
+        // Add keyboard indicator (1, 2, 3, 4) (hide on mobile)
         const keyboardIndicator = document.createElement("span");
         keyboardIndicator.className = "keyboard-indicator";
         keyboardIndicator.textContent = (index + 1).toString();
         keyboardIndicator.title = `Press ${index + 1} to select this answer`;
         keyboardIndicator.style.cssText = `
-          display: inline-block;
+          display: ${isMobile ? 'none' : 'inline-block'};
           margin-right: 8px;
           padding: 4px 8px;
           background-color: rgba(255, 255, 255, 0.2);
@@ -652,19 +706,26 @@
         `;
         
         choicesdiv.appendChild(choice);
-        choicesdiv.appendChild(controllerIndicator);
-        choicesdiv.appendChild(keyboardIndicator);
+        if (!isMobile) {
+            choicesdiv.appendChild(controllerIndicator);
+            choicesdiv.appendChild(keyboardIndicator);
+        }
         choicesdiv.appendChild(choiceLabel);
-        opt.appendChild(choicesdiv);
+      opt.appendChild(choicesdiv);
         document.querySelector("#btn").style.display = "block";
         
-        // Set initial visibility based on controller connection state
-        if (gamepadConnected) {
-          controllerIndicator.style.display = "inline-block";
-          keyboardIndicator.style.display = "none";
-        } else {
-          controllerIndicator.style.display = "none";
-          keyboardIndicator.style.display = "inline-block";
+        // Align grade display after question loads (container content may have changed)
+        setTimeout(() => alignGradeDisplay(), 0);
+        
+        // Set initial visibility based on controller connection state (only if not mobile)
+        if (!isMobile) {
+            if (gamepadConnected) {
+              controllerIndicator.style.display = "inline-block";
+              keyboardIndicator.style.display = "none";
+            } else {
+              controllerIndicator.style.display = "none";
+              keyboardIndicator.style.display = "inline-block";
+            }
         }
 
         // Make the div clickable to select the option
@@ -974,20 +1035,21 @@
           updateGradeDisplay();
         }
         
-        if (quizMinutes >= 7 && currQuestion === 50) {
+        if (quizMinutes >= 7 && currQuestion >= 50) {
           // TGM3 Lv.500 torikan
           alert("Excellent! ...but let's go better next time");
           evalScreen();
         }
-        if (quizMinutes >= 10) {
-          timeDisplay.style.color = "yellow";
-        }
-        if (quizMinutes >= 12) {
-          timeDisplay.style.color = "orange";
-        }
+        // Apply gold color after question 50, but red for invalid runs takes precedence
         if (quizMinutes >= 15) {
           alert("You took too long! This run has been invalidated.");
           timeDisplay.style.color = "red";
+        } else if (currQuestion >= 50) {
+          timeDisplay.style.color = "#ffd700"; // Gold after question 50
+        } else if (quizMinutes >= 12) {
+          timeDisplay.style.color = "orange";
+        } else if (quizMinutes >= 10) {
+          timeDisplay.style.color = "yellow";
         }
       }, 10);
       timeDisplay.style.fontSize = "xx-large";
@@ -1021,8 +1083,9 @@
 
     // Update grade display in real-time based on current totalGradePoints
     function updateGradeDisplay() {
-      const gradeDisplay = document.getElementById("currentgrade");
-      if (!gradeDisplay) return;
+      const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+      const gradePointsDisplay = document.getElementById("currentgrade");
+      if (!gradeDisplayLeft || !gradePointsDisplay) return;
       
       let currentGrade = "";
       let line = "white"; // Default to white
@@ -1033,20 +1096,7 @@
         line = "white";
       } else {
         currentGrade = getGradeFromPoints(totalGradePoints);
-        // Check for GM condition (S9 grade with time < 8 minutes)
-        if (currentGrade === "S9" && quizMinutes < 6) {
-          currentGrade = "GM";
-          line = "orange";
-        } else if (currentGrade === "S9" && quizMinutes < 8) {
-          currentGrade = "GM";
-          line = "green";
-        }
-        if (quizMinutes < 7) {
-          line = "orange";
-        }
-        else if (quizMinutes < 9) {
-          line = "green";
-        }
+   
         // Ensure we always have a grade value
         if (!currentGrade || currentGrade === "") {
           currentGrade = "9";
@@ -1066,18 +1116,95 @@
       // Update previous grade
       previousGrade = currentGrade;
       
-      // Apply line color to grade display
-      let lineColor = "cyan"; // Default color (fallback)
-      if (line === "orange") {
-        lineColor = "#ff8800";
-      } else if (line === "green") {
-        lineColor = "#00ff00";
-      } else if (line === "white" || line === "") {
-        lineColor = "#ffffff";
+      // Get text color (white normally, gold after question 50)
+      let textColor = "#ffffff"; // White
+      if (currQuestion >= 50) {
+        textColor = "#ffd700"; // Gold after question 50
       }
       
-      gradeDisplay.innerHTML = currentGrade;
-      gradeDisplay.style.color = lineColor;
+      // Apply gold color to all text elements after question 50
+      if (currQuestion >= 50) {
+        const questionEl = document.getElementById("ques");
+        if (questionEl) {
+          questionEl.style.color = textColor;
+        }
+        
+        const optionsEl = document.getElementById("opt");
+        if (optionsEl) {
+          const labels = optionsEl.querySelectorAll("label");
+          labels.forEach(label => {
+            label.style.color = textColor;
+          });
+        }
+        
+        const scoreEl = document.getElementById("score");
+        if (scoreEl) {
+          scoreEl.style.color = textColor;
+        }
+        
+        const timeElapsedEl = document.getElementById("timeelapsed");
+        if (timeElapsedEl) {
+          timeElapsedEl.style.color = textColor;
+        }
+      }
+      
+      // Get background and border colors
+      const bgColor = getGradeBackgroundColor(currentGrade, line);
+      const borderColor = getGradeBorderColor(currentGrade, line);
+      
+      // Get next grade threshold
+      const nextThreshold = getNextGradeThreshold(currentGrade, totalGradePoints);
+      let thresholdText = "";
+      if (nextThreshold) {
+        if (nextThreshold.points !== null) {
+          thresholdText = `Next grade at<br><b>${nextThreshold.points.toLocaleString()}</b><br>points`;
+        }
+      } else if (currentGrade === "S9") {
+        thresholdText = "Next grade at<br><b>??????</b><br>points";
+      }
+      // Apply styling to grade display
+      const gradeText = document.getElementById("gradeText");
+      if (gradeText) {
+        gradeText.textContent = currentGrade;
+        gradeText.style.color = textColor;
+        gradeText.style.backgroundColor = bgColor;
+        gradeText.style.borderColor = borderColor;
+        
+        // Make grade display box square (width = height)
+        // Force a reflow to get accurate height
+        void gradeText.offsetHeight;
+        const height = gradeText.offsetHeight;
+        gradeText.style.width = height + "px";
+        gradeText.style.minWidth = height + "px";
+        gradeText.style.maxWidth = height + "px";
+      }
+      
+      // Update next threshold display
+      const nextThresholdEl = document.getElementById("nextGradeThreshold");
+      if (nextThresholdEl) {
+        nextThresholdEl.innerHTML = thresholdText;
+        nextThresholdEl.style.color = textColor;
+      }
+      
+      // Display grade points in the old position
+      gradePointsDisplay.innerHTML = totalGradePoints.toLocaleString() || "0";
+      gradePointsDisplay.style.color = currQuestion >= 50 ? textColor : "cyan";
+      
+      // Align grade display with container top after all updates
+      alignGradeDisplay();
+    }
+    
+    // Separate function to align grade display with container top
+    function alignGradeDisplay() {
+      requestAnimationFrame(() => {
+        const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+        const container = document.querySelector(".container");
+        if (gradeDisplayLeft && container) {
+          const containerRect = container.getBoundingClientRect();
+          const wrapperRect = container.parentElement ? container.parentElement.getBoundingClientRect() : { top: 0 };
+          gradeDisplayLeft.style.top = (containerRect.top - wrapperRect.top - 20) + "px";
+        }
+      });
     }
 
     function internalGrade(){
@@ -1176,7 +1303,6 @@
       // Check if all questions were completed (in master mode, you can only progress if correct, so completion means all correct)
       const allQuestionsCompleted = currQuestion >= allQuestions.length - 1;
       
-      // Play completion sound only if quiz was not abandoned AND all questions were completed
       if (!quizAbandoned && allQuestionsCompleted) {
         let completeSound = new Audio("bgm/complete.wav");
         completeSound.play().catch(err => console.log("Complete sound play failed:", err));
@@ -1192,16 +1318,20 @@
         grade = "Invalid";
       } else {
         grade = getGradeFromPoints(totalGradePoints);
-        // Check for GM condition (S9 grade with time < 8 minutes)
-        if (grade === "S9" && quizMinutes < 6) {
+        // Only grant GM if all questions were completed
+        if (allQuestionsCompleted && grade === "S9" && quizMinutes < 5 && totalGradePoints >= 1050000) {
           grade = "GM"; // under 6 minutes for Grand Master (orange line)
           line = "orange";
-        }
-        if (grade === "S9" && quizMinutes < 8) {
+        } else if (allQuestionsCompleted && grade === "S9" && quizMinutes < 6 && totalGradePoints >= 1050000) {
           grade = "GM"; // under 8 minutes for Grand Master
           line = "green";
         }
-        // If no grade from points (too low), show "9"
+        else if (quizMinutes < 6 && allQuestionsCompleted) { // only grant orange/green lines if the player completed the quiz
+          line = "orange";
+        }
+        else if (quizMinutes < 8 && allQuestionsCompleted) {
+          line = "green";
+        }
         if (!grade) {
           grade = "9";
         }
@@ -1212,10 +1342,32 @@
         clearInterval(window.answerTimerId);
       }
 
+      // Hide grade displays when quiz is finished or abandoned
+      const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+      const gradePointsDisplay = document.getElementById("currentgrade");
+      if (gradeDisplayLeft) {
+        gradeDisplayLeft.style.display = "none";
+      }
+      if (gradePointsDisplay) {
+        gradePointsDisplay.style.display = "none";
+      }
+
       const timeElapsedDiv = document.getElementById("timeelapsed");
       const timerDiv = document.querySelector(".timerifinvalid");
       timerDiv.style.display = "none";
 
+      // Get input type icon
+      let inputTypeIcon = '';
+      if (inputType === 'controller') {
+          inputTypeIcon = '🎮';
+      } else if (inputType === 'keyboard') {
+          inputTypeIcon = '⌨️';
+      } else if (inputType === 'mobile') {
+          inputTypeIcon = '📱';
+      } else {
+          inputTypeIcon = '❓';
+      }
+      
       evalDiv.innerHTML = `<h3>Game Over.</h3>
                     <p style="font-size:larger">Your score is:</p>
                     <div class="eval" style="display:flex; justify-content:space-between;">
@@ -1227,6 +1379,7 @@
                     </div>
                     </div>
                     <p style="font-size:medium; margin-top: 10px;">Total Grade Points: ${totalGradePoints.toLocaleString()}</p>
+                    <p style="font-size:medium; margin-top: 10px;">Input: ${inputTypeIcon} ${inputType || 'unknown'}</p>
                     <p>Thank you for playing!</p>
                 <button onclick="location.reload()">Play Again</button>
                 <button class="submitsuffering">Submit your suffe- I mean score</button>
@@ -1281,6 +1434,7 @@
             time: document.getElementById("timeelapsed").textContent,
             date: new Date().toLocaleString(),
             line: line,
+            inputType: inputType || 'unknown',
           };
 
           // Global leaderboard entry
@@ -1435,13 +1589,97 @@
       if (points >= 295000) return "1";        // Q50 milestone (~296,000)
       if (points >= 225000) return "2";        // Q40 milestone (~224,000)
       if (points >= 145000) return "3";         // Q30 milestone (~144,000)
-      if (points >= 80000) return "4";         // Q20 milestone (~80,000)
-      if (points >= 60000) return "5";         
-      if (points >= 45000) return "6";          
+      if (points >= 100000) return "4";         // Q20 milestone (~80,000)
+      if (points >= 80000) return "5";         
+      if (points >= 60000) return "6";          
       if (points >= 40000) return "7";         // Q10 milestone (~40,000)
       if (points >= 25000) return "8";         
       if (points >= 0) return "9";             // Lowest grade (any points)
       return "9"; // Fallback to lowest grade
+    }
+    
+    // Get the next grade threshold
+    function getNextGradeThreshold(currentGrade, currentPoints) {
+      const thresholds = [
+        { grade: "9", points: 0 },
+        { grade: "8", points: 25000 },
+        { grade: "7", points: 40000 },
+        { grade: "6", points: 60000 },
+        { grade: "5", points: 80000 },
+        { grade: "4", points: 100000 },
+        { grade: "3", points: 145000 },
+        { grade: "2", points: 225000 },
+        { grade: "1", points: 295000 },
+        { grade: "S1", points: 430000 },
+        { grade: "S2", points: 550000 },
+        { grade: "S3", points: 595000 },
+        { grade: "S4", points: 625000 },
+        { grade: "S5", points: 640000 },
+        { grade: "S6", points: 700000 },
+        { grade: "S7", points: 760000 },
+        { grade: "S8", points: 850000 },
+        { grade: "S9", points: 1000000 }
+      ];
+      
+      // Find current grade index
+      let currentIndex = thresholds.findIndex(t => t.grade === currentGrade);
+      if (currentIndex === -1) return null;
+      
+      // If already at highest grade, check for GM
+      if (currentIndex === thresholds.length - 1) {
+        if (currentGrade === "S9" && quizMinutes >= 8) {
+          return { grade: "GM", points: null, time: "8:00" };
+        }
+        if (currentGrade === "S9" && quizMinutes >= 6) {
+          return { grade: "GM", points: null, time: "6:00" };
+        }
+        return null; // Already at max
+      }
+      
+      // Return next threshold
+      return thresholds[currentIndex + 1];
+    }
+    
+    // Get background color based on grade
+    function getGradeBackgroundColor(grade, line) {
+      if (grade === "GM") {
+        if (line === "orange") return "rgba(255, 136, 0, 0.3)";
+        if (line === "green") return "rgba(0, 255, 0, 0.3)";
+        return "rgba(255, 255, 255, 0.2)";
+      }
+      if (grade.startsWith("S")) {
+        return "rgba(255, 215, 0, 0.3)"; // Gold for S grades
+      }
+      // Numeric grades
+      const num = parseInt(grade);
+      if (num >= 1 && num <= 3) {
+        return "rgba(0, 255, 0, 0.3)"; // Green for grades 1-3
+      }
+      if (num >= 4 && num <= 6) {
+        return "rgba(255, 255, 0, 0.3)"; // Yellow for grades 4-6
+      }
+      return "rgba(255, 0, 0, 0.3)"; // Red for grades 7-9
+    }
+    
+    // Get border color based on grade
+    function getGradeBorderColor(grade, line) {
+      if (grade === "GM") {
+        if (line === "orange") return "#ff8800";
+        if (line === "green") return "#00ff00";
+        return "#ffffff";
+      }
+      if (grade.startsWith("S")) {
+        return "#ffd700"; // Gold for S grades
+      }
+      // Numeric grades
+      const num = parseInt(grade);
+      if (num >= 1 && num <= 3) {
+        return "#00ff00"; // Green for grades 1-3
+      }
+      if (num >= 4 && num <= 6) {
+        return "#ffff00"; // Yellow for grades 4-6
+      }
+      return "#ff0000"; // Red for grades 7-9
     }
 
   </script>
