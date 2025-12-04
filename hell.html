@@ -292,11 +292,12 @@
     let elapsedQuestions = 0; // Track number of questions answered
     let totalGradePoints = 0; // Track accumulated grade points
     let questionStartTime = null; // Track when each question starts (for time bonus calculation)
+    let thresholdChecked = { q51: false, q101: false, q131: false }; // Track which thresholds have been checked
     let timeToAnswer = null; // Track time allocated for current question
     let initialTimeToAnswer = null; // Track initial time allocated for current question
     let quizAbandoned = false; // Track if quiz was abandoned (gave up)
 
-    ques.innerHTML = `<h5>Please Wait!! Loading Questions...</h5>`;
+    ques.innerHTML = `<h5>Please be patient. Loading questions will take a long time.</h5>`;
     document.querySelector('#btn').style.display = "none";
     
     // Handle give up button
@@ -987,6 +988,44 @@
         // Update indicator visibility after loading question
         updateIndicatorVisibility();
         
+        // Check threshold times only when reaching specific questions (51, 101, 131)
+        // Question 51 (currQuestion === 50): Check if time >= 3 minutes
+        if (currQuestion === 50 && !thresholdChecked.q51) {
+            thresholdChecked.q51 = true;
+            if (quizMinutes >= 3) {
+                stopBGM();
+                if (timer) {
+                    clearInterval(timer);
+                }
+                showThresholdScreen(); // TGM3 Lv.500 torikan
+                return;
+            }
+        }
+        // Question 101 (currQuestion === 100): Check if time >= 5 minutes
+        if (currQuestion === 100 && !thresholdChecked.q101) {
+            thresholdChecked.q101 = true;
+            if (quizMinutes >= 5) {
+                stopBGM();
+                if (timer) {
+                    clearInterval(timer);
+                }
+                showThresholdScreen(); // TGM3 Lv.1000 torikan
+                return;
+            }
+        }
+        // Question 131 (currQuestion === 130): Check if time >= 6 minutes
+        if (currQuestion === 130 && !thresholdChecked.q131) {
+            thresholdChecked.q131 = true;
+            if (quizMinutes >= 6) {
+                stopBGM();
+                if (timer) {
+                    clearInterval(timer);
+                }
+                showThresholdScreen(); // TGM3 Lv.1300 torikan (not quite, it's TGM4's Normal 3.1)
+                return;
+            }
+        }
+        
         // Update BGM based on current question
         playBGM();
     }
@@ -1125,29 +1164,6 @@
             }
             
             updateGradeDisplay(); // Update grade display in real-time
-            
-            // Only check timer thresholds after specific questions have been answered
-            if (currQuestion >= 50 && quizMinutes >= 3) {
-                // Stop BGM and game if threshold exceeded after question 50
-                stopBGM();
-                clearInterval(timer);
-                showThresholdScreen(); // TGM3 Lv.500 torikan
-                return;
-            }
-            if (currQuestion >= 100 && quizMinutes >= 5) {
-                // Stop BGM and game if threshold exceeded after question 100
-                stopBGM();
-                clearInterval(timer);
-                showThresholdScreen(); // TGM3 Lv.1000 torikan
-                return;
-            }
-            if (currQuestion >= 130 && quizMinutes >= 6) {
-                // Stop BGM and game if threshold exceeded after question 130
-                stopBGM();
-                clearInterval(timer);
-                showThresholdScreen(); // TGM3 Lv.1300 torikan (not quite, it's TGM4's Normal 3.1)
-                return;
-            }
             
             if (quizMinutes >= 10) {
                 timeDisplay.style.color = "yellow";
@@ -1347,11 +1363,27 @@
             giveUpBtn.style.display = "none";
         }
         
-        document.getElementById("opt").remove();
-        document.getElementById("ques").remove();
-        document.getElementById("btn").remove();
-        document.getElementById("score").remove();
+        // Hide container to show evalScreen
+        const container = document.querySelector(".container");
+        if (container) {
+            container.style.display = "none";
+        }
+        
+        // Remove elements safely (check if they exist first)
+        const optEl = document.getElementById("opt");
+        if (optEl) optEl.remove();
+        const quesEl = document.getElementById("ques");
+        if (quesEl) quesEl.remove();
+        const btnEl = document.getElementById("btn");
+        if (btnEl) btnEl.remove();
+        const scoreEl = document.getElementById("score");
+        if (scoreEl) scoreEl.remove();
         const evalDiv = document.querySelector(".evalscreen");
+        
+        if (!evalDiv) {
+            console.error("evalScreen div not found!");
+            return;
+        }
         
         // Check if player completed hell mode (all 200 questions answered, not abandoned)
         // We've completed if we answered all 200 questions correctly
@@ -1385,7 +1417,9 @@
         
         const timeElapsedDiv = document.getElementById("timeelapsed");
         const timerDiv = document.querySelector(".timerifinvalid");
-        timerDiv.style.display = "none";
+        if (timerDiv) {
+            timerDiv.style.display = "none";
+        }
 
         // Calculate grade for submission (needed for both screens)
         let grade = "";
@@ -1667,6 +1701,40 @@
         } else if (allQuestions.length > 0) {
             showNotification("Please select an answer.");
         }
+    }
+
+    // Get background color based on hell mode grade
+    function getGradeBackgroundColorHell(grade) {
+        if (!grade || grade === "") {
+            return "rgba(255, 255, 255, 0.2)"; // Default white
+        }
+        if (grade === "Grand Master - Infinity") {
+            return "rgba(255, 215, 0, 0.3)"; // Gold for Grand Master - Infinity
+        }
+        if (grade === "Invalid") {
+            return "rgba(255, 0, 0, 0.3)"; // Red for Invalid
+        }
+        if (grade.startsWith("S")) {
+            return "rgba(255, 215, 0, 0.3)"; // Gold for S grades
+        }
+        return "rgba(255, 255, 255, 0.2)"; // Default white
+    }
+    
+    // Get border color based on hell mode grade
+    function getGradeBorderColorHell(grade) {
+        if (!grade || grade === "") {
+            return "#ffffff"; // Default white
+        }
+        if (grade === "Grand Master - Infinity") {
+            return "#ffd700"; // Gold for Grand Master - Infinity
+        }
+        if (grade === "Invalid") {
+            return "#ff0000"; // Red for Invalid
+        }
+        if (grade.startsWith("S")) {
+            return "#ffd700"; // Gold for S grades
+        }
+        return "#ffffff"; // Default white
     }
 
 

@@ -16,6 +16,23 @@
         <a href="index.html">Home</a>
     </div>
     <div class="container2">
+        <div id="levelProgression" class="level-progression-card" style="display: none; margin-bottom: 20px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px; border: 2px solid rgba(255, 255, 255, 0.3);">
+            <h2 style="margin: 0 0 15px 0; color: white; text-align: center;">Player Level</h2>
+            <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 10px;">
+                <span id="playerLevelDisplay" style="font-size: 2em; font-weight: bold; color: #ffd700;">Lv. 1</span>
+                <div style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                        <span id="currentXP" style="color: white; font-size: 0.9em;">0 XP</span>
+                        <span id="nextLevelXP" style="color: white; font-size: 0.9em;">50 XP</span>
+                    </div>
+                    <div style="width: 100%; height: 30px; background: rgba(0, 0, 0, 0.5); border-radius: 15px; overflow: hidden; border: 2px solid rgba(255, 255, 255, 0.3); position: relative;">
+                        <div id="xpProgressBar" style="height: 100%; background: linear-gradient(90deg, #4CAF50, #8BC34A); width: 0%; transition: width 0.5s ease; position: absolute; top: 0; left: 0; display: flex; align-items: center; justify-content: flex-end; padding-right: 10px; box-sizing: border-box;">
+                            <span id="xpProgressText" style="color: white; font-weight: bold; font-size: 0.85em; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div class="tabs-container">
             <div class="tabs">
                 <button class="tab-button active" data-tab="easy">Easy Mode</button>

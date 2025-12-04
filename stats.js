@@ -3,6 +3,60 @@ import { getAuth, getFirestore, collection, getDocs, onAuthStateChanged } from "
 const auth = getAuth();
 const db = getFirestore();
 
+// Calculate player level and XP based on achievements
+function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores) {
+    let level = 1;
+    let experience = 0;
+    
+    // Easy mode completion (30 questions)
+    const easyCompleted = easyScores.some(s => s.score === 30);
+    if (easyCompleted) {
+        experience += 10;
+        level++;
+    }
+    
+    // Normal mode - check for high scores
+    if (normalScores.length > 0) {
+        const bestNormal = Math.max(...normalScores.map(s => s.score || 0));
+        if (bestNormal >= 50) experience += 10;
+        if (bestNormal >= 100) experience += 10;
+        if (bestNormal >= 150) experience += 10;
+    }
+    
+    // Master mode completion (90 questions)
+    const masterCompleted = masterScores.some(s => s.score === 90);
+    if (masterCompleted) {
+        experience += 20;
+        level += 2;
+    }
+    
+    // Master mode - check for GM grade
+    const hasGM = masterScores.some(s => s.grade === "GM");
+    if (hasGM) {
+        experience += 30;
+        level += 2;
+    }
+    
+    // Hell mode completion (200 questions)
+    const hellCompleted = hellScores.some(s => s.score === 200);
+    if (hellCompleted) {
+        experience += 50;
+        level += 3;
+    }
+    
+    // Secret mode completion (300 questions)
+    const secretCompleted = secretScores.some(s => s.score === 300);
+    if (secretCompleted) {
+        experience += 100;
+        level += 5;
+    }
+    
+    // Calculate final level based on total experience
+    const finalLevel = Math.max(1, Math.floor(level + (experience / 50)));
+    
+    return { level: finalLevel, experience: experience };
+}
+
 // Helper function to compare line colors (orange > green > white)
 // Returns: 1 if line1 > line2, -1 if line1 < line2, 0 if equal
 function compareLineColors(line1, line2) {
@@ -151,6 +205,71 @@ let allNormalList = [];
 let allMasterList = [];
 let allHellList = [];
 
+// Update level progression display
+function updateLevelProgression(playerData) {
+    const levelProgressionCard = document.getElementById("levelProgression");
+    const levelDisplay = document.getElementById("playerLevelDisplay");
+    const currentXP = document.getElementById("currentXP");
+    const nextLevelXP = document.getElementById("nextLevelXP");
+    const xpProgressBar = document.getElementById("xpProgressBar");
+    const xpProgressText = document.getElementById("xpProgressText");
+    
+    if (!levelProgressionCard || !levelDisplay || !currentXP || !nextLevelXP || !xpProgressBar) {
+        return;
+    }
+    
+    // Show the level progression card
+    levelProgressionCard.style.display = "block";
+    
+    const finalLevel = playerData.level;
+    const experience = playerData.experience;
+    
+    // Level formula: finalLevel = Math.max(1, Math.floor(baseLevel + (experience / 50)))
+    // To calculate progress, we need to find the XP range for the current level
+    // For finalLevel = N: floor(baseLevel + experience/50) = N
+    // This means: N <= baseLevel + experience/50 < N + 1
+    // So: (N - baseLevel) * 50 <= experience < (N + 1 - baseLevel) * 50
+    
+    // Since we don't have baseLevel directly, we'll estimate it
+    // The minimum baseLevel for a given finalLevel and experience:
+    // baseLevel >= finalLevel - experience/50
+    // The maximum baseLevel: baseLevel < finalLevel + 1 - experience/50
+    
+    // For progress calculation, we'll use the fact that each level requires 50 XP
+    // XP needed for level N (assuming baseLevel = 1): (N - 1) * 50
+    // XP needed for level N+1: N * 50
+    
+    // Calculate XP thresholds (using baseLevel = 1 as reference)
+    const xpForCurrentLevelMin = (finalLevel - 1) * 50;
+    const xpForNextLevelMin = finalLevel * 50;
+    
+    // Calculate how much XP is in the current level range
+    // If experience is less than the minimum for current level, show 0%
+    const xpInCurrentLevel = Math.max(0, experience - xpForCurrentLevelMin);
+    const xpNeededForNextLevel = xpForNextLevelMin - xpForCurrentLevelMin; // Always 50
+    
+    // Calculate progress percentage
+    const progressPercent = xpNeededForNextLevel > 0 
+        ? Math.min(100, Math.max(0, (xpInCurrentLevel / xpNeededForNextLevel) * 100))
+        : 100;
+    
+    // Update display
+    levelDisplay.textContent = `Lv. ${finalLevel}`;
+    currentXP.textContent = `${experience} XP`;
+    nextLevelXP.textContent = `${xpForNextLevelMin} XP`;
+    
+    // Update progress bar
+    xpProgressBar.style.width = `${progressPercent}%`;
+    if (xpProgressText) {
+        // Only show text if progress bar is wide enough
+        if (progressPercent > 25) {
+            xpProgressText.textContent = `${xpInCurrentLevel} / ${xpNeededForNextLevel}`;
+        } else {
+            xpProgressText.textContent = "";
+        }
+    }
+}
+
 // Current filter state
 const currentFilter = {
     easy: 'all',
@@ -254,11 +373,12 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
             // Read per‑player data from Firestore subcollections
             const uid = user.uid;
-        const [easySnap, normalSnap, masterSnap, hellSnap] = await Promise.all([
+        const [easySnap, normalSnap, masterSnap, hellSnap, secretSnap] = await Promise.all([
                 getDocs(collection(db, "playerData", uid, "easy")),
                 getDocs(collection(db, "playerData", uid, "normal")),
                 getDocs(collection(db, "playerData", uid, "master")),
                 getDocs(collection(db, "playerData", uid, "hell")),
+                getDocs(collection(db, "playerData", uid, "secret")).catch(() => ({ empty: true, docs: [] })),
             ]);
 
             const listFromSnap = (snap) => {
@@ -271,6 +391,11 @@ document.addEventListener("DOMContentLoaded", () => {
             allNormalList = listFromSnap(normalSnap);
             allMasterList = listFromSnap(masterSnap);
             allHellList = listFromSnap(hellSnap);
+            const secretList = listFromSnap(secretSnap);
+
+            // Calculate and display player level and XP
+            const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList);
+            updateLevelProgression(playerData);
 
             // Render all modes
             renderModeStats('easy');
@@ -574,11 +699,12 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             // Read per‑player data from Firestore subcollections
             const uid = user.uid;
-            const [easySnap, normalSnap, masterSnap, hellSnap] = await Promise.all([
+            const [easySnap, normalSnap, masterSnap, hellSnap, secretSnap] = await Promise.all([
                 getDocs(collection(db, "playerData", uid, "easy")),
                 getDocs(collection(db, "playerData", uid, "normal")),
                 getDocs(collection(db, "playerData", uid, "master")),
                 getDocs(collection(db, "playerData", uid, "hell")),
+                getDocs(collection(db, "playerData", uid, "secret")).catch(() => ({ empty: true, docs: [] })),
             ]);
 
             const listFromSnap = (snap) => {
@@ -591,6 +717,11 @@ document.addEventListener("DOMContentLoaded", () => {
             allNormalList = listFromSnap(normalSnap);
             allMasterList = listFromSnap(masterSnap);
             allHellList = listFromSnap(hellSnap);
+            const secretList = listFromSnap(secretSnap);
+
+            // Calculate and display player level and XP
+            const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList);
+            updateLevelProgression(playerData);
 
             // Render all modes
             renderModeStats('easy');

@@ -9,6 +9,7 @@
 <body>
   <div class="status">
     <span class="name hide"></span>
+    <span class="player-level hide" id="playerLevel" style="margin-right: 15px; font-weight: bold; color: #dbffff;">Lv. 1</span>
     <a login href="signin.html">Login</a>
     <a signup href="signup.html">Signup</a>
     <a logout class="hide" href="index.html">Log out</a>
@@ -56,6 +57,15 @@
           </div>
           <p class="mode-description">Extremely difficult questions with inhumane time limits. Not for the faint of heart.</p>
           <div class="mode-difficulty hell-diff">Ultimate Challenge</div>
+        </div>
+        
+        <div class="mode-card hide" data-mode="secret" id="secretModeCard">
+          <div class="mode-card-header">
+            <span class="mode-icon">💀</span>
+            <h3 class="mode-name">??????</h3>
+          </div>
+          <p class="mode-description">One step beyond Hell. No way back.</p>
+          <div class="mode-difficulty hell-diff">Secret Mode</div>
         </div>
       </div>
     </div>

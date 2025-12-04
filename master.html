@@ -295,6 +295,7 @@
     }
     let currQuestion = 0;
     let score = 0;
+    let thresholdChecked = { q51: false }; // Track which thresholds have been checked
     let elapsedQuestions = 0;
     let quizAbandoned = false; // Track if quiz was abandoned (gave up)
     let totalGradePoints = 0; // Track accumulated grade points
@@ -347,7 +348,7 @@
     
     initKeyboard();
 
-    ques.innerHTML = `<h5>Please Wait!! Loading Questions...</h5>`;
+    ques.innerHTML = `<h5>Please Wait!! Loading Questions... DO NOT PANIC IF IT LOOKS STUCK</h5>`;
     document.querySelector("#btn").style.display = "none";
 
     // Handle give up button
@@ -1009,6 +1010,21 @@
       
       // Update indicator visibility after loading question
       updateIndicatorVisibility();
+      
+      // Check threshold time only when reaching question 51 (currQuestion === 50)
+      // Question 51: Check if time >= 7 minutes
+      if (currQuestion === 50 && !thresholdChecked.q51) {
+        thresholdChecked.q51 = true;
+        if (quizMinutes >= 7) {
+          // TGM3 Lv.500 torikan
+          if (timer) {
+            clearInterval(timer);
+          }
+          alert("Excellent! ...but let's go better next time");
+          evalScreen();
+          return;
+        }
+      }
     }
     let quizMinutes = 0; // Global variable to track minutes
     let timer; // Global variable to store the timer interval
@@ -1035,11 +1051,6 @@
           updateGradeDisplay();
         }
         
-        if (quizMinutes >= 7 && currQuestion >= 50) {
-          // TGM3 Lv.500 torikan
-          alert("Excellent! ...but let's go better next time");
-          evalScreen();
-        }
         // Apply gold color after question 50, but red for invalid runs takes precedence
         if (quizMinutes >= 15) {
           alert("You took too long! This run has been invalidated.");

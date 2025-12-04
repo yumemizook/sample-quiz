@@ -33,6 +33,15 @@ body.mode-hell {
     background-image: url('hell1.jpg');
 }
 
+body.mode-secret {
+    background-image: none !important;
+    background-color: #000000 !important;
+}
+
+body.mode-secret::before {
+    display: none !important;
+}
+
 body::before {
     content: "";
     position: fixed;
@@ -372,6 +381,34 @@ body.mode-hell .mode-card[data-mode="hell"].active {
 
 body.mode-hell .mode-card[data-mode="hell"].active::before {
     background: linear-gradient(90deg, #ff6b6b, #ff4444);
+}
+
+/* ModernDOS font for secret mode */
+@font-face {
+    font-family: 'ModernDOS';
+    src: url('font/ModernDOS8x16.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Secret mode active styling - no background, ModernDOS font */
+body.mode-secret .mode-card[data-mode="secret"].active {
+    border-color: #00ff00;
+    background: transparent !important;
+    box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+    font-family: 'ModernDOS', 'Courier New', Courier, monospace !important;
+}
+
+body.mode-secret .mode-card[data-mode="secret"].active::before {
+    background: linear-gradient(90deg, #00ff00, #00ff00);
+}
+
+body.mode-secret .mode-card[data-mode="secret"].active * {
+    font-family: 'ModernDOS', 'Courier New', Courier, monospace !important;
+}
+
+body.mode-secret .mode-card[data-mode="secret"] .mode-name {
+    color: #00ff00;
 }
 
 .mode-card-header {
@@ -883,8 +920,8 @@ td:first-child {
 }
 
 .container2 {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    display: flex;
+    flex-direction: column;
     gap: 25px;
     padding: 30px 20px;
     max-width: 1600px;
@@ -1095,6 +1132,41 @@ td:first-child {
     .timerifinvalid {
         font-size: 0.85em;
         margin-top: 10px;
+    }
+    
+    .notification {
+        position: relative !important;
+        top: auto !important;
+        right: auto !important;
+        left: auto !important;
+        bottom: auto !important;
+        margin: 15px auto 0 auto !important;
+        max-width: calc(100% - 20px) !important;
+        width: calc(100% - 20px) !important;
+        padding: 12px 16px !important;
+        font-size: 0.95em !important;
+        animation: slideInMobile 0.3s ease, fadeOutMobile 0.3s ease 2.7s forwards !important;
+    }
+    
+    @keyframes slideInMobile {
+        from {
+            transform: translateY(-20px);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes fadeOutMobile {
+        from {
+            opacity: 1;
+        }
+        to {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
     }
     
     .head {
