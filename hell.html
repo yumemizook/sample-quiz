@@ -7,24 +7,22 @@
     <title>SUFFERING IS ETERNAL</title>
     <link rel="stylesheet" href="index.css">
     <style>
-        /* Embed ModernDOS font - using web font alternative */
-        @import url('https://fonts.googleapis.com/css2?family=Share+Tech+Mono&display=swap');
-        
+        /* Embed ModernDOS font */
         @font-face {
             font-family: 'ModernDOS';
-            src: local('Courier New'), local('Courier'), monospace;
+            src: url('ModernDOS8x16.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
         }
         
-        /* Use Share Tech Mono as ModernDOS alternative (DOS-style monospace) */
+        /* Use ModernDOS font */
         .modern-dos-font {
-            font-family: 'Share Tech Mono', 'Courier New', Courier, monospace !important;
+            font-family: 'ModernDOS', 'Courier New', Courier, monospace !important;
         }
         
         /* Apply ModernDOS to questions 100+ */
         .question-modern-dos {
-            font-family: 'Share Tech Mono', 'Courier New', Courier, monospace !important;
+            font-family: 'ModernDOS', 'Courier New', Courier, monospace !important;
         }
         
         /* Green text for questions 110+ */
@@ -109,10 +107,14 @@
         <div class="correctanswer"></div>
         <div class="jum" style="display: flex; justify-content: space-between;">
             <div id="score"></div>
+            <div id="currentgrade" style="font-size: xx-large; color: #00ff00; font-weight: bold;"></div>
             <div id="timeelapsed"></div>
         </div>
-        <div id="gradeDisplay" style="text-align: center; font-size: xx-large; color: #00ff00; margin-top: 10px;"></div>
         <div class="timerifinvalid"></div>
+            <div id="thresholdScreen" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.95); z-index: 9999; flex-direction: column; justify-content: center; align-items: center; color: #00ff00;">
+            <h1 style="font-size: 3em; margin-bottom: 30px; text-align: center;">Excellent!</h1>
+            <p style="font-size: 1.5em; text-align: center; margin: 20px 0;">...but let's go better next time</p>
+        </div>
         <div class="evalscreen" style="display:none"></div>
         <div id="notification" class="notification hide"></div>
     </div>
@@ -581,7 +583,7 @@
             
             // Apply ModernDOS font to options for questions 100+
             if (currQuestion >= 100) {
-                choiceLabel.style.fontFamily = "'Share Tech Mono', 'Courier New', Courier, monospace";
+                choiceLabel.style.fontFamily = "'ModernDOS', 'Courier New', Courier, monospace";
             }
             
             // Apply green color to options for questions 110+
@@ -1067,10 +1069,30 @@
             quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
             timeDisplay.innerHTML = `${quizMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${miliseconds.toString().padStart(2, '0')}`;
             updateGradeDisplay(); // Update grade display in real-time
-            if ((quizMinutes >= 3 && currQuestion === 50) || (quizMinutes >= 5 && currQuestion === 100) || (quizMinutes >= 6 && currQuestion === 130)) {
-                alert("Excellent! ...but let's go better next time"); // TGM3 torikan line (scaled for 200 questions)
-                evalScreen();
+            
+            // Only check timer thresholds after specific questions have been answered
+            if (currQuestion >= 50 && quizMinutes >= 3) {
+                // Stop BGM and game if threshold exceeded after question 50
+                stopBGM();
+                clearInterval(timer);
+                showThresholdScreen(); // TGM3 Lv.500 torikan
+                return;
             }
+            if (currQuestion >= 100 && quizMinutes >= 5) {
+                // Stop BGM and game if threshold exceeded after question 100
+                stopBGM();
+                clearInterval(timer);
+                showThresholdScreen(); // TGM3 Lv.1000 torikan
+                return;
+            }
+            if (currQuestion >= 130 && quizMinutes >= 6) {
+                // Stop BGM and game if threshold exceeded after question 130
+                stopBGM();
+                clearInterval(timer);
+                showThresholdScreen(); // TGM3 Lv.1300 torikan (not quite, it's TGM4's Normal 3.1)
+                return;
+            }
+            
             if (quizMinutes >= 10) {
                 timeDisplay.style.color = "yellow";
             }
@@ -1086,6 +1108,45 @@
         timeDisplay.style.textAlign = "center";
     }
 
+    // Show threshold exceeded screen, then evalScreen after 5 seconds
+    function showThresholdScreen() {
+        // Ensure timer is stopped
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
+        }
+        
+        // Stop any question timers
+        if (window.questionTimerId) {
+            clearInterval(window.questionTimerId);
+            window.questionTimerId = null;
+        }
+        
+        const thresholdScreen = document.getElementById("thresholdScreen");
+        if (thresholdScreen) {
+            // Show the threshold screen
+            thresholdScreen.style.display = "flex";
+            
+            // Prevent interaction with game elements while screen is showing
+            const container = document.querySelector(".container");
+            if (container) {
+                container.style.pointerEvents = "none";
+            }
+            
+            // After 5 seconds, hide threshold screen and show evalScreen
+            setTimeout(() => {
+                thresholdScreen.style.display = "none";
+                if (container) {
+                    container.style.pointerEvents = "auto";
+                }
+                evalScreen();
+            }, 5000);
+        } else {
+            // Fallback: if screen element doesn't exist, just show evalScreen
+            evalScreen();
+        }
+    }
+
     // Calculate real-time grade based on current progress
     function calculateRealTimeGrade() {
         if (!allQuestions || allQuestions.length === 0) {
@@ -1097,7 +1158,7 @@
         if (quizMinutes >= 15) {
             return "Invalid";
         } 
-        else if (evalPercent == 200 && quizMinutes < 5) {
+        else if (evalPercent == 200 && quizMinutes < 7) {
             return "Grand Master - Infinity";
         }
         else if (allQuestions.length > 0) {
@@ -1108,11 +1169,34 @@
         }
     }
     
+    let previousGrade = ""; // Track previous grade for promotion detection
+    
     function updateGradeDisplay() {
-        const gradeDisplay = document.getElementById("gradeDisplay");
-        if (gradeDisplay) {
-            const grade = calculateRealTimeGrade();
-            gradeDisplay.innerHTML = grade ? `Grade: ${grade}` : "";
+        // Update timer bar grade display
+        const currentGradeDisplay = document.getElementById("currentgrade");
+        
+        const grade = calculateRealTimeGrade();
+        
+        // Check if grade was promoted (increased)
+        if (previousGrade && previousGrade !== "" && grade !== "" && grade !== previousGrade) {
+            // Simple comparison: if grade string is different and not empty, check if it's higher
+            const gradeNum1 = parseInt(grade.replace("S", "").replace("Grand Master - Infinity", "999")) || 0;
+            const gradeNum2 = parseInt(previousGrade.replace("S", "").replace("Grand Master - Infinity", "999")) || 0;
+            if (gradeNum1 > gradeNum2 || (grade.includes("Grand Master") && !previousGrade.includes("Grand Master"))) {
+                // Grade was promoted! Play sound
+                const gradeUpSound = new Audio("bgm/gradeup.wav");
+                gradeUpSound.play().catch(err => console.log("Grade up sound play failed:", err));
+            }
+        }
+        
+        // Update previous grade
+        if (grade) {
+            previousGrade = grade;
+        }
+        
+        // Update timer bar display
+        if (currentGradeDisplay) {
+            currentGradeDisplay.innerHTML = grade || "";
         }
     }
     
@@ -1157,6 +1241,12 @@
         clearInterval(timer);
         if (window.answerTimerId) {
             clearInterval(window.answerTimerId);
+        }
+        
+        // Hide grade display when quiz is finished or abandoned
+        const gradeDisplay = document.getElementById("currentgrade");
+        if (gradeDisplay) {
+            gradeDisplay.style.display = "none";
         }
         
         const timeElapsedDiv = document.getElementById("timeelapsed");
@@ -1211,8 +1301,10 @@
             }
             
             // Credits screen (responsive for mobile devices)
+            // Use ModernDOS font only if question 100+ was reached, otherwise use normal font
+            const creditsFont = currQuestion >= 100 ? "'ModernDOS', 'Courier New', Courier, monospace" : "inherit";
             evalDiv.innerHTML = `
-                <div style="color: #00ff00; font-family: 'Share Tech Mono', 'Courier New', Courier, monospace; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
+                <div style="color: #00ff00; font-family: ${creditsFont}; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
                     <h1 style="font-size: clamp(1.5em, 5vw, 3em); margin-bottom: 20px; text-align: center; word-wrap: break-word;">CREDITS</h1>
                     <div style="font-size: clamp(0.9em, 2.5vw, 1.5em); line-height: 1.8; text-align: center; max-width: 90%; width: 100%; box-sizing: border-box;">
                         <p style="margin: 15px 0;">Congratulations on completing HELL MODE</p>
@@ -1235,9 +1327,11 @@
             `;
             
             // After 10 seconds, show grade screen (responsive for mobile devices)
+            // Use ModernDOS font only if question 100+ was reached, otherwise use normal font
+            const gradeScreenFont = currQuestion >= 100 ? "'ModernDOS', 'Courier New', Courier, monospace" : "inherit";
             setTimeout(() => {
                 evalDiv.innerHTML = `
-                    <div style="color: #00ff00; font-family: 'Share Tech Mono', 'Courier New', Courier, monospace; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
+                    <div style="color: #00ff00; font-family: ${gradeScreenFont}; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
                         <h1 style="font-size: clamp(2em, 6vw, 4em); margin-bottom: 30px; text-align: center; word-wrap: break-word;">YOU ARE</h1>
                         <div style="font-size: clamp(3em, 10vw, 6em); margin: 30px 0; text-align: center; font-weight: bold; word-wrap: break-word;">
                             ${grade || "N/A"}

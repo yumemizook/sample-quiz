@@ -47,9 +47,9 @@
         <div class="correctanswer"></div>
         <div class="jum" style="display: flex; justify-content: space-between;">
             <div id="score"></div>
+            <div id="currentgrade" style="font-size: x-large; color: #adffcd; font-weight: bold;"></div>
             <div id="timeelapsed"></div>
         </div>
-        <div id="gradePointsDisplay" style="text-align: center; font-size: x-large; color: #adffcd; margin-top: 10px;"></div>
         <div class="timerifinvalid"></div>
         <div class="evalscreen" style="display:none"></div>
         <div id="notification" class="notification hide"></div>
@@ -563,12 +563,28 @@
             if (quizMinutes >= 15) {
                 alert("You took too long! This run has been invalidated.");
                 timeDisplay.style.color = "red";
+                updateGradePointsDisplay(); // Update to show "Invalid"
             }
         }, 10);
         timeDisplay.style.fontSize = "xx-large";
         timeDisplay.style.textAlign = "center";
+        
+        // Initialize grade points display
+        updateGradePointsDisplay();
     }
 
+    // Update grade points display in real-time
+    function updateGradePointsDisplay() {
+        const gradeDisplay = document.getElementById("currentgrade");
+        if (!gradeDisplay) return;
+        
+        if (quizMinutes >= 15) {
+            gradeDisplay.innerHTML = "Invalid";
+        } else {
+            gradeDisplay.innerHTML = totalGradePoints.toLocaleString();
+        }
+    }
+    
     function loadScore() {
         scoreDisplay.innerHTML = `${score} / ${currQuestion + 1}`;
         scoreDisplay.style.fontSize = "xx-large";
@@ -576,9 +592,8 @@
         
         // Update total grade points display
         const gradePointsDisplay = document.getElementById("gradePointsDisplay");
-        if (gradePointsDisplay) {
-            gradePointsDisplay.innerHTML = `Grade Points: ${totalGradePoints.toLocaleString()}`;
-        }
+        // Update grade points display in timer bar
+        updateGradePointsDisplay();
     }
     function evalScreen(gaveUp = false) {
         // Stop BGM when quiz ends
@@ -620,10 +635,13 @@
                 totalGradePoints += timeBonus;
                 // Update grade points display if it exists
                 const gradePointsDisplay = document.getElementById("gradePointsDisplay");
-                if (gradePointsDisplay) {
-                    gradePointsDisplay.innerHTML = `Grade Points: ${totalGradePoints.toLocaleString()}`;
-                }
             }
+        }
+        
+        // Hide grade display when quiz is finished or abandoned
+        const gradeDisplay = document.getElementById("currentgrade");
+        if (gradeDisplay) {
+            gradeDisplay.style.display = "none";
         }
         
         const evalDiv = document.querySelector(".evalscreen");
@@ -806,7 +824,7 @@
                 // Calculate and accumulate grade points for this question
                 const questionPoints = internalGrade();
                 totalGradePoints += questionPoints;
-                loadScore(); // Update display with new grade points
+                loadScore(); // Update display with new grade points (includes updateGradePointsDisplay)
                 showNotification("Correct!", true);
             }
             else if (decodedAnswerValue !== decodedCorrectAnswer && answerValue !== correctAnswer) {
