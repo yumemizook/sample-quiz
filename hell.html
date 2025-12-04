@@ -1152,7 +1152,6 @@
         if (!allQuestions || allQuestions.length === 0) {
             return "";
         }
-        
         let evalPercent = (score / allQuestions.length) * 200;
         
         if (quizMinutes >= 15) {
@@ -1256,25 +1255,26 @@
         // Calculate grade for submission (needed for both screens)
         let grade = "";
         let evalPercent = allQuestions.length > 0 ? (score / allQuestions.length) * 200 : 0;
-        
+        let line = "white";
         if (quizMinutes >= 15) {
             grade = "Invalid";
         } 
         else if (evalPercent == 200 && quizMinutes < 5) {
             grade = "Grand Master - Infinity";
+            line = "orange";
         }
         else if (allQuestions.length > 0) {
             // Floor division by 10 to get grade number (0-20)
             let ngrade = Math.floor(evalPercent / 10);
             // Grade format: S1, S2, S3, ..., S20 (or empty string if 0)
             grade = ngrade > 0 ? "S" + ngrade : "";
+            line = ngrade === 20 ? "green" : "white";
         } else {
             grade = "";
         }
         
-        // Show credits screen if completed, otherwise show evaluation screen
+        // Automatically submit score for all completed runs
         if (isCompleted) {
-            // Automatically submit score for completed runs
             const user = auth.currentUser;
             if (user) {
                 // Submit score automatically without user interaction
@@ -1286,7 +1286,8 @@
                             score: score,
                             grade: grade,
                             time: timeElapsedDiv ? timeElapsedDiv.textContent : 'N/A',
-                            date: new Date().toLocaleString()
+                            date: new Date().toLocaleString(),
+                            line: line,
                         };
 
                         // Global leaderboard entry
@@ -1299,7 +1300,10 @@
                     }
                 })();
             }
-            
+        }
+        
+        // Show credits screen only if completed AND grade is Grand Master - Infinity, otherwise show evaluation screen
+        if (isCompleted && grade === "Grand Master - Infinity") {
             // Credits screen (responsive for mobile devices)
             // Use ModernDOS font only if question 100+ was reached, otherwise use normal font
             const creditsFont = currQuestion >= 100 ? "'ModernDOS', 'Courier New', Courier, monospace" : "inherit";
@@ -1347,14 +1351,15 @@
             }, 10000); // 10 seconds
         } else {
             // Regular evaluation screen
+            const gradeScreenFont = currQuestion >= 100 ? "'ModernDOS', 'Courier New', Courier, monospace" : "inherit";
             evalDiv.innerHTML = `<h3>Game Over.</h3>
-                        <p style="font-size:larger">Your score is:</p>
+                        <p style="font-size:larger; font-family: ${gradeScreenFont}">Your score is:</p>
                         <div class="eval" style="display:flex; justify-content:space-between;">
                         <div id="score" >
                         <span class="score" style="font-size:4em">${score}</span> <span style="font-size:xx-large">/ ${allQuestions.length}</span>
                         </div>
                         <div id=grade>
-                        <span class="grade" style="font-size:6em">${grade}</span>
+                        <span class="grade" style="font-size:6em; color: ${line}">${grade}</span>
                         </div>
                         </div>
                         <p>Thank you for playing!</p>

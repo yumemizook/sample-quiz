@@ -1025,19 +1025,32 @@
       if (!gradeDisplay) return;
       
       let currentGrade = "";
+      let line = "white"; // Default to white
       
       // Use grade based on total grade points
       if (quizMinutes >= 15) {
         currentGrade = "Invalid";
+        line = "white";
       } else {
         currentGrade = getGradeFromPoints(totalGradePoints);
         // Check for GM condition (S9 grade with time < 8 minutes)
-        if (currentGrade === "S9" && quizMinutes < 8) {
+        if (currentGrade === "S9" && quizMinutes < 6) {
           currentGrade = "GM";
+          line = "orange";
+        } else if (currentGrade === "S9" && quizMinutes < 8) {
+          currentGrade = "GM";
+          line = "green";
+        }
+        if (quizMinutes < 7) {
+          line = "orange";
+        }
+        else if (quizMinutes < 9) {
+          line = "green";
         }
         // Ensure we always have a grade value
         if (!currentGrade || currentGrade === "") {
           currentGrade = "9";
+          line = "white";
         }
       }
       
@@ -1052,7 +1065,19 @@
       
       // Update previous grade
       previousGrade = currentGrade;
+      
+      // Apply line color to grade display
+      let lineColor = "cyan"; // Default color (fallback)
+      if (line === "orange") {
+        lineColor = "#ff8800";
+      } else if (line === "green") {
+        lineColor = "#00ff00";
+      } else if (line === "white" || line === "") {
+        lineColor = "#ffffff";
+      }
+      
       gradeDisplay.innerHTML = currentGrade;
+      gradeDisplay.style.color = lineColor;
     }
 
     function internalGrade(){
@@ -1255,6 +1280,7 @@
             grade: grade,
             time: document.getElementById("timeelapsed").textContent,
             date: new Date().toLocaleString(),
+            line: line,
           };
 
           // Global leaderboard entry

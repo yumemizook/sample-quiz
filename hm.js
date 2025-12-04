@@ -1,8 +1,12 @@
 import { getAuth, onAuthStateChanged, signOut } from "./firebase.js";
 
 const auth = getAuth();
-const displayNameContainer = document.querySelector(".name");
+let selectedMode = "normal"; // Default mode
+
 document.addEventListener("DOMContentLoaded", () => {
+    const displayNameContainer = document.querySelector(".name");
+    
+    // Handle authentication state
     onAuthStateChanged(auth, (user) => {
         if (user && displayNameContainer) {
             displayNameContainer.textContent = user.displayName || user.email || "-no credentials-disabled account-";
@@ -12,70 +16,84 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelector("[logout]")?.classList.remove("hide");
         }
     });
-});
 
-document.querySelector("[logout]").addEventListener("click", async () => {
-    signOut(auth).then(() => {
-        displayNameContainer.textContent = "";
-        displayNameContainer.classList.add("hide");
-        document.querySelector("[login]").classList.remove("hide");
-        document.querySelector("[signup]").classList.remove("hide");
-        document.querySelector("[logout]").classList.add("hide");
-    }).catch((error) => {
-        console.error("Error signing out:", error);
-        alert("An error occurred while signing out. Please try again.");
-    });
-});
-let tooltip = document.querySelector(".explain");
-let selectedMode = document.querySelector("#mode").value;
-
-// Function to update tooltip based on selected mode
-function updateTooltip(mode) {
-    switch (mode) {
-        case "normal":
-            tooltip.textContent = "Answer questions to score points. The more you answer, the higher your score. There is no time limit until the end of the first half, but you can only answer each question once.";
-            break;
-        case "master":
-            tooltip.textContent = "Answer questions with a slowly shrinking time limit. Getting a question wrong will not allow you to progress. Can you be the Grand Master?";
-            break;
-        case "hell":
-            tooltip.textContent = "Extremely difficult questions with inhumane time limits. Only the most skilled can hope to be close to beating this mode. Not for the faint of heart.";
-            break;
-        case "easy":
-            tooltip.textContent = "A mode for beginners. Answer 30 easy questions as fast as you can! Perfect for those new to the game.";
-            break;
-        default:
-            tooltip.textContent = "";
+    // Handle logout
+    const logoutBtn = document.querySelector("[logout]");
+    if (logoutBtn) {
+        logoutBtn.addEventListener("click", async () => {
+            signOut(auth).then(() => {
+                if (displayNameContainer) {
+                    displayNameContainer.textContent = "";
+                    displayNameContainer.classList.add("hide");
+                }
+                document.querySelector("[login]")?.classList.remove("hide");
+                document.querySelector("[signup]")?.classList.remove("hide");
+                document.querySelector("[logout]")?.classList.add("hide");
+            }).catch((error) => {
+                console.error("Error signing out:", error);
+                alert("An error occurred while signing out. Please try again.");
+            });
+        });
     }
-}
 
-// Initialize tooltip on page load
-updateTooltip(selectedMode);
+    // Initialize mode selection with cards
+    const modeCards = document.querySelectorAll(".mode-card");
+    
+    // Function to update background and styling based on mode
+    function updateModeStyling(mode) {
+        // Remove all mode classes from body
+        document.body.classList.remove("mode-easy", "mode-normal", "mode-master", "mode-hell");
+        // Add the appropriate mode class
+        document.body.classList.add(`mode-${mode}`);
+    }
+    
+    // Set initial active state and styling
+    modeCards.forEach(card => {
+        if (card.dataset.mode === selectedMode) {
+            card.classList.add("active");
+            updateModeStyling(selectedMode);
+        }
+        
+        card.addEventListener("click", () => {
+            // Remove active class from all cards
+            modeCards.forEach(c => c.classList.remove("active"));
+            // Add active class to clicked card
+            card.classList.add("active");
+            selectedMode = card.dataset.mode;
+            // Update background and styling
+            updateModeStyling(selectedMode);
+        });
+    });
 
-document.querySelector("#mode").addEventListener("change", (event) => {
-    selectedMode = event.target.value;
-    updateTooltip(selectedMode);
-});
+    // Handle play button
+    const playBtn = document.querySelector(".play-btn");
+    if (playBtn) {
+        playBtn.addEventListener("click", () => {
+            if (selectedMode === "normal") {
+                window.location.href = "normal.html";
+            } else if (selectedMode === "master") {
+                window.location.href = "master.html";
+            } else if (selectedMode === "hell") {
+                window.location.href = "hell.html";
+            } else if (selectedMode === "easy") {
+                window.location.href = "easy.html";
+            }
+        });
+    }
 
-document.querySelector(".play").addEventListener("click", () => {
-    if (selectedMode === "normal") {
-        window.location.href = "normal.html";
-    } else if (selectedMode === "master") {
-        window.location.href = "master.html";
-    } else if (selectedMode === "hell") {
-        window.location.href = "hell.html";
-    } else if (selectedMode === "easy") {
-        window.location.href = "easy.html";
+    // Handle high scores button
+    const hiscoreBtn = document.querySelector(".hiscore");
+    if (hiscoreBtn) {
+        hiscoreBtn.addEventListener("click", () => {
+            window.location.href = "IR.html";
+        });
+    }
+
+    // Handle stats button
+    const statsBtn = document.querySelector(".stats");
+    if (statsBtn) {
+        statsBtn.addEventListener("click", () => {
+            window.location.href = "stats.html";
+        });
     }
 });
-
-document.querySelector(".hiscore").addEventListener("click", () => {
-    window.location.href = "IR.html";
-});
-
-const statsBtn = document.querySelector(".stats");
-if (statsBtn) {
-    statsBtn.addEventListener("click", () => {
-        window.location.href = "stats.html";
-    });
-}

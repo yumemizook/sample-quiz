@@ -17,71 +17,91 @@
         <a href="index.html">Home</a>
     </div>
     <div class="container2">
-        <div class="normal stats-card">
-            <h1>Easy mode:</h1>
-            <div class="scores">
-                <table id="scoreTable">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Name</th>
-                            <th>Score</th>
-                            <th>Time</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                </table>
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab-button active" data-tab="easy">Easy Mode</button>
+                <button class="tab-button" data-tab="normal">Normal Mode</button>
+                <button class="tab-button" data-tab="master">Master Mode</button>
+                <button class="tab-button" data-tab="hell">Hell Mode</button>
             </div>
-        </div>
-        <div class="hell stats-card">
-            <h1>Normal mode:</h1>
-            <div class="scores">
-                <table id="scoreTable2">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Name</th>
-                            <th>Score</th>
-                            <th>Grade</th>
-                            <th>Time</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                </table>
+            
+            <div class="tab-content active" id="easy-tab">
+                <div class="normal stats-card">
+                    <h1>Easy mode:</h1>
+                    <div class="scores">
+                        <table id="scoreTable">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Name</th>
+                                    <th>Score</th>
+                                    <th>Time</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="normal stats-card">
-            <h1>Master mode:</h1>
-            <div class="scores">
-                <table id="scoreTable3">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Name</th>
-                            <th>Score</th>
-                            <th>Grade</th>
-                            <th>Time</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                </table>
+            
+            <div class="tab-content" id="normal-tab">
+                <div class="hell stats-card">
+                    <h1>Normal mode:</h1>
+                    <div class="scores">
+                        <table id="scoreTable2">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Name</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Time</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="hell stats-card">
-            <h1>Final mode:</h1>
-            <div class="scores">
-                <table id="scoreTable4">
-                    <thead>
-                        <tr>
-                            <th>Rank</th>
-                            <th>Name</th>
-                            <th>Score</th>
-                            <th>Grade</th>
-                            <th>Time</th>
-                            <th>Date</th>
-                        </tr>
-                    </thead>
-                </table>
+            
+            <div class="tab-content" id="master-tab">
+                <div class="normal stats-card">
+                    <h1>Master mode:</h1>
+                    <div class="scores">
+                        <table id="scoreTable3">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Name</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Time</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="hell-tab">
+                <div class="hell stats-card">
+                    <h1>Final mode:</h1>
+                    <div class="scores">
+                        <table id="scoreTable4">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Name</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Time</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>

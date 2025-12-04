@@ -13,23 +13,69 @@
     <a signup href="signup.html">Signup</a>
     <a logout class="hide" href="index.html">Log out</a>
   </div> 
-  <div class="container">
-    <span style="font-size: xx-large;">Example quiz app </span>
-    <button class="play">Play!</button>
-    <button class="hiscore">High Scores</button>
-    <button class="stats">Your Stats</button>
-  <form>
-    <div class="mode">
-      <label for="mode">Select mode:</label>
-      <select id="mode" name="mode">
-        <option value="easy">Easy</option>
-        <option value="normal" selected>Normal</option>
-        <option value="master">Master</option>
-        <option value="hell">Hell</option>
-      </select>
-      <div class="explain" style="font-size: x-large;"></div>
+  <div class="container menu-container">
+    <div class="menu-header">
+      <h1 class="menu-title">Icy's Quiz Challenge</h1>
+      <p class="menu-subtitle">TGM-style quiz game with timers, grades and more!</p>
     </div>
-  </form>
+    
+    <div class="mode-selection">
+      <h2 class="mode-selection-title">Select Difficulty</h2>
+      <div class="mode-cards">
+        <div class="mode-card" data-mode="easy">
+          <div class="mode-card-header">
+            <span class="mode-icon">🌱</span>
+            <h3 class="mode-name">Easy</h3>
+          </div>
+          <p class="mode-description">Perfect for beginners. Answer 30 easy questions as fast as you can!</p>
+          <div class="mode-difficulty easy-diff">Beginner Friendly</div>
+        </div>
+        
+        <div class="mode-card active" data-mode="normal">
+          <div class="mode-card-header">
+            <span class="mode-icon">⭐</span>
+            <h3 class="mode-name">Normal</h3>
+          </div>
+          <p class="mode-description">Answer questions to score points. The more you answer, the higher your score.</p>
+          <div class="mode-difficulty normal-diff">Standard Challenge</div>
+        </div>
+        
+        <div class="mode-card" data-mode="master">
+          <div class="mode-card-header">
+            <span class="mode-icon">👑</span>
+            <h3 class="mode-name">Master</h3>
+          </div>
+          <p class="mode-description">Answer questions with a slowly shrinking time limit. Can you be the Grand Master?</p>
+          <div class="mode-difficulty master-diff">Expert Level</div>
+        </div>
+        
+        <div class="mode-card" data-mode="hell">
+          <div class="mode-card-header">
+            <span class="mode-icon">🔥</span>
+            <h3 class="mode-name">Hell</h3>
+          </div>
+          <p class="mode-description">Extremely difficult questions with inhumane time limits. Not for the faint of heart.</p>
+          <div class="mode-difficulty hell-diff">Ultimate Challenge</div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="menu-actions">
+      <button class="menu-btn play-btn">
+        <span class="btn-icon">▶</span>
+        <span class="btn-text">Start Quiz</span>
+      </button>
+      <div class="secondary-actions">
+        <button class="menu-btn secondary-btn hiscore">
+          <span class="btn-icon">🏆</span>
+          <span class="btn-text">Leaderboards</span>
+        </button>
+        <button class="menu-btn secondary-btn stats">
+          <span class="btn-icon">📊</span>
+          <span class="btn-text">Your Stats</span>
+        </button>
+      </div>
+    </div>
   </div>
 </body>
 <script type="module" src="hm.js"></script>

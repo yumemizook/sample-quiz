@@ -16,80 +16,163 @@
         <a href="index.html">Home</a>
     </div>
     <div class="container2">
-        <div class="normal stats-card">
-            <h1>Your Easy mode stats</h1>
-            <div class="scores">
-                <table id="easyStats">
-                    <thead>
-                        <tr>
-                            <th>Games played</th>
-                            <th>Best score</th>
-                            <th>Average score</th>
-                        </tr>
-                    </thead>
-                </table>
+        <div class="tabs-container">
+            <div class="tabs">
+                <button class="tab-button active" data-tab="easy">Easy Mode</button>
+                <button class="tab-button" data-tab="normal">Normal Mode</button>
+                <button class="tab-button" data-tab="master">Master Mode</button>
+                <button class="tab-button" data-tab="hell">Hell Mode</button>
             </div>
-        </div>
-        <div class="hell stats-card">
-            <h1>Your Normal mode stats</h1>
-            <div class="scores">
-                <table id="normalStats">
-                    <thead>
-                        <tr>
-                            <th>Games played</th>
-                            <th>Best score</th>
-                            <th>Average score</th>
-                            <th>Best grade</th>
-                        </tr>
-                    </thead>
-                </table>
+            
+            <div class="tab-content active" id="easy-tab">
+                <div class="normal stats-card">
+                    <h1>Your Easy mode stats</h1>
+                    <div class="scores">
+                        <table id="easyStats">
+                            <thead>
+                                <tr>
+                                    <th>Games played</th>
+                                    <th>Best score</th>
+                                    <th>Average score</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="normal stats-card">
+                    <h1>Easy Mode Progress</h1>
+                    <canvas id="easyChart"></canvas>
+                </div>
+                <div class="normal stats-card">
+                    <h1>Easy Mode History</h1>
+                    <div class="scores">
+                        <table id="easyHistory">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="normal stats-card">
-            <h1>Your Master mode stats</h1>
-            <div class="scores">
-                <table id="masterStats">
-                    <thead>
-                        <tr>
-                            <th>Games played</th>
-                            <th>Best score</th>
-                            <th>Average score</th>
-                            <th>Best grade</th>
-                        </tr>
-                    </thead>
-                </table>
+            
+            <div class="tab-content" id="normal-tab">
+                <div class="hell stats-card">
+                    <h1>Your Normal mode stats</h1>
+                    <div class="scores">
+                        <table id="normalStats">
+                            <thead>
+                                <tr>
+                                    <th>Games played</th>
+                                    <th>Best score</th>
+                                    <th>Average score</th>
+                                    <th>Best grade</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="hell stats-card">
+                    <h1>Normal Mode Progress</h1>
+                    <canvas id="normalChart"></canvas>
+                </div>
+                <div class="hell stats-card">
+                    <h1>Normal Mode History</h1>
+                    <div class="scores">
+                        <table id="normalHistory">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="hell stats-card">
-            <h1>Your Hell mode stats</h1>
-            <div class="scores">
-                <table id="hellStats">
-                    <thead>
-                        <tr>
-                            <th>Games played</th>
-                            <th>Best score</th>
-                            <th>Average score</th>
-                            <th>Best grade</th>
-                        </tr>
-                    </thead>
-                </table>
+            
+            <div class="tab-content" id="master-tab">
+                <div class="normal stats-card">
+                    <h1>Your Master mode stats</h1>
+                    <div class="scores">
+                        <table id="masterStats">
+                            <thead>
+                                <tr>
+                                    <th>Games played</th>
+                                    <th>Best score</th>
+                                    <th>Average score</th>
+                                    <th>Best grade</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="normal stats-card">
+                    <h1>Master Mode Progress</h1>
+                    <canvas id="masterChart"></canvas>
+                </div>
+                <div class="normal stats-card">
+                    <h1>Master Mode History</h1>
+                    <div class="scores">
+                        <table id="masterHistory">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="normal stats-card">
-            <h1>Easy Mode Progress</h1>
-            <canvas id="easyChart"></canvas>
-        </div>
-        <div class="hell stats-card">
-            <h1>Normal Mode Progress</h1>
-            <canvas id="normalChart"></canvas>
-        </div>
-        <div class="normal stats-card">
-            <h1>Master Mode Progress</h1>
-            <canvas id="masterChart"></canvas>
-        </div>
-        <div class="hell stats-card">
-            <h1>Hell Mode Progress</h1>
-            <canvas id="hellChart"></canvas>
+            
+            <div class="tab-content" id="hell-tab">
+                <div class="hell stats-card">
+                    <h1>Your Hell mode stats</h1>
+                    <div class="scores">
+                        <table id="hellStats">
+                            <thead>
+                                <tr>
+                                    <th>Games played</th>
+                                    <th>Best score</th>
+                                    <th>Average score</th>
+                                    <th>Best grade</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="hell stats-card">
+                    <h1>Hell Mode Progress</h1>
+                    <canvas id="hellChart"></canvas>
+                </div>
+                <div class="hell stats-card">
+                    <h1>Hell Mode History</h1>
+                    <div class="scores">
+                        <table id="hellHistory">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>Score</th>
+                                    <th>Grade</th>
+                                    <th>Time</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 </body>
