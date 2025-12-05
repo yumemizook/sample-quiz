@@ -2466,7 +2466,7 @@ td:first-child {
         padding: 12px;
         margin: 5px auto;
         margin-bottom: 110px;
-        max-height: calc(100vh - 120px);
+        max-height: calc(100vh - 260px);
     }
     
     .question {
