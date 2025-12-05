@@ -29,7 +29,8 @@ export function initMenuNavigation() {
         document.querySelector(".play-btn"),
         document.querySelector(".hiscore"),
         document.querySelector(".stats"),
-        document.querySelector(".wiki")
+        document.querySelector(".wiki"),
+        document.querySelector(".settings")
     ].filter(btn => btn !== null);
 
     // Find the initially active mode card

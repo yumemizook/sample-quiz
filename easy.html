@@ -34,12 +34,18 @@
 
 <body>
     <div class="status">
-        <span class="name hide"></span>
-        <span class="player-level hide" id="playerLevel"></span>
         <a login href="signin.html">Login</a>
         <a signup href="signup.html">Signup</a>
         <a logout class="hide" href="index.html">Log out</a>
         <a giveup href="index.html">Give up</a>
+        <div class="player-info hide" id="playerInfo">
+            <span class="name"></span>
+            <span class="player-level" id="playerLevel"></span>
+        </div>
+        <div class="player-avatar hide" id="playerAvatar">
+            <img id="playerAvatarImg" src="" alt="Avatar">
+            <div class="player-avatar-placeholder">👤</div>
+        </div>
     </div>
     <div class="container">
         <div class="question" id="ques"></div>
@@ -654,8 +660,8 @@
         
         // Play credits BGM (always play, even if abandoned, unless sounds are disabled)
         if (localStorage.getItem("musicEnabled") !== "false") {
-            let creditsBGM = new Audio("bgm/credits.mp3");
-            creditsBGM.play().catch(err => console.log("Credits BGM play failed:", err));
+        let creditsBGM = new Audio("bgm/credits.mp3");
+        creditsBGM.play().catch(err => console.log("Credits BGM play failed:", err));
         }
         
         // Hide the give up button when evaluation screen is displayed

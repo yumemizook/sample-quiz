@@ -4,6 +4,7 @@ import {
     GoogleAuthProvider,
     signInWithPopup
 } from "./firebase.js";
+import { getFirestore, doc, getDoc } from "./firebase.js";
 
 const auth = getAuth();
 const signinForm = document.getElementById("login");
@@ -13,10 +14,18 @@ signinForm.addEventListener("submit", async (e) => {
     const email = signinForm.email.value;
     const password = signinForm.pw.value;
 await signInWithEmailAndPassword(auth, email, password)
-.then((userCredential) => {
+.then(async (userCredential) => {
     const user = userCredential.user;
-    alert("Signed in successfully! Redirecting to home page...");
-    window.location.href = "index.html";
+    const db = getFirestore();
+    // Check if user has seen introduction
+    const userProfileRef = doc(db, 'userProfiles', user.uid);
+    const userProfileSnap = await getDoc(userProfileRef);
+    if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
+        window.location.href = "introduction.html";
+    } else {
+        alert("Signed in successfully! Redirecting to home page...");
+        window.location.href = "index.html";
+    }
     console.log("User signed in:", user);
 })
 .catch((error) => {
@@ -49,8 +58,16 @@ googleButton.addEventListener("click", async () => {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         const credential = GoogleAuthProvider.credentialFromResult(result);
+        const db = getFirestore();
+        // Check if user has seen introduction
+        const userProfileRef = doc(db, 'userProfiles', user.uid);
+        const userProfileSnap = await getDoc(userProfileRef);
+        if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
+            window.location.href = "introduction.html";
+        } else {
+            window.location.href = "index.html";
+        }
         console.log("User signed in with Google:", user);
-        window.location.href = "index.html";
     } catch (error) {
         const errorCode = error.code;
 const errorMessage = error.message;

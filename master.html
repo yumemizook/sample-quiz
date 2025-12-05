@@ -38,12 +38,18 @@
 
   <body>
     <div class="status">
-      <span class="name hide"></span>
-      <span class="player-level hide" id="playerLevel"></span>
       <a login href="signin.html">Login</a>
       <a signup href="signup.html">Signup</a>
       <a logout class="hide" href="index.html">Log out</a>
       <a giveup href="index.html">Give up</a>
+      <div class="player-info hide" id="playerInfo">
+        <span class="name"></span>
+        <span class="player-level" id="playerLevel"></span>
+      </div>
+      <div class="player-avatar hide" id="playerAvatar">
+        <img id="playerAvatarImg" src="" alt="Avatar">
+        <div class="player-avatar-placeholder">👤</div>
+      </div>
     </div>
     <div class="absolutecontainer" style="display: flex; align-items: flex-start; gap: 20px;">
       <div id="gradeDisplayLeft" style="font-size: 4em; color: white; font-weight: bold; white-space: nowrap; padding: 20px; min-width: 120px; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">

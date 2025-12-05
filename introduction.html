@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="index.css">
+    <style>
+        .intro-container {
+            max-width: 800px;
+            width: 90%;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+
+        .intro-title {
+            font-size: 3em;
+            font-weight: bold;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #dbffff 0%, #b8f0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .intro-subtitle {
+            font-size: 1.3em;
+            color: #dbffff;
+            margin-bottom: 40px;
+            opacity: 0.9;
+        }
+
+        .intro-content {
+            text-align: left;
+            color: #dbffff;
+            line-height: 1.8;
+            margin-bottom: 40px;
+        }
+
+        .intro-section {
+            margin-bottom: 30px;
+        }
+
+        .intro-section h3 {
+            color: #b8f0e0;
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .intro-section p {
+            color: #dbffff;
+            font-size: 1.1em;
+            margin-bottom: 10px;
+            padding-left: 30px;
+        }
+
+        .intro-button {
+            background: linear-gradient(135deg, #dbffff 0%, #b8f0e0 100%);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.2em;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(219, 255, 255, 0.3);
+        }
+
+        .intro-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(219, 255, 255, 0.5);
+        }
+
+        @media (max-width: 768px) {
+            .intro-container {
+                padding: 30px 20px;
+            }
+
+            .intro-title {
+                font-size: 2em;
+            }
+
+            .intro-subtitle {
+                font-size: 1.1em;
+            }
+
+            .intro-section h3 {
+                font-size: 1.2em;
+            }
+
+            .intro-section p {
+                font-size: 1em;
+                padding-left: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status">
+        <a logout class="hide" href="index.html">Log out</a>
+        <div class="player-info hide" id="playerInfo">
+            <span class="name"></span>
+            <span class="player-level" id="playerLevel"></span>
+        </div>
+        <div class="player-avatar hide" id="playerAvatar">
+            <img id="playerAvatarImg" src="" alt="Avatar">
+            <div class="player-avatar-placeholder">👤</div>
+        </div>
+    </div>
+    <div class="container menu-container">
+        <div class="intro-container">
+            <h1 class="intro-title">Welcome to Icy's Quiz Challenge!</h1>
+            <p class="intro-subtitle">Get ready to test your knowledge and climb the leaderboards</p>
+            
+            <div class="intro-content">
+                <div class="intro-section">
+                    <h3>🎮 How to Play</h3>
+                    <p>• Select a difficulty mode that suits your skill level</p>
+                    <p>• Answer questions as quickly and accurately as possible</p>
+                    <p>• Earn points and XP to level up your account</p>
+                    <p>• Compete with others on the global leaderboards</p>
+                </div>
+
+                <div class="intro-section">
+                    <h3>⭐ Game Modes</h3>
+                    <p>• <strong>Easy:</strong> Perfect for beginners - 30 easy questions</p>
+                    <p>• <strong>Normal:</strong> Standard challenge - answer as many as you can</p>
+                    <p>• <strong>Master:</strong> Expert level - time limits shrink as you progress</p>
+                    <p>• <strong>Hell:</strong> Ultimate challenge - extremely difficult with tight time limits</p>
+                </div>
+
+                <div class="intro-section">
+                    <h3>🏆 Progression System</h3>
+                    <p>• Earn XP by completing quizzes and achieving milestones</p>
+                    <p>• Level up to unlock new badges and show off your progress</p>
+                    <p>• Track your stats and see how you improve over time</p>
+                    <p>• Customize your profile with avatars and banners</p>
+                </div>
+
+                <div class="intro-section">
+                    <h3>💡 Tips</h3>
+                    <p>• Read questions carefully before answering</p>
+                    <p>• Speed matters, but accuracy is more important</p>
+                    <p>• Practice regularly to improve your reaction time</p>
+                    <p>• Check the Wiki for detailed game mechanics</p>
+                </div>
+            </div>
+
+            <button class="intro-button" onclick="window.location.href='index.html'">Start Playing</button>
+        </div>
+    </div>
+
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="hm.js"></script>
+    <script type="module">
+        import { getAuth, onAuthStateChanged } from "./firebase.js";
+        import { getFirestore, doc, setDoc, getDoc } from "./firebase.js";
+
+        const auth = getAuth();
+        const db = getFirestore();
+
+        // Mark user as having seen introduction
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userProfileRef = doc(db, 'userProfiles', user.uid);
+                    const userProfileSnap = await getDoc(userProfileRef);
+                    
+                    if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
+                        // Mark as having seen intro
+                        await setDoc(userProfileRef, { hasSeenIntro: true }, { merge: true });
+                    }
+                } catch (error) {
+                    console.error('Error updating intro status:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+

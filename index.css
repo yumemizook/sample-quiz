@@ -63,14 +63,29 @@ body::before {
     display: flex;
     gap: 15px;
     align-items: center;
-    z-index: 1000;
+    z-index: 10000;
     flex-wrap: wrap;
+    justify-content: flex-end;
 }
 
 .status .name {
     color: #dbffff;
     font-size: large;
     font-weight: bold;
+    display: block;
+    line-height: 1.2;
+}
+
+.player-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 5px;
+    padding: 8px 12px;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    min-width: 120px;
 }
 
 .player-level {
@@ -79,19 +94,50 @@ body::before {
     gap: 8px;
     font-weight: bold;
     color: #dbffff;
-    font-size: large;
-    padding: 5px 10px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    font-size: 0.9em;
     cursor: help;
     position: relative;
-    transition: background 0.3s, border-color 0.3s;
+    transition: color 0.3s;
 }
 
 .player-level:hover {
-    background: rgba(0, 0, 0, 0.5);
-    border-color: rgba(255, 255, 255, 0.4);
+    color: #4CAF50;
+}
+
+.player-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    overflow: hidden;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.player-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: none;
+}
+
+.player-avatar img.show {
+    display: block;
+}
+
+.player-avatar-placeholder {
+    font-size: 2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.player-avatar-placeholder.hide {
+    display: none;
 }
 
 /* Tooltip container */
@@ -1029,9 +1075,92 @@ div[style*="display: flex"] > .container {
 }
 
 /* Menu Screen Styles */
+.profile-banner {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 200px;
+    margin: 0;
+    padding: 0;
+    z-index: 1;
+    overflow: hidden;
+}
+
+.profile-banner img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    border-radius: 0;
+    box-shadow: none;
+    border: none;
+}
+
 .menu-container {
     max-width: 1000px;
+    width: 90%;
     padding: 40px;
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+}
+
+.tips-container {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    max-width: 600px;
+    width: 90%;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(219, 255, 255, 0.3);
+    border-radius: 15px 15px 0 0;
+    padding: 15px 20px;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+    animation: slideUp 0.5s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.tips-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.tips-icon {
+    font-size: 1.2em;
+}
+
+.tips-title {
+    color: #b8f0e0;
+    font-weight: bold;
+    font-size: 0.9em;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.tips-text {
+    color: #dbffff;
+    font-size: 0.95em;
+    line-height: 1.5;
+    margin: 0;
+    opacity: 0.9;
 }
 
 .menu-header {
@@ -1451,8 +1580,29 @@ body.mode-hell .play-btn:hover {
 }
 
 @media (max-width: 768px) {
+    .profile-banner {
+        height: 150px;
+    }
+
+    .profile-banner img {
+        height: 100%;
+    }
+    
     .menu-container {
+        margin-top: 75px; /* Account for banner height (150px / 2) */
         padding: 25px 20px;
+        width: 95%;
+    }
+    
+    .tips-container {
+        bottom: 0;
+        padding: 12px 15px;
+        max-width: 90%;
+        border-radius: 12px 12px 0 0;
+    }
+    
+    .tips-text {
+        font-size: 0.85em;
     }
     
     .menu-title {
@@ -1888,7 +2038,8 @@ td:first-child {
         left: auto;
         transform: none;
         margin: 10px auto;
-        max-height: calc(100vh - 20px);
+        margin-bottom: 120px;
+        max-height: calc(100vh - 140px);
         overflow-y: auto;
         box-sizing: border-box;
         -webkit-overflow-scrolling: touch;
@@ -1918,6 +2069,20 @@ td:first-child {
     .status a {
         font-size: 0.9em;
         padding: 5px 8px;
+    }
+    
+    .player-info {
+        min-width: 100px;
+        padding: 6px 10px;
+    }
+    
+    .player-avatar {
+        width: 40px;
+        height: 40px;
+    }
+    
+    .player-avatar-placeholder {
+        font-size: 1.5em;
     }
     
     .question {
@@ -2121,12 +2286,187 @@ td:first-child {
     }
 }
 
+/* Player Profile Popup Styles */
+.player-name-hover {
+    cursor: pointer;
+    color: #dbffff;
+    text-decoration: underline;
+    text-decoration-color: rgba(219, 255, 255, 0.5);
+    transition: color 0.2s, text-decoration-color 0.2s;
+}
+
+.player-name-hover:hover {
+    color: #4CAF50;
+    text-decoration-color: #4CAF50;
+}
+
+.player-profile-popup {
+    position: fixed;
+    z-index: 10000;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 40, 0.95));
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 15px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(76, 175, 80, 0.3);
+    backdrop-filter: blur(15px);
+    width: 350px;
+    max-width: 90vw;
+    display: none;
+    overflow: hidden;
+    animation: popupFadeIn 0.3s ease;
+}
+
+@keyframes popupFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9) translateY(-10px);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1) translateY(0);
+    }
+}
+
+.profile-popup-banner {
+    width: 100%;
+    height: 120px;
+    background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(69, 160, 73, 0.3));
+    background-size: cover;
+    background-position: center;
+    display: none;
+}
+
+.profile-popup-content {
+    padding: 20px;
+    position: relative;
+}
+
+.profile-popup-avatar-container {
+    position: absolute;
+    top: -50px;
+    left: 20px;
+    width: 100px;
+    height: 100px;
+}
+
+.profile-popup-avatar,
+.profile-popup-avatar-placeholder {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 4px solid rgba(255, 255, 255, 0.3);
+    object-fit: cover;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3em;
+}
+
+.profile-popup-avatar {
+    display: none;
+}
+
+.profile-popup-info {
+    margin-top: 60px;
+    margin-bottom: 20px;
+}
+
+.profile-popup-name {
+    color: #dbffff;
+    font-size: 1.5em;
+    font-weight: bold;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+}
+
+.profile-popup-level {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #ffd700;
+    font-size: 1.1em;
+    font-weight: bold;
+}
+
+.profile-popup-badge {
+    font-size: 1.5em;
+}
+
+.profile-popup-level-text {
+    text-shadow: 0 2px 10px rgba(255, 215, 0, 0.5);
+}
+
+.profile-popup-scores {
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.profile-popup-scores h4 {
+    color: #dbffff;
+    font-size: 1.1em;
+    margin-bottom: 12px;
+    text-align: center;
+}
+
+.profile-popup-score-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 8px 0;
+    color: #fff;
+    font-size: 0.95em;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.profile-popup-score-item:last-child {
+    border-bottom: none;
+}
+
+.profile-popup-score-item .score-mode {
+    color: #dbffff;
+    font-weight: 500;
+}
+
+.profile-popup-score-item .score-value {
+    color: #4CAF50;
+    font-weight: bold;
+}
+
+/* Keep popup visible when hovering over it */
+.player-profile-popup:hover {
+    display: block !important;
+}
+
+@media (max-width: 768px) {
+    .player-profile-popup {
+        width: 300px;
+    }
+    
+    .profile-popup-avatar-container {
+        width: 80px;
+        height: 80px;
+        top: -40px;
+    }
+    
+    .profile-popup-avatar,
+    .profile-popup-avatar-placeholder {
+        width: 80px;
+        height: 80px;
+        font-size: 2.5em;
+    }
+    
+    .profile-popup-info {
+        margin-top: 50px;
+    }
+}
+
 @media (max-width: 480px) {
     .container {
         width: 98%;
         padding: 12px;
         margin: 5px auto;
-        max-height: calc(100vh - 10px);
+        margin-bottom: 110px;
+        max-height: calc(100vh - 120px);
     }
     
     .question {
@@ -2170,6 +2510,45 @@ td:first-child {
     .status a {
         font-size: 0.8em;
         padding: 4px 6px;
+    }
+    
+    .player-info {
+        min-width: 90px;
+        padding: 4px 8px;
+    }
+    
+    .player-avatar {
+        width: 35px;
+        height: 35px;
+    }
+    
+    .player-avatar-placeholder {
+        font-size: 1.3em;
+    }
+    
+    .profile-banner {
+        height: 120px;
+    }
+    
+    .menu-container {
+        margin-top: 60px; /* Account for banner height (120px / 2) */
+        width: 98%;
+        padding: 20px 15px;
+    }
+    
+    .tips-container {
+        bottom: 0;
+        padding: 10px 12px;
+        max-width: 95%;
+        border-radius: 10px 10px 0 0;
+    }
+    
+    .tips-text {
+        font-size: 0.8em;
+    }
+    
+    .tips-title {
+        font-size: 0.8em;
     }
 }
 

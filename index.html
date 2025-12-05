@@ -1,102 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Home</title>
-    <link rel="stylesheet" href="index.css">
-</head>
-<body>
-  <div class="status">
-    <span class="name hide"></span>
-    <span class="player-level hide" id="playerLevel"></span>
-    <a login href="signin.html">Login</a>
-    <a signup href="signup.html">Signup</a>
-    <a logout class="hide" href="index.html">Log out</a>
-  </div> 
-  <div class="container menu-container">
-    <div class="menu-header">
-      <h1 class="menu-title">Icy's Quiz Challenge</h1>
-      <p class="menu-subtitle">TGM-style quiz game with timers, grades and more!</p>
+    <link rel="stylesheet" href="index.css" />
+  </head>
+  <body>
+    <div class="status">
+      <a login href="signin.html">Login</a>
+      <a signup href="signup.html">Signup</a>
+      <a logout class="hide" href="index.html">Log out</a>
+      <div class="player-info hide" id="playerInfo">
+        <span class="name"></span>
+        <span class="player-level" id="playerLevel"></span>
+      </div>
+      <div class="player-avatar hide" id="playerAvatar">
+        <img id="playerAvatarImg" src="" alt="Avatar" />
+        <div class="player-avatar-placeholder">👤</div>
+      </div>
     </div>
-    
-    <div class="mode-selection">
-      <h2 class="mode-selection-title">Select Difficulty</h2>
-      <div class="mode-cards">
-        <div class="mode-card" data-mode="easy">
-          <div class="mode-card-header">
-            <span class="mode-icon">🌱</span>
-            <h3 class="mode-name">Easy</h3>
+    <div id="profileBanner" class="profile-banner" style="display: none">
+      <img id="bannerImage" src="" alt="Profile Banner" />
+    </div>
+    <div class="container menu-container">
+      <div class="menu-header">
+        <h1 class="menu-title">Icy's Quiz Challenge</h1>
+        <p class="menu-subtitle">
+          TGM-style quiz game with timers, grades and more!
+        </p>
+      </div>
+
+      <div class="mode-selection">
+        <h2 class="mode-selection-title">Select Difficulty</h2>
+        <div class="mode-cards">
+          <div class="mode-card" data-mode="easy">
+            <div class="mode-card-header">
+              <span class="mode-icon">🌱</span>
+              <h3 class="mode-name">Easy</h3>
+            </div>
+            <p class="mode-description">
+              Perfect for beginners. Answer 30 easy questions as fast as you
+              can!
+            </p>
+            <div class="mode-difficulty easy-diff">Beginner Friendly</div>
           </div>
-          <p class="mode-description">Perfect for beginners. Answer 30 easy questions as fast as you can!</p>
-          <div class="mode-difficulty easy-diff">Beginner Friendly</div>
+
+          <div class="mode-card active" data-mode="normal">
+            <div class="mode-card-header">
+              <span class="mode-icon">⭐</span>
+              <h3 class="mode-name">Normal</h3>
+            </div>
+            <p class="mode-description">
+              Answer questions to score points. The more you answer, the higher
+              your score.
+            </p>
+            <div class="mode-difficulty normal-diff">Standard Challenge</div>
+          </div>
+
+          <div class="mode-card" data-mode="master">
+            <div class="mode-card-header">
+              <span class="mode-icon">👑</span>
+              <h3 class="mode-name">Master</h3>
+            </div>
+            <p class="mode-description">
+              Answer questions with a slowly shrinking time limit. Can you be
+              the Grand Master?
+            </p>
+            <div class="mode-difficulty master-diff">Expert Level</div>
+          </div>
+
+          <div class="mode-card" data-mode="hell">
+            <div class="mode-card-header">
+              <span class="mode-icon">🔥</span>
+              <h3 class="mode-name">Hell</h3>
+            </div>
+            <p class="mode-description">
+              Extremely difficult questions with inhumane time limits. Not for
+              the faint of heart.
+            </p>
+            <div class="mode-difficulty hell-diff">Ultimate Challenge</div>
+          </div>
+
+          <div class="mode-card hide" data-mode="secret" id="secretModeCard">
+            <div class="mode-card-header">
+              <span class="mode-icon">💀</span>
+              <h3 class="mode-name">??????</h3>
+            </div>
+            <p class="mode-description">One step beyond Hell. No way back.</p>
+            <div class="mode-difficulty hell-diff">Secret Mode</div>
+          </div>
         </div>
-        
-        <div class="mode-card active" data-mode="normal">
-          <div class="mode-card-header">
-            <span class="mode-icon">⭐</span>
-            <h3 class="mode-name">Normal</h3>
-          </div>
-          <p class="mode-description">Answer questions to score points. The more you answer, the higher your score.</p>
-          <div class="mode-difficulty normal-diff">Standard Challenge</div>
-        </div>
-        
-        <div class="mode-card" data-mode="master">
-          <div class="mode-card-header">
-            <span class="mode-icon">👑</span>
-            <h3 class="mode-name">Master</h3>
-          </div>
-          <p class="mode-description">Answer questions with a slowly shrinking time limit. Can you be the Grand Master?</p>
-          <div class="mode-difficulty master-diff">Expert Level</div>
-        </div>
-        
-        <div class="mode-card" data-mode="hell">
-          <div class="mode-card-header">
-            <span class="mode-icon">🔥</span>
-            <h3 class="mode-name">Hell</h3>
-          </div>
-          <p class="mode-description">Extremely difficult questions with inhumane time limits. Not for the faint of heart.</p>
-          <div class="mode-difficulty hell-diff">Ultimate Challenge</div>
-        </div>
-        
-        <div class="mode-card hide" data-mode="secret" id="secretModeCard">
-          <div class="mode-card-header">
-            <span class="mode-icon">💀</span>
-            <h3 class="mode-name">??????</h3>
-          </div>
-          <p class="mode-description">One step beyond Hell. No way back.</p>
-          <div class="mode-difficulty hell-diff">Secret Mode</div>
+      </div>
+
+      <div class="menu-actions">
+        <button class="menu-btn play-btn">
+          <span class="btn-icon">▶</span>
+          <span class="btn-text">Start Quiz</span>
+        </button>
+        <div class="secondary-actions">
+          <button class="menu-btn secondary-btn hiscore">
+            <span class="btn-icon">🏆</span>
+            <span class="btn-text">Leaderboards</span>
+          </button>
+          <button class="menu-btn secondary-btn stats">
+            <span class="btn-icon">📊</span>
+            <span class="btn-text">Your Stats</span>
+          </button>
+          <button class="menu-btn secondary-btn wiki">
+            <span class="btn-icon">📖</span>
+            <span class="btn-text">Wiki</span>
+          </button>
+          <button
+            class="menu-btn secondary-btn settings"
+            onclick="location.href='settings.html'"
+          >
+            <span class="btn-icon">⚙️</span>
+            <span class="btn-text">Settings</span>
+          </button>
         </div>
       </div>
     </div>
-    
-    <div class="menu-actions">
-      <button class="menu-btn play-btn">
-        <span class="btn-icon">▶</span>
-        <span class="btn-text">Start Quiz</span>
-      </button>
-      <div class="secondary-actions">
-        <button class="menu-btn secondary-btn hiscore">
-          <span class="btn-icon">🏆</span>
-          <span class="btn-text">Leaderboards</span>
-        </button>
-        <button class="menu-btn secondary-btn stats">
-          <span class="btn-icon">📊</span>
-          <span class="btn-text">Your Stats</span>
-        </button>
-        <button class="menu-btn secondary-btn wiki">
-          <span class="btn-icon">📖</span>
-          <span class="btn-text">Wiki</span>
-        </button>
-        <button class="menu-btn secondary-btn" onclick="location.href='settings.html'">
-          <span class="btn-icon">⚙️</span>
-          <span class="btn-text">Settings</span>
-        </button>
+    <div class="tips-container" id="tipsContainer">
+      <div class="tips-header">
+        <span class="tips-icon">💡</span>
+        <span class="tips-title">Tip</span>
       </div>
+      <p class="tips-text" id="tipsText">Loading tips...</p>
     </div>
-  </div>
-</body>
-<script type="module" src="firebase.js"></script>
-<script type="module" src="menuNavigation.js"></script>
-<script type="module" src="hm.js"></script>
+  </body>
+  <script type="module" src="firebase.js"></script>
+  <script type="module" src="menuNavigation.js"></script>
+  <script type="module" src="hm.js"></script>
+  <script type="module">
+    const tips = [
+      "You aer",
+      "You are as good as you were five minutes ago",
+      "Answer questions by answering the questions",
+      "Maybe the true grand master is the questions you answered along the way",
+      "The only way to get better is to keep playing",
+      "Just try the first option, you might be right",
+      "The best way to learn is to teach. Who you are teaching this to, is the question of time.",
+      "Struggling? Play more.",
+      "Every answer is a step towards the answer. Literally!",
+      "Also try Tetris the Grand Master! (all four of it, i beg you)",
+      "Every one second in Icy's Quiz Challenge is worth a thousand milliseconds in real life.",
+      "You can play the Tetris the Grand Master OST if you want to experience the true power of the game. Make sure to turn off the music in the settings!",
+      "Dying at the first questions? Skill issue.",
+      "There is gamepad support! Use your controller to play!",
+      "You can also play with your keyboard! Use the arrow keys to navigate the options and enter to submit.",
+      "'maybe if someone links their brain with the computer, they can play as fast as a tas; - not the dev",
+      "The answer is not always the first option. But the first option is often the answer.",
+      "The game emphasizes on speed and not accurracy as it seems. Too bad!",
+      "The MS-DOS font is a way to recreate the bone blocks. You play TGM3, you should know.",
+      "The game is not perfect. But it is a fun way to test your knowledge. And it is a fun way to test your skills.",
+      "DO NOT PANIC IF IT LOOKS STUCK",
+      "it is pretty cold here i think, can i turn the ac up?",
+      "cyclone, master pikii, and korean stacking",
+      "The developer team is always there to help you. if you need anything, just ask.",
+      "What happens if you answer all questions in hell mode? Who knows!",
+      "Go drink some water, you might need it.",
+      "You can play with your face turning the other way as good as when you play this blindfolded.",
+      "should we add a fading element mode? idk",
+      "counter time attack when? (oh yea if you did one of those please send me a video)",
+      "Have fun, and if you are having fun, please share your score with us!",
+      "the hardest quiz site that's ever existed"
+    ];
+
+    const tipsContainer = document.getElementById("tipsContainer");
+    const tipsText = document.getElementById("tipsText");
+    let lastTipIndex = -1;
+
+    function showRandomTip() {
+      let randomIndex;
+      // Ensure we don't show the same tip twice in a row
+      do {
+        randomIndex = Math.floor(Math.random() * tips.length);
+      } while (randomIndex === lastTipIndex && tips.length > 1);
+
+      lastTipIndex = randomIndex;
+      tipsText.textContent = tips[randomIndex];
+    }
+
+    // Show first random tip immediately
+    showRandomTip();
+
+    // Show random tips every 8 seconds
+    setInterval(showRandomTip, 8000);
+  </script>
 </html>

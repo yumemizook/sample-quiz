@@ -272,11 +272,17 @@
   </head>
   <body>
     <div class="status">
-        <span class="player-level hide" id="playerLevel"></span>
-      <span class="name hide"></span>
       <a login href="signin.html">Login</a>
       <a signup href="signup.html">Signup</a>
       <a logout class="hide" href="index.html">Log out</a>
+      <div class="player-info hide" id="playerInfo">
+        <span class="name"></span>
+        <span class="player-level" id="playerLevel"></span>
+      </div>
+      <div class="player-avatar hide" id="playerAvatar">
+        <img id="playerAvatarImg" src="" alt="Avatar">
+        <div class="player-avatar-placeholder">👤</div>
+      </div>
       <a href="index.html">Home</a>
     </div>
 

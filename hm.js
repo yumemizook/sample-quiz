@@ -1,5 +1,5 @@
 import { getAuth, onAuthStateChanged, signOut } from "./firebase.js";
-import { getFirestore, collection, getDocs } from "./firebase.js";
+import { getFirestore, collection, getDocs, doc, getDoc } from "./firebase.js";
 
 const auth = getAuth();
 let selectedMode = "normal"; // Default mode
@@ -281,18 +281,97 @@ document.addEventListener("DOMContentLoaded", () => {
     const displayNameContainer = document.querySelector(".name");
     
     // Handle authentication state
-    onAuthStateChanged(auth, (user) => {
-        if (user && displayNameContainer) {
-            displayNameContainer.textContent = user.displayName || user.email || "-no credentials-disabled account-";
+    onAuthStateChanged(auth, async (user) => {
+        const playerInfo = document.getElementById("playerInfo");
+        const playerAvatar = document.getElementById("playerAvatar");
+        
+        if (user && displayNameContainer && playerInfo) {
+            const nameSpan = playerInfo.querySelector(".name");
+            if (nameSpan) {
+                nameSpan.textContent = user.displayName || user.email || "-no credentials-disabled account-";
+            }
+            
+            playerInfo.classList.remove("hide");
             displayNameContainer.classList.remove("hide");
             document.querySelector("[login]")?.classList.add("hide");
             document.querySelector("[signup]")?.classList.add("hide");
             document.querySelector("[logout]")?.classList.remove("hide");
+            
+            // Load and display avatar and banner
+            try {
+                const db = getFirestore();
+                const userProfileRef = doc(db, 'userProfiles', user.uid);
+                const userProfileSnap = await getDoc(userProfileRef);
+                
+                // Load avatar
+                if (playerAvatar) {
+                    const avatarImg = playerAvatar.querySelector("#playerAvatarImg");
+                    const avatarPlaceholder = playerAvatar.querySelector(".player-avatar-placeholder");
+                    
+                    let avatarURL = null;
+                    if (userProfileSnap.exists() && userProfileSnap.data().avatarURL) {
+                        avatarURL = userProfileSnap.data().avatarURL;
+                    } else if (user.photoURL) {
+                        avatarURL = user.photoURL;
+                    }
+                    
+                    if (avatarURL && avatarImg && avatarPlaceholder) {
+                        // Set up image loading with error handling
+                        avatarImg.onload = () => {
+                            avatarImg.classList.add("show");
+                            avatarPlaceholder.classList.add("hide");
+                        };
+                        avatarImg.onerror = () => {
+                            // If image fails to load, show placeholder
+                            avatarImg.classList.remove("show");
+                            avatarPlaceholder.classList.remove("hide");
+                        };
+                        avatarImg.src = avatarURL;
+                    } else if (avatarPlaceholder) {
+                        if (avatarImg) {
+                            avatarImg.classList.remove("show");
+                            avatarImg.src = "";
+                        }
+                        avatarPlaceholder.classList.remove("hide");
+                    }
+                    playerAvatar.classList.remove("hide");
+                }
+                
+                // Load and display profile banner (only on index.html)
+                const profileBanner = document.getElementById('profileBanner');
+                const bannerImage = document.getElementById('bannerImage');
+                
+                if (userProfileSnap.exists() && userProfileSnap.data().bannerURL && profileBanner && bannerImage) {
+                    bannerImage.src = userProfileSnap.data().bannerURL;
+                    profileBanner.style.display = 'block';
+                } else if (profileBanner) {
+                    profileBanner.style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error loading profile data:', error);
+            }
         } else {
+            // Hide player info when logged out
+            if (playerInfo) {
+                playerInfo.classList.add("hide");
+            }
+            if (playerAvatar) {
+                playerAvatar.classList.add("hide");
+            }
+            if (displayNameContainer) {
+                displayNameContainer.classList.add("hide");
+            }
+            
             // Hide level when logged out
             const levelDisplay = document.getElementById("playerLevel");
             if (levelDisplay) {
                 levelDisplay.classList.add("hide");
+            }
+            
+            // Hide banner when logged out
+            const profileBanner = document.getElementById('profileBanner');
+            if (profileBanner) {
+                profileBanner.style.display = 'none';
             }
         }
     });

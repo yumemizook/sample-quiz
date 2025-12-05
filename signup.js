@@ -4,6 +4,7 @@ import {
   GoogleAuthProvider,
   signInWithPopup
 } from "./firebase.js";
+import { getFirestore, doc, setDoc, getDoc } from "./firebase.js";
 const auth = getAuth();
 const signupForm = document.getElementById("signup");
 
@@ -28,10 +29,14 @@ signupForm.addEventListener("submit", async (e) => {
     return;
   } else
     await createUserWithEmailAndPassword(auth, email, password)
-      .then((userCredential) => {
+      .then(async (userCredential) => {
         const user = userCredential.user;
-        alert("Account created successfully! Redirecting to sign in page...");
-        window.location.href = "signin.html";
+        const db = getFirestore();
+        // Mark as new user
+        const userProfileRef = doc(db, 'userProfiles', user.uid);
+        await setDoc(userProfileRef, { hasSeenIntro: false }, { merge: true });
+        alert("Account created successfully! Redirecting to introduction...");
+        window.location.href = "introduction.html";
         console.log("User created:", user);
       })
       .catch((error) => {
@@ -60,8 +65,17 @@ googleButton.addEventListener("click", async () => {
         const result = await signInWithPopup(auth, provider);
         const user = result.user;
         const credential = GoogleAuthProvider.credentialFromResult(result);
+        const db = getFirestore();
+        // Check if this is a new user (first time signing in)
+        const userProfileRef = doc(db, 'userProfiles', user.uid);
+        const userProfileSnap = await getDoc(userProfileRef);
+        if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
+            await setDoc(userProfileRef, { hasSeenIntro: false }, { merge: true });
+            window.location.href = "introduction.html";
+        } else {
+            window.location.href = "index.html";
+        }
         console.log("User signed in with Google:", user);
-        window.location.href = "signin.html";
     } catch (error) {
         const errorCode = error.code;
 const errorMessage = error.message;
