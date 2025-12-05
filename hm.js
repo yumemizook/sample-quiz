@@ -10,6 +10,71 @@ let secretClickCount = 0; // Track clicks on secret mode card
 let secretClickTimeout = null; // Timeout to reset click counter
 let isSecretModeVisible = false; // Track if secret mode is currently visible
 
+// Calculate main input method based on play counts
+function calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores) {
+    const inputCounts = {
+        keyboard: 0,
+        controller: 0,
+        mobile: 0,
+        unknown: 0
+    };
+    
+    // Count input types across all modes
+    const allScores = [...easyScores, ...normalScores, ...masterScores, ...hellScores, ...secretScores];
+    allScores.forEach(score => {
+        const inputType = (score.inputType || "unknown").toLowerCase();
+        if (inputType === "keyboard" || inputType === "⌨️") {
+            inputCounts.keyboard++;
+        } else if (inputType === "controller" || inputType === "🎮") {
+            inputCounts.controller++;
+        } else if (inputType === "mobile" || inputType === "📱") {
+            inputCounts.mobile++;
+        } else {
+            inputCounts.unknown++;
+        }
+    });
+    
+    // Determine main input method (highest count)
+    let mainInput = "unknown";
+    let maxCount = inputCounts.unknown;
+    
+    if (inputCounts.keyboard > maxCount) {
+        mainInput = "keyboard";
+        maxCount = inputCounts.keyboard;
+    }
+    if (inputCounts.controller > maxCount) {
+        mainInput = "controller";
+        maxCount = inputCounts.controller;
+    }
+    if (inputCounts.mobile > maxCount) {
+        mainInput = "mobile";
+        maxCount = inputCounts.mobile;
+    }
+    
+    // Format with icon
+    const icons = {
+        keyboard: "⌨️",
+        controller: "🎮",
+        mobile: "📱",
+        unknown: "❓"
+    };
+    
+    const names = {
+        keyboard: "Keyboard",
+        controller: "Controller",
+        mobile: "Mobile",
+        unknown: "Unknown"
+    };
+    
+    return {
+        method: mainInput,
+        icon: icons[mainInput],
+        name: names[mainInput],
+        count: maxCount,
+        total: allScores.length
+    };
+}
+
 // Calculate player level and XP based on achievements and grade points
 function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores) {
     let experience = 0;
@@ -18,7 +83,7 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
     // Easy mode: score field contains totalGradePoints
     easyScores.forEach(score => {
         const gradePoints = score.score || 0; // In easy mode, score is grade points
-        experience += Math.floor(gradePoints / 100); // 1 XP per 100 grade points
+        experience += Math.floor(gradePoints / 200); // 1 XP per 200 grade points (reduced from 100)
     });
     
     // Normal mode: score field contains correct answers (0-150)
@@ -65,15 +130,9 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
         }
     });
     
-    // Secret mode: score field contains correct answers (0-300)
-    secretScores.forEach(score => {
-        const correctAnswers = score.score || 0;
-        experience += Math.floor(correctAnswers * 3); // 3 XP per question completed
-    });
-    
     // Achievement bonuses (one-time)
     const easyCompleted = easyScores.some(s => s.score === 30);
-    if (easyCompleted) experience += 25;
+    if (easyCompleted) experience += 15; // Reduced from 25
     
     const masterCompleted = masterScores.some(s => s.score === 90);
     if (masterCompleted) experience += 75;
@@ -84,17 +143,15 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
         hasCompletedHell = true;
     }
     
-    const secretCompleted = secretScores.some(s => s.score === 300);
-    if (secretCompleted) experience += 300;
-    
     // Calculate level using exponential scaling
-    // Level formula: level = floor(1 + sqrt(experience / 10))
-    // This gives: Lv 1 = 0 XP, Lv 2 = 30 XP, Lv 3 = 80 XP, Lv 4 = 150 XP, etc.
-    const finalLevel = Math.max(1, Math.floor(1 + Math.sqrt(experience / 10)));
+    // Level formula: level = floor(1 + sqrt(experience / 30))
+    // This gives: Lv 1 = 0 XP, Lv 2 = 90 XP, Lv 3 = 240 XP, Lv 4 = 450 XP, etc.
+    // Increased threshold: changed divisor from 20 to 30 (requires more XP per level)
+    const finalLevel = Math.max(1, Math.floor(1 + Math.sqrt(experience / 30)));
     
     // Calculate XP needed for current level and next level
-    const xpForCurrentLevel = Math.pow((finalLevel - 1), 2) * 10;
-    const xpForNextLevel = Math.pow(finalLevel, 2) * 10;
+    const xpForCurrentLevel = Math.pow((finalLevel - 1), 2) * 30;
+    const xpForNextLevel = Math.pow(finalLevel, 2) * 30;
     const xpInCurrentLevel = experience - xpForCurrentLevel;
     const xpNeededForNextLevel = xpForNextLevel - xpForCurrentLevel;
     
@@ -240,6 +297,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Calculate total plays
                 const totalPlays = easyScores.length + normalScores.length + masterScores.length + hellScores.length + secretScores.length;
                 
+                // Calculate main input method
+                const mainInput = calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores);
+                
                 // Calculate and display player level
                 const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores);
                 const levelDisplay = document.getElementById("playerLevel");
@@ -256,7 +316,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     tooltip.innerHTML = `
                         <div class="tooltip-badge-name">${badgeName}</div>
-                        <div class="tooltip-stats">Total XP: ${playerData.experience.toLocaleString()}<br>Total Plays: ${totalPlays.toLocaleString()}</div>
+                        <div class="tooltip-stats">Total XP: ${playerData.experience.toLocaleString()}<br>Total Plays: ${totalPlays.toLocaleString()}<br>Main Input: ${mainInput.icon} ${mainInput.name}</div>
                     `;
                     // Store formatted data for hover tooltip (for fallback CSS ::before)
                     levelDisplay.setAttribute("data-badge", badgeName);

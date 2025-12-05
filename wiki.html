@@ -812,13 +812,140 @@
         </ul>
       </div>
 
-      <div class="wiki-section">
+      <div class="wiki-section" id="secretModeSection">
         <h2>??????</h2>
-        <p>There is a secret waiting to be unfold...</p>
+        <div id="secretModeContent">
+          <p>There is a secret waiting to be unfold...</p>
+        </div>
       </div>
       <a href="index.html" class="back-button">← Back to Menu</a>
     </div>
   </body>
   <script type="module" src="firebase.js"></script>
   <script type="module" src="hm.js"></script>
+  <script type="module">
+    import { getAuth, onAuthStateChanged } from "./firebase.js";
+    import { getFirestore, collection, getDocs } from "./firebase.js";
+
+    async function updateSecretModeWiki() {
+      const auth = getAuth();
+      const db = getFirestore();
+      const secretModeSection = document.getElementById("secretModeSection");
+      const secretModeContent = document.getElementById("secretModeContent");
+
+      onAuthStateChanged(auth, async (user) => {
+        if (!user) {
+          // Not logged in - show placeholder
+          secretModeContent.innerHTML = '<p>There is a secret waiting to be unfold...</p>';
+          return;
+        }
+
+        try {
+          const uid = user.uid;
+          
+          // Check if player has completed Hell Mode (unlocked secret mode)
+          const hellSnap = await getDocs(collection(db, "playerData", uid, "hell"));
+          const hasCompletedHell = hellSnap.empty 
+            ? false 
+            : hellSnap.docs.map(doc => doc.data()).some(score => score.score === 200);
+
+          // Check if player has played secret mode at least once
+          let secretSnap;
+          try {
+            secretSnap = await getDocs(collection(db, "playerData", uid, "secret"));
+          } catch (error) {
+            secretSnap = { empty: true, docs: [] };
+          }
+          const hasPlayedSecret = !secretSnap.empty && secretSnap.docs.length > 0;
+
+          if (!hasCompletedHell) {
+            // Not unlocked - show placeholder
+            secretModeContent.innerHTML = '<p>There is a secret waiting to be unfold...</p>';
+          } else if (hasCompletedHell && !hasPlayedSecret) {
+            // Unlocked but not played - show gist
+            secretModeContent.innerHTML = `
+              <div class="mode-info" style="border-left-color: #8b00ff;">
+                <h3>?????</h3>
+                <p><strong>You have unlocked this mode, but have yet to experience it.</strong></p>
+                <p>This is the ultimate challenge beyond Hell Mode. Complete Hell Mode (200/200) to unlock it, then experience the true horror beyond time.</p>
+                <div class="warning-box">
+                  <strong>⚠️ Warning:</strong> This mode is not for the faint of heart. Only attempt if you're truly prepared for the ultimate challenge.
+                </div>
+              </div>
+            `;
+          } else {
+            // Played at least once - show full details
+            secretModeContent.innerHTML = `
+              <div class="mode-info" style="border-left-color: #8b00ff;">
+                <h3>💀 ??????</h3>
+                <div class="warning-box">
+                  <strong>⚠️ Warning:</strong> The ultimate challenge beyond Hell Mode. Only the most dedicated players will survive.
+                </div>
+
+                <div class="info-grid">
+                  <div class="info-item">
+                    <strong>Questions:</strong>
+                    <span>300 questions</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Difficulty:</strong>
+                    <span>Extreme</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Time Limit:</strong>
+                    <span>1.5 seconds per question</span>
+                  </div>
+                  <div class="info-item">
+                    <strong>Kill Timer:</strong>
+                    <span>15 minutes total</span>
+                  </div>
+                </div>
+
+                <h4>Scoring System</h4>
+                <p>Score is based on the number of correct answers:</p>
+                <ul>
+                  <li><strong>Score Range:</strong> 0-300 (one point per correct answer)</li>
+                  <li>No grade points or multipliers - pure survival</li>
+                  <li>Complete all 300 questions correctly to achieve the ultimate score</li>
+                </ul>
+
+                <h4>Special Features</h4>
+                <ul class="feature-list">
+                  <li>Simplistic theme from the start (black background, green text)</li>
+                  <li>ModernDOS font applied to all text elements</li>
+                  <li>Extreme time pressure - 1.5 seconds per question</li>
+                  <li>No visual changes during gameplay - pure focus on speed and accuracy</li>
+                  <li>Unique BGM for the ultimate challenge</li>
+                  <li>Unlocked by completing Hell Mode (200/200)</li>
+                </ul>
+
+                <h4>Visual Theme</h4>
+                <p>Secret Mode features a minimalist aesthetic from the very beginning:</p>
+                <ul>
+                  <li><strong>Background:</strong> Pure black (#000000)</li>
+                  <li><strong>Text Color:</strong> Bright green (#00ff00)</li>
+                  <li><strong>Font:</strong> ModernDOS monospace font</li>
+                  <li><strong>UI:</strong> Minimal borders and styling</li>
+                </ul>
+
+                <h4>Unlock Requirement</h4>
+                <p>To unlock Secret Mode, you must:</p>
+                <ul class="feature-list">
+                  <li>Complete Hell Mode with a perfect score (200/200 correct answers)</li>
+                  <li>Be logged in to your account</li>
+                </ul>
+              </div>
+            `;
+          }
+        } catch (error) {
+          console.error("Error updating secret mode wiki:", error);
+          // On error, show placeholder
+          secretModeContent.innerHTML = '<p>There is a secret waiting to be unfold...</p>';
+        }
+      });
+    }
+
+    // Update wiki when page loads
+    updateSecretModeWiki();
+  </script>
 </html>
