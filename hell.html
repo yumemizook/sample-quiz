@@ -94,6 +94,7 @@
   <body>
     <div class="status">
       <span class="name hide"></span>
+      <span class="player-level hide" id="playerLevel"></span>
       <a login href="signin.html">Login</a>
       <a signup href="signup.html">Signup</a>
       <a logout class="hide" href="index.html">Log out</a>
@@ -553,6 +554,17 @@
     let currentStage = -1;
 
     function playBGM() {
+      // Check if music is disabled
+      if (localStorage.getItem("musicEnabled") === "false") {
+        if (currentBGM) {
+          currentBGM.pause();
+          currentBGM.currentTime = 0;
+          currentBGM = null;
+          currentStage = -1;
+        }
+        return;
+      }
+
       if (!bgm3) {
         bgm3 = new Audio("bgm/stage4.mp3");
         bgm4 = new Audio("bgm/stage5.mp3");
@@ -1383,17 +1395,7 @@
               .replace("S", "")
               .replace("Grand Master - Infinity", "999")
           ) || 0;
-        if (
-          gradeNum1 > gradeNum2 ||
-          (grade.includes("Grand Master") &&
-            !previousGrade.includes("Grand Master"))
-        ) {
-          // Grade was promoted! Play sound
-          const gradeUpSound = new Audio("bgm/sectionchange.wav");
-          gradeUpSound
-            .play()
-            .catch((err) => console.log("Grade up sound play failed:", err));
-        }
+   
       }
 
       // Update previous grade
@@ -1537,18 +1539,20 @@
         quizMinutes < 15;
 
       // Play completion sound only if quiz was not abandoned AND all questions were completed
-      if (!quizAbandoned && isCompleted) {
+      if (!quizAbandoned && isCompleted && localStorage.getItem("musicEnabled") !== "false") {
         let completeSound = new Audio("bgm/complete.wav");
         completeSound
           .play()
           .catch((err) => console.log("Complete sound play failed:", err));
       }
 
-      // Play credits BGM (always play, even if abandoned)
-      let creditsBGM = new Audio("bgm/credits.mp3");
-      creditsBGM
-        .play()
-        .catch((err) => console.log("Credits BGM play failed:", err));
+      // Play credits BGM (always play, even if abandoned, unless sounds are disabled)
+      if (localStorage.getItem("musicEnabled") !== "false") {
+        let creditsBGM = new Audio("bgm/credits.mp3");
+        creditsBGM
+          .play()
+          .catch((err) => console.log("Credits BGM play failed:", err));
+      }
 
       // Clear all timers
       clearInterval(timer);
@@ -1592,10 +1596,10 @@
         grade = "";
       }
 
-      // Automatically submit score for all completed runs
+      // Automatically submit score for all completed runs (if enabled)
       if (isCompleted) {
         const user = auth.currentUser;
-        if (user) {
+        if (user && localStorage.getItem("autoSubmitEnabled") !== "false") {
           // Submit score automatically without user interaction
           (async function autoSubmitScore() {
             try {
@@ -1808,6 +1812,11 @@
     function nextQuestion() {
       if (currQuestion < allQuestions.length - 1) {
         currQuestion++;
+        // Play section change sound every 10 questions
+        if (currQuestion % 10 === 0 && localStorage.getItem("musicEnabled") !== "false") {
+          const sectionChangeSound = new Audio("bgm/sectionchange.wav");
+          sectionChangeSound.play().catch(err => console.log("Section change sound play failed:", err));
+        }
         loadQues();
         document.querySelector(".correctanswer").innerHTML = "";
       } else {

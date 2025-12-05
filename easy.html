@@ -35,6 +35,7 @@
 <body>
     <div class="status">
         <span class="name hide"></span>
+        <span class="player-level hide" id="playerLevel"></span>
         <a login href="signin.html">Login</a>
         <a signup href="signup.html">Signup</a>
         <a logout class="hide" href="index.html">Log out</a>
@@ -369,6 +370,15 @@
     // BGM for easy mode (simple single track)
     let easyBGM = null;
     function playBGM() {
+        // Check if music is disabled
+        if (localStorage.getItem("musicEnabled") === "false") {
+            if (easyBGM) {
+                easyBGM.pause();
+                easyBGM.currentTime = 0;
+            }
+            return;
+        }
+
         if (!easyBGM) {
             easyBGM = new Audio("bgm/stage1.mp3");
             easyBGM.loop = true;
@@ -637,14 +647,16 @@
         const allQuestionsCompleted = currQuestion >= Questions.length - 1;
         
         // Play completion sound only if quiz was not abandoned AND all questions were completed
-        if (!gaveUp && !quizAbandoned && allQuestionsCompleted) {
+        if (!gaveUp && !quizAbandoned && allQuestionsCompleted && localStorage.getItem("musicEnabled") !== "false") {
             let completeSound = new Audio("bgm/complete.wav");
             completeSound.play().catch(err => console.log("Complete sound play failed:", err));
         }
         
-        // Play credits BGM (always play, even if abandoned)
-        let creditsBGM = new Audio("bgm/credits.mp3");
-        creditsBGM.play().catch(err => console.log("Credits BGM play failed:", err));
+        // Play credits BGM (always play, even if abandoned, unless sounds are disabled)
+        if (localStorage.getItem("musicEnabled") !== "false") {
+            let creditsBGM = new Audio("bgm/credits.mp3");
+            creditsBGM.play().catch(err => console.log("Credits BGM play failed:", err));
+        }
         
         // Hide the give up button when evaluation screen is displayed
         const giveUpBtn = document.querySelector("[giveup]");
@@ -797,6 +809,11 @@
     function nextQuestion() {
         if (currQuestion < Questions.length - 1) {
             currQuestion++;
+            // Play section change sound every 10 questions
+            if (currQuestion % 10 === 0 && localStorage.getItem("musicEnabled") !== "false") {
+                const sectionChangeSound = new Audio("bgm/sectionchange.wav");
+                sectionChangeSound.play().catch(err => console.log("Section change sound play failed:", err));
+            }
             loadQues();
             document.querySelector(".correctanswer").innerHTML = "";
         } else {

@@ -3,58 +3,99 @@ import { getAuth, getFirestore, collection, getDocs, onAuthStateChanged } from "
 const auth = getAuth();
 const db = getFirestore();
 
-// Calculate player level and XP based on achievements
+// Calculate player level and XP based on achievements and grade points
 function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores) {
-    let level = 1;
     let experience = 0;
     
-    // Easy mode completion (30 questions)
+    // Base XP from scores earned (scaled appropriately for each mode)
+    // Easy mode: score field contains totalGradePoints
+    easyScores.forEach(score => {
+        const gradePoints = score.score || 0; // In easy mode, score is grade points
+        experience += Math.floor(gradePoints / 100); // 1 XP per 100 grade points
+    });
+    
+    // Normal mode: score field contains correct answers (0-150)
+    normalScores.forEach(score => {
+        const correctAnswers = score.score || 0;
+        // Award XP based on questions answered (more questions = more XP)
+        experience += Math.floor(correctAnswers * 0.5); // 0.5 XP per question
+        
+        // Milestone bonuses
+        if (correctAnswers >= 150) experience += 25; // Full completion bonus
+        else if (correctAnswers >= 100) experience += 15;
+        else if (correctAnswers >= 50) experience += 10;
+    });
+    
+    // Master mode: score field contains totalGradePoints
+    masterScores.forEach(score => {
+        const gradePoints = score.score || 0;
+        experience += Math.floor(gradePoints / 200); // 1 XP per 200 grade points
+        
+        // Bonus XP for grades
+        if (score.grade === "GM") {
+            experience += 100; // Grand Master bonus
+        } else if (score.grade && score.grade.startsWith("S")) {
+            const sLevel = parseInt(score.grade.substring(1)) || 0;
+            experience += sLevel * 5; // S1 = +5, S9 = +45
+        }
+        
+        // Line color bonuses
+        if (score.line === "orange") experience += 50;
+        else if (score.line === "green") experience += 25;
+    });
+    
+    // Hell mode: score field contains correct answers (0-200)
+    hellScores.forEach(score => {
+        const correctAnswers = score.score || 0;
+        experience += Math.floor(correctAnswers * 1.5); // 1.5 XP per question completed
+        
+        // Grade bonuses (significant rewards for hell mode achievements)
+        if (score.grade === "Grand Master - Infinity") {
+            experience += 200;
+        } else if (score.grade && score.grade.startsWith("S")) {
+            const sLevel = parseInt(score.grade.substring(1)) || 0;
+            experience += sLevel * 10; // S1 = +10, S20 = +200
+        }
+    });
+    
+    // Secret mode: score field contains correct answers (0-300)
+    secretScores.forEach(score => {
+        const correctAnswers = score.score || 0;
+        experience += Math.floor(correctAnswers * 3); // 3 XP per question completed
+    });
+    
+    // Achievement bonuses (one-time)
     const easyCompleted = easyScores.some(s => s.score === 30);
-    if (easyCompleted) {
-        experience += 10;
-        level++;
-    }
+    if (easyCompleted) experience += 25;
     
-    // Normal mode - check for high scores
-    if (normalScores.length > 0) {
-        const bestNormal = Math.max(...normalScores.map(s => s.score || 0));
-        if (bestNormal >= 50) experience += 10;
-        if (bestNormal >= 100) experience += 10;
-        if (bestNormal >= 150) experience += 10;
-    }
-    
-    // Master mode completion (90 questions)
     const masterCompleted = masterScores.some(s => s.score === 90);
-    if (masterCompleted) {
-        experience += 20;
-        level += 2;
-    }
+    if (masterCompleted) experience += 75;
     
-    // Master mode - check for GM grade
-    const hasGM = masterScores.some(s => s.grade === "GM");
-    if (hasGM) {
-        experience += 30;
-        level += 2;
-    }
-    
-    // Hell mode completion (200 questions)
     const hellCompleted = hellScores.some(s => s.score === 200);
-    if (hellCompleted) {
-        experience += 50;
-        level += 3;
-    }
+    if (hellCompleted) experience += 150;
     
-    // Secret mode completion (300 questions)
     const secretCompleted = secretScores.some(s => s.score === 300);
-    if (secretCompleted) {
-        experience += 100;
-        level += 5;
-    }
+    if (secretCompleted) experience += 300;
     
-    // Calculate final level based on total experience
-    const finalLevel = Math.max(1, Math.floor(level + (experience / 50)));
+    // Calculate level using exponential scaling
+    // Level formula: level = floor(1 + sqrt(experience / 10))
+    // This gives: Lv 1 = 0 XP, Lv 2 = 30 XP, Lv 3 = 80 XP, Lv 4 = 150 XP, etc.
+    const finalLevel = Math.max(1, Math.floor(1 + Math.sqrt(experience / 10)));
     
-    return { level: finalLevel, experience: experience };
+    // Calculate XP needed for current level and next level
+    const xpForCurrentLevel = Math.pow((finalLevel - 1), 2) * 10;
+    const xpForNextLevel = Math.pow(finalLevel, 2) * 10;
+    const xpInCurrentLevel = experience - xpForCurrentLevel;
+    const xpNeededForNextLevel = xpForNextLevel - xpForCurrentLevel;
+    
+    return { 
+        level: finalLevel, 
+        experience: experience,
+        xpForCurrentLevel: xpForCurrentLevel,
+        xpForNextLevel: xpForNextLevel,
+        xpInCurrentLevel: xpInCurrentLevel,
+        xpNeededForNextLevel: xpNeededForNextLevel
+    };
 }
 
 // Helper function to compare line colors (orange > green > white)
@@ -205,8 +246,40 @@ let allNormalList = [];
 let allMasterList = [];
 let allHellList = [];
 
+// Get badge for level (matches hm.js badge system, extended to level 1000)
+function getBadgeForLevelStats(level) {
+    if (level >= 1000) return "🌠"; // Meteor (Lv 1000+)
+    if (level >= 900) return "🌙"; // Moon (Lv 900-999)
+    if (level >= 800) return "☀️"; // Sun (Lv 800-899)
+    if (level >= 700) return "🌍"; // Earth (Lv 700-799)
+    if (level >= 600) return "🪐"; // Planet (Lv 600-699)
+    if (level >= 500) return "⭐"; // Star (Lv 500-599)
+    if (level >= 400) return "🌟"; // Glowing Star (Lv 400-499)
+    if (level >= 300) return "💫"; // Dizzy Star (Lv 300-399)
+    if (level >= 250) return "🌌"; // Galaxy (Lv 250-299)
+    if (level >= 200) return "🌠"; // Shooting Star (Lv 200-249)
+    if (level >= 150) return "⚛️"; // Atomic (Lv 150-199)
+    if (level >= 120) return "🔮"; // Crystal (Lv 120-149)
+    if (level >= 100) return "✨"; // Sparkle (Lv 100-119)
+    if (level >= 80) return "🏆"; // Champion (Lv 80-99)
+    if (level >= 70) return "👑"; // Royal (Lv 70-79)
+    if (level >= 60) return "💎"; // Diamond (Lv 60-69)
+    if (level >= 50) return "⭐"; // Star (Lv 50-59)
+    if (level >= 40) return "🔥"; // Fire (Lv 40-49)
+    if (level >= 35) return "⚡"; // Lightning (Lv 35-39)
+    if (level >= 30) return "🌟"; // Shining Star (Lv 30-34)
+    if (level >= 25) return "🎯"; // Target (Lv 25-29)
+    if (level >= 20) return "🎖️"; // Medal (Lv 20-24)
+    if (level >= 15) return "🏅"; // Trophy (Lv 15-19)
+    if (level >= 12) return "🥇"; // Gold Medal (Lv 12-14)
+    if (level >= 9) return "🥈"; // Silver Medal (Lv 9-11)
+    if (level >= 6) return "🥉"; // Bronze Medal (Lv 6-8)
+    if (level >= 3) return "⭐"; // Star (Lv 3-5)
+    return "🌱"; // Sprout (Lv 1-2)
+}
+
 // Update level progression display
-function updateLevelProgression(playerData) {
+function updateLevelProgression(playerData, totalPlays = 0) {
     const levelProgressionCard = document.getElementById("levelProgression");
     const levelDisplay = document.getElementById("playerLevelDisplay");
     const currentXP = document.getElementById("currentXP");
@@ -224,29 +297,15 @@ function updateLevelProgression(playerData) {
     const finalLevel = playerData.level;
     const experience = playerData.experience;
     
-    // Level formula: finalLevel = Math.max(1, Math.floor(baseLevel + (experience / 50)))
-    // To calculate progress, we need to find the XP range for the current level
-    // For finalLevel = N: floor(baseLevel + experience/50) = N
-    // This means: N <= baseLevel + experience/50 < N + 1
-    // So: (N - baseLevel) * 50 <= experience < (N + 1 - baseLevel) * 50
+    // Use the new XP calculation system with exponential scaling
+    // Level formula: level = floor(1 + sqrt(experience / 10))
+    // XP for level N: (N-1)^2 * 10
+    // XP for level N+1: N^2 * 10
     
-    // Since we don't have baseLevel directly, we'll estimate it
-    // The minimum baseLevel for a given finalLevel and experience:
-    // baseLevel >= finalLevel - experience/50
-    // The maximum baseLevel: baseLevel < finalLevel + 1 - experience/50
-    
-    // For progress calculation, we'll use the fact that each level requires 50 XP
-    // XP needed for level N (assuming baseLevel = 1): (N - 1) * 50
-    // XP needed for level N+1: N * 50
-    
-    // Calculate XP thresholds (using baseLevel = 1 as reference)
-    const xpForCurrentLevelMin = (finalLevel - 1) * 50;
-    const xpForNextLevelMin = finalLevel * 50;
-    
-    // Calculate how much XP is in the current level range
-    // If experience is less than the minimum for current level, show 0%
-    const xpInCurrentLevel = Math.max(0, experience - xpForCurrentLevelMin);
-    const xpNeededForNextLevel = xpForNextLevelMin - xpForCurrentLevelMin; // Always 50
+    const xpForCurrentLevel = playerData.xpForCurrentLevel || Math.pow((finalLevel - 1), 2) * 10;
+    const xpForNextLevel = playerData.xpForNextLevel || Math.pow(finalLevel, 2) * 10;
+    const xpInCurrentLevel = playerData.xpInCurrentLevel || Math.max(0, experience - xpForCurrentLevel);
+    const xpNeededForNextLevel = playerData.xpNeededForNextLevel || (xpForNextLevel - xpForCurrentLevel);
     
     // Calculate progress percentage
     const progressPercent = xpNeededForNextLevel > 0 
@@ -254,16 +313,111 @@ function updateLevelProgression(playerData) {
         : 100;
     
     // Update display
-    levelDisplay.textContent = `Lv. ${finalLevel}`;
-    currentXP.textContent = `${experience} XP`;
-    nextLevelXP.textContent = `${xpForNextLevelMin} XP`;
+    const badge = getBadgeForLevelStats(finalLevel);
+    levelDisplay.innerHTML = `<span style="font-size: 1.2em; margin-right: 5px;">${badge}</span> Lv. ${finalLevel}`;
+    currentXP.textContent = `${experience.toLocaleString()} XP`;
+    nextLevelXP.textContent = `${xpForNextLevel.toLocaleString()} XP`;
+    
+    // Get badge name for tooltip
+    function getBadgeNameStats(level) {
+        if (level >= 1000) return "Meteor";
+        if (level >= 900) return "Moon";
+        if (level >= 800) return "Sun";
+        if (level >= 700) return "Earth";
+        if (level >= 600) return "Planet";
+        if (level >= 500) return "Star";
+        if (level >= 400) return "Glowing Star";
+        if (level >= 300) return "Dizzy Star";
+        if (level >= 250) return "Galaxy";
+        if (level >= 200) return "Shooting Star";
+        if (level >= 150) return "Atomic";
+        if (level >= 120) return "Crystal";
+        if (level >= 100) return "Sparkle";
+        if (level >= 80) return "Champion";
+        if (level >= 70) return "Royal";
+        if (level >= 60) return "Diamond";
+        if (level >= 50) return "Star";
+        if (level >= 40) return "Fire";
+        if (level >= 35) return "Lightning";
+        if (level >= 30) return "Shining Star";
+        if (level >= 25) return "Target";
+        if (level >= 20) return "Medal";
+        if (level >= 15) return "Trophy";
+        if (level >= 12) return "Gold Medal";
+        if (level >= 9) return "Silver Medal";
+        if (level >= 6) return "Bronze Medal";
+        if (level >= 3) return "Star";
+        return "Sprout";
+    }
+    
+    // Get color class based on level
+    function getLevelColorClassStats(level) {
+        if (level >= 1000) return "level-meteor";
+        if (level >= 900) return "level-moon";
+        if (level >= 800) return "level-sun";
+        if (level >= 700) return "level-earth";
+        if (level >= 600) return "level-planet";
+        if (level >= 500) return "level-star-high";
+        if (level >= 400) return "level-glowing";
+        if (level >= 300) return "level-dizzy";
+        if (level >= 250) return "level-galaxy";
+        if (level >= 200) return "level-shooting";
+        if (level >= 150) return "level-atomic";
+        if (level >= 120) return "level-crystal";
+        if (level >= 100) return "level-sparkle";
+        if (level >= 80) return "level-champion";
+        if (level >= 70) return "level-royal";
+        if (level >= 60) return "level-diamond";
+        if (level >= 50) return "level-star";
+        if (level >= 40) return "level-fire";
+        if (level >= 35) return "level-lightning";
+        if (level >= 30) return "level-shining";
+        if (level >= 25) return "level-target";
+        if (level >= 20) return "level-medal";
+        if (level >= 15) return "level-trophy";
+        if (level >= 12) return "level-gold";
+        if (level >= 9) return "level-silver";
+        if (level >= 6) return "level-bronze";
+        if (level >= 3) return "level-star-low";
+        return "level-sprout";
+    }
+    
+    // Apply color class to progression card for dynamic progress bar styling
+    const colorClass = getLevelColorClassStats(finalLevel);
+    levelProgressionCard.className = `level-progression-card ${colorClass}`;
+    
+    // Add tooltip to level display if it exists in status bar
+    const statusLevelDisplay = document.getElementById("playerLevel");
+    if (statusLevelDisplay) {
+        const badgeName = getBadgeNameStats(finalLevel);
+        // Create tooltip element with larger badge name
+        let tooltip = statusLevelDisplay.querySelector(".player-level-tooltip");
+        if (!tooltip) {
+            tooltip = document.createElement("div");
+            tooltip.className = "player-level-tooltip";
+            statusLevelDisplay.appendChild(tooltip);
+        }
+        tooltip.innerHTML = `
+            <div class="tooltip-badge-name">${badgeName}</div>
+            <div class="tooltip-stats">Total XP: ${experience.toLocaleString()}<br>Total Plays: ${totalPlays.toLocaleString()}</div>
+        `;
+        // Store formatted data for hover tooltip (for fallback CSS ::before)
+        statusLevelDisplay.setAttribute("data-badge", badgeName);
+        statusLevelDisplay.setAttribute("data-xp", experience.toLocaleString());
+        statusLevelDisplay.setAttribute("data-plays", totalPlays.toLocaleString());
+        // Update color class
+        statusLevelDisplay.className = `player-level ${getLevelColorClassStats(finalLevel)}`;
+        if (!statusLevelDisplay.classList.contains("hide")) {
+            statusLevelDisplay.classList.remove("hide");
+        }
+    }
     
     // Update progress bar
     xpProgressBar.style.width = `${progressPercent}%`;
     if (xpProgressText) {
         // Only show text if progress bar is wide enough
-        if (progressPercent > 25) {
-            xpProgressText.textContent = `${xpInCurrentLevel} / ${xpNeededForNextLevel}`;
+        if (progressPercent > 15) {
+            xpProgressText.textContent = `${xpInCurrentLevel.toLocaleString()} / ${xpNeededForNextLevel.toLocaleString()}`;
         } else {
             xpProgressText.textContent = "";
         }
@@ -395,7 +549,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Calculate and display player level and XP
             const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList);
-            updateLevelProgression(playerData);
+            const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + (secretList ? secretList.length : 0);
+            updateLevelProgression(playerData, totalPlays);
 
             // Render all modes
             renderModeStats('easy');
@@ -721,7 +876,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
             // Calculate and display player level and XP
             const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList);
-            updateLevelProgression(playerData);
+            const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + (secretList ? secretList.length : 0);
+            updateLevelProgression(playerData, totalPlays);
 
             // Render all modes
             renderModeStats('easy');

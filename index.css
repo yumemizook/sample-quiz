@@ -73,6 +73,851 @@ body::before {
     font-weight: bold;
 }
 
+.player-level {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: bold;
+    color: #dbffff;
+    font-size: large;
+    padding: 5px 10px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    cursor: help;
+    position: relative;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+.player-level:hover {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+/* Tooltip container */
+.player-level-tooltip {
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    padding: 0;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 40, 0.95));
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 10000;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 255, 255, 0.1);
+    min-width: 220px;
+    backdrop-filter: blur(10px);
+}
+
+.player-level-tooltip .tooltip-badge-name {
+    display: block;
+    padding: 12px 18px 8px 18px;
+    font-size: 1.4em;
+    font-weight: bold;
+    text-align: center;
+    color: #dbffff;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.player-level-tooltip .tooltip-stats {
+    padding: 8px 18px 12px 18px;
+    font-size: 0.95em;
+    text-align: center;
+    color: #dbffff;
+    line-height: 1.6;
+}
+
+.player-level:hover .player-level-tooltip {
+    opacity: 1;
+    transform: translateX(-50%) translateY(2px);
+}
+
+/* Colorful tooltip backgrounds based on level - apply to tooltip element */
+.player-level.level-sprout .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(144, 238, 144, 0.95), rgba(60, 179, 113, 0.95));
+    border-color: rgba(144, 238, 144, 0.8);
+    box-shadow: 0 6px 20px rgba(144, 238, 144, 0.4), 0 0 30px rgba(144, 238, 144, 0.3);
+}
+
+.player-level.level-sprout .player-level-tooltip .tooltip-badge-name,
+.player-level.level-sprout .player-level-tooltip .tooltip-stats {
+    color: #0d4d0d;
+}
+
+.player-level.level-star-low .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95));
+    border-color: rgba(255, 255, 255, 0.8);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4), 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.player-level.level-star-low .player-level-tooltip .tooltip-badge-name,
+.player-level.level-star-low .player-level-tooltip .tooltip-stats {
+    color: #333;
+}
+
+.player-level.level-bronze .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.95), rgba(160, 82, 45, 0.95));
+    border-color: rgba(205, 127, 50, 0.9);
+    box-shadow: 0 6px 20px rgba(205, 127, 50, 0.5), 0 0 30px rgba(205, 127, 50, 0.4);
+}
+
+.player-level.level-bronze .player-level-tooltip .tooltip-badge-name,
+.player-level.level-bronze .player-level-tooltip .tooltip-stats {
+    color: #fff;
+}
+
+.player-level.level-silver .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.95), rgba(169, 169, 169, 0.95));
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 20px rgba(192, 192, 192, 0.5), 0 0 30px rgba(255, 255, 255, 0.4);
+}
+
+.player-level.level-silver .player-level-tooltip .tooltip-badge-name,
+.player-level.level-silver .player-level-tooltip .tooltip-stats {
+    color: #333;
+}
+
+.player-level.level-gold .player-level-tooltip,
+.player-level.level-trophy .player-level-tooltip,
+.player-level.level-medal .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 165, 0, 0.95));
+    border-color: rgba(255, 215, 0, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.5);
+}
+
+.player-level.level-gold .player-level-tooltip .tooltip-badge-name,
+.player-level.level-gold .player-level-tooltip .tooltip-stats,
+.player-level.level-trophy .player-level-tooltip .tooltip-badge-name,
+.player-level.level-trophy .player-level-tooltip .tooltip-stats,
+.player-level.level-medal .player-level-tooltip .tooltip-badge-name,
+.player-level.level-medal .player-level-tooltip .tooltip-stats {
+    color: #8b6914;
+}
+
+.player-level.level-target .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 99, 71, 0.95), rgba(255, 69, 0, 0.95));
+    border-color: rgba(255, 99, 71, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 99, 71, 0.5), 0 0 30px rgba(255, 99, 71, 0.4);
+}
+
+.player-level.level-target .player-level-tooltip .tooltip-badge-name,
+.player-level.level-target .player-level-tooltip .tooltip-stats {
+    color: #fff;
+}
+
+.player-level.level-shining .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 255, 224, 0.95), rgba(255, 255, 0, 0.95));
+    border-color: rgba(255, 255, 224, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 255, 224, 0.5), 0 0 30px rgba(255, 255, 0, 0.4);
+}
+
+.player-level.level-shining .player-level-tooltip .tooltip-badge-name,
+.player-level.level-shining .player-level-tooltip .tooltip-stats {
+    color: #666;
+}
+
+.player-level.level-lightning .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 255, 0, 0.95), rgba(255, 215, 0, 0.95));
+    border-color: rgba(255, 255, 0, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 255, 0, 0.6), 0 0 40px rgba(255, 255, 0, 0.5);
+}
+
+.player-level.level-lightning .player-level-tooltip .tooltip-badge-name,
+.player-level.level-lightning .player-level-tooltip .tooltip-stats {
+    color: #666;
+}
+
+.player-level.level-fire .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 69, 0, 0.95), rgba(255, 140, 0, 0.95));
+    border-color: rgba(255, 69, 0, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 69, 0, 0.6), 0 0 40px rgba(255, 140, 0, 0.5);
+}
+
+.player-level.level-fire .player-level-tooltip .tooltip-badge-name,
+.player-level.level-fire .player-level-tooltip .tooltip-stats {
+    color: #fff;
+}
+
+.player-level.level-star .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(230, 230, 250, 0.95));
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.4);
+}
+
+.player-level.level-star .player-level-tooltip .tooltip-badge-name,
+.player-level.level-star .player-level-tooltip .tooltip-stats {
+    color: #333;
+}
+
+.player-level.level-diamond .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(185, 242, 255, 0.95), rgba(135, 206, 250, 0.95));
+    border-color: rgba(185, 242, 255, 0.9);
+    box-shadow: 0 6px 20px rgba(185, 242, 255, 0.5), 0 0 30px rgba(135, 206, 250, 0.4);
+}
+
+.player-level.level-diamond .player-level-tooltip .tooltip-badge-name,
+.player-level.level-diamond .player-level-tooltip .tooltip-stats {
+    color: #003366;
+}
+
+.player-level.level-royal .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(218, 165, 32, 0.95));
+    border-color: rgba(255, 215, 0, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.7), 0 0 50px rgba(255, 215, 0, 0.6);
+}
+
+.player-level.level-royal .player-level-tooltip .tooltip-badge-name,
+.player-level.level-royal .player-level-tooltip .tooltip-stats {
+    color: #8b6914;
+}
+
+.player-level.level-champion .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 140, 0, 0.95));
+    border-color: rgba(255, 215, 0, 1);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.7);
+}
+
+.player-level.level-champion .player-level-tooltip .tooltip-badge-name,
+.player-level.level-champion .player-level-tooltip .tooltip-stats {
+    color: #8b6914;
+}
+
+.player-level.level-sparkle .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 192, 203, 0.95), rgba(255, 20, 147, 0.95));
+    border-color: rgba(255, 192, 203, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 192, 203, 0.5), 0 0 30px rgba(255, 20, 147, 0.4);
+}
+
+.player-level.level-sparkle .player-level-tooltip .tooltip-badge-name,
+.player-level.level-sparkle .player-level-tooltip .tooltip-stats {
+    color: #8b0a50;
+}
+
+.player-level.level-crystal .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(176, 224, 230, 0.95), rgba(135, 206, 235, 0.95));
+    border-color: rgba(176, 224, 230, 0.9);
+    box-shadow: 0 6px 20px rgba(176, 224, 230, 0.5), 0 0 30px rgba(135, 206, 235, 0.4);
+}
+
+.player-level.level-crystal .player-level-tooltip .tooltip-badge-name,
+.player-level.level-crystal .player-level-tooltip .tooltip-stats {
+    color: #003366;
+}
+
+.player-level.level-atomic .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(0, 191, 255, 0.95), rgba(30, 144, 255, 0.95));
+    border-color: rgba(0, 191, 255, 0.9);
+    box-shadow: 0 6px 20px rgba(0, 191, 255, 0.6), 0 0 40px rgba(30, 144, 255, 0.5);
+}
+
+.player-level.level-atomic .player-level-tooltip .tooltip-badge-name,
+.player-level.level-atomic .player-level-tooltip .tooltip-stats {
+    color: #fff;
+}
+
+.player-level.level-shooting .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.95), rgba(75, 0, 130, 0.95));
+    border-color: rgba(138, 43, 226, 0.9);
+    box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6), 0 0 40px rgba(75, 0, 130, 0.5);
+}
+
+.player-level.level-shooting .player-level-tooltip .tooltip-badge-name,
+.player-level.level-shooting .player-level-tooltip .tooltip-stats {
+    color: #fff;
+}
+
+.player-level.level-galaxy .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(75, 0, 130, 0.95), rgba(25, 25, 112, 0.95));
+    border-color: rgba(138, 43, 226, 0.9);
+    box-shadow: 0 6px 20px rgba(75, 0, 130, 0.7), 0 0 50px rgba(138, 43, 226, 0.6);
+}
+
+.player-level.level-galaxy .player-level-tooltip .tooltip-badge-name,
+.player-level.level-galaxy .player-level-tooltip .tooltip-stats {
+    color: #fff;
+}
+
+.player-level.level-dizzy .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 20, 147, 0.95), rgba(199, 21, 133, 0.95));
+    border-color: rgba(255, 20, 147, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 20, 147, 0.6), 0 0 40px rgba(199, 21, 133, 0.5);
+}
+
+.player-level.level-dizzy .player-level-tooltip .tooltip-badge-name,
+.player-level.level-dizzy .player-level-tooltip .tooltip-stats {
+    color: #fff;
+}
+
+.player-level.level-glowing .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(255, 250, 250, 0.95));
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.5);
+}
+
+.player-level.level-glowing .player-level-tooltip .tooltip-badge-name,
+.player-level.level-glowing .player-level-tooltip .tooltip-stats {
+    color: #333;
+}
+
+.player-level.level-star-high .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 248, 255, 0.95));
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.6), 0 0 40px rgba(255, 255, 255, 0.5);
+}
+
+.player-level.level-star-high .player-level-tooltip .tooltip-badge-name,
+.player-level.level-star-high .player-level-tooltip .tooltip-stats {
+    color: #333;
+}
+
+.player-level.level-planet .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(70, 130, 180, 0.95), rgba(30, 144, 255, 0.95));
+    border-color: rgba(70, 130, 180, 0.9);
+    box-shadow: 0 6px 20px rgba(70, 130, 180, 0.6), 0 0 40px rgba(30, 144, 255, 0.5);
+}
+
+.player-level.level-planet .player-level-tooltip .tooltip-badge-name,
+.player-level.level-planet .player-level-tooltip .tooltip-stats {
+    color: #fff;
+}
+
+.player-level.level-earth .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(34, 139, 34, 0.95), rgba(0, 128, 0, 0.95));
+    border-color: rgba(34, 139, 34, 0.9);
+    box-shadow: 0 6px 20px rgba(34, 139, 34, 0.6), 0 0 40px rgba(0, 128, 0, 0.5);
+}
+
+.player-level.level-earth .player-level-tooltip .tooltip-badge-name,
+.player-level.level-earth .player-level-tooltip .tooltip-stats {
+    color: #fff;
+}
+
+.player-level.level-sun .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 140, 0, 0.95));
+    border-color: rgba(255, 215, 0, 0.9);
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.7), 0 0 50px rgba(255, 140, 0, 0.6);
+}
+
+.player-level.level-sun .player-level-tooltip .tooltip-badge-name,
+.player-level.level-sun .player-level-tooltip .tooltip-stats {
+    color: #8b6914;
+}
+
+.player-level.level-moon .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.95), rgba(169, 169, 169, 0.95));
+    border-color: rgba(255, 255, 255, 0.9);
+    box-shadow: 0 6px 20px rgba(192, 192, 192, 0.6), 0 0 40px rgba(255, 255, 255, 0.5);
+}
+
+.player-level.level-moon .player-level-tooltip .tooltip-badge-name,
+.player-level.level-moon .player-level-tooltip .tooltip-stats {
+    color: #333;
+}
+
+.player-level.level-meteor .player-level-tooltip {
+    background: linear-gradient(135deg, rgba(255, 69, 0, 0.95), rgba(220, 20, 60, 0.95));
+    border-color: rgba(255, 69, 0, 1);
+    box-shadow: 0 6px 20px rgba(255, 69, 0, 0.8), 0 0 60px rgba(220, 20, 60, 0.7), 0 0 100px rgba(255, 0, 0, 0.5);
+}
+
+.player-level.level-meteor .player-level-tooltip .tooltip-badge-name,
+.player-level.level-meteor .player-level-tooltip .tooltip-stats {
+    color: #fff;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.8);
+}
+
+/* Fallback for ::before pseudo-element (if tooltip element doesn't exist) */
+.player-level::before {
+    content: attr(data-badge) "\A Total XP: " attr(data-xp) "\A Total Plays: " attr(data-plays);
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 8px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95), rgba(20, 20, 40, 0.95));
+    color: #dbffff;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    white-space: pre-line;
+    text-align: center;
+    font-size: 1.05em;
+    font-weight: normal;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 10000;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.7), 0 0 30px rgba(255, 255, 255, 0.1);
+    min-width: 220px;
+    backdrop-filter: blur(10px);
+    line-height: 2;
+}
+
+/* Hide ::before if tooltip element exists */
+.player-level:has(.player-level-tooltip)::before {
+    display: none;
+}
+
+.player-level:hover::before {
+    opacity: 1;
+    transform: translateX(-50%) translateY(2px);
+}
+
+/* Colorful tooltip backgrounds based on level */
+.player-level.level-sprout::before {
+    background: linear-gradient(135deg, rgba(144, 238, 144, 0.95), rgba(60, 179, 113, 0.95));
+    border-color: rgba(144, 238, 144, 0.8);
+    color: #0d4d0d;
+    box-shadow: 0 6px 20px rgba(144, 238, 144, 0.4), 0 0 30px rgba(144, 238, 144, 0.3);
+}
+
+.player-level.level-star-low::before {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(240, 240, 240, 0.95));
+    border-color: rgba(255, 255, 255, 0.8);
+    color: #333;
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.4), 0 0 30px rgba(255, 255, 255, 0.3);
+}
+
+.player-level.level-bronze::before {
+    background: linear-gradient(135deg, rgba(205, 127, 50, 0.95), rgba(160, 82, 45, 0.95));
+    border-color: rgba(205, 127, 50, 0.9);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(205, 127, 50, 0.5), 0 0 30px rgba(205, 127, 50, 0.4);
+}
+
+.player-level.level-silver::before {
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.95), rgba(169, 169, 169, 0.95));
+    border-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+    box-shadow: 0 6px 20px rgba(192, 192, 192, 0.5), 0 0 30px rgba(255, 255, 255, 0.4);
+}
+
+.player-level.level-gold::before,
+.player-level.level-trophy::before,
+.player-level.level-medal::before {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 165, 0, 0.95));
+    border-color: rgba(255, 215, 0, 0.9);
+    color: #8b6914;
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6), 0 0 40px rgba(255, 215, 0, 0.5);
+}
+
+.player-level.level-target::before {
+    background: linear-gradient(135deg, rgba(255, 99, 71, 0.95), rgba(255, 69, 0, 0.95));
+    border-color: rgba(255, 99, 71, 0.9);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(255, 99, 71, 0.5), 0 0 30px rgba(255, 99, 71, 0.4);
+}
+
+.player-level.level-shining::before {
+    background: linear-gradient(135deg, rgba(255, 255, 224, 0.95), rgba(255, 255, 0, 0.95));
+    border-color: rgba(255, 255, 224, 0.9);
+    color: #666;
+    box-shadow: 0 6px 20px rgba(255, 255, 224, 0.5), 0 0 30px rgba(255, 255, 0, 0.4);
+}
+
+.player-level.level-lightning::before {
+    background: linear-gradient(135deg, rgba(255, 255, 0, 0.95), rgba(255, 215, 0, 0.95));
+    border-color: rgba(255, 255, 0, 0.9);
+    color: #666;
+    box-shadow: 0 6px 20px rgba(255, 255, 0, 0.6), 0 0 40px rgba(255, 255, 0, 0.5);
+}
+
+.player-level.level-fire::before {
+    background: linear-gradient(135deg, rgba(255, 69, 0, 0.95), rgba(255, 140, 0, 0.95));
+    border-color: rgba(255, 69, 0, 0.9);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(255, 69, 0, 0.6), 0 0 40px rgba(255, 140, 0, 0.5);
+}
+
+.player-level.level-star::before {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(230, 230, 250, 0.95));
+    border-color: rgba(255, 255, 255, 0.9);
+    color: #333;
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.5), 0 0 30px rgba(255, 255, 255, 0.4);
+}
+
+.player-level.level-diamond::before {
+    background: linear-gradient(135deg, rgba(185, 242, 255, 0.95), rgba(135, 206, 250, 0.95));
+    border-color: rgba(185, 242, 255, 0.9);
+    color: #003366;
+    box-shadow: 0 6px 20px rgba(185, 242, 255, 0.5), 0 0 30px rgba(135, 206, 250, 0.4);
+}
+
+.player-level.level-royal::before {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(218, 165, 32, 0.95));
+    border-color: rgba(255, 215, 0, 0.9);
+    color: #8b6914;
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.7), 0 0 50px rgba(255, 215, 0, 0.6);
+}
+
+.player-level.level-champion::before {
+    background: linear-gradient(135deg, rgba(255, 215, 0, 0.95), rgba(255, 140, 0, 0.95));
+    border-color: rgba(255, 215, 0, 1);
+    color: #8b6914;
+    box-shadow: 0 6px 20px rgba(255, 215, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.7);
+}
+
+.player-level.level-sparkle::before {
+    background: linear-gradient(135deg, rgba(255, 192, 203, 0.95), rgba(255, 20, 147, 0.95));
+    border-color: rgba(255, 192, 203, 0.9);
+    color: #8b0a50;
+    box-shadow: 0 6px 20px rgba(255, 192, 203, 0.5), 0 0 30px rgba(255, 20, 147, 0.4);
+}
+
+.player-level.level-crystal::before {
+    background: linear-gradient(135deg, rgba(176, 224, 230, 0.95), rgba(135, 206, 235, 0.95));
+    border-color: rgba(176, 224, 230, 0.9);
+    color: #003366;
+    box-shadow: 0 6px 20px rgba(176, 224, 230, 0.5), 0 0 30px rgba(135, 206, 235, 0.4);
+}
+
+.player-level.level-atomic::before {
+    background: linear-gradient(135deg, rgba(0, 191, 255, 0.95), rgba(30, 144, 255, 0.95));
+    border-color: rgba(0, 191, 255, 0.9);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(0, 191, 255, 0.6), 0 0 40px rgba(30, 144, 255, 0.5);
+}
+
+.player-level.level-shooting::before {
+    background: linear-gradient(135deg, rgba(138, 43, 226, 0.95), rgba(75, 0, 130, 0.95));
+    border-color: rgba(138, 43, 226, 0.9);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(138, 43, 226, 0.6), 0 0 40px rgba(75, 0, 130, 0.5);
+}
+
+.player-level.level-galaxy::before {
+    background: linear-gradient(135deg, rgba(75, 0, 130, 0.95), rgba(25, 25, 112, 0.95));
+    border-color: rgba(138, 43, 226, 0.9);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(75, 0, 130, 0.7), 0 0 50px rgba(138, 43, 226, 0.6);
+}
+
+.player-level.level-dizzy::before {
+    background: linear-gradient(135deg, rgba(255, 20, 147, 0.95), rgba(199, 21, 133, 0.95));
+    border-color: rgba(255, 20, 147, 0.9);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(255, 20, 147, 0.6), 0 0 40px rgba(199, 21, 133, 0.5);
+}
+
+.player-level.level-glowing::before {
+    background: linear-gradient(135deg, rgba(255, 255, 0, 0.95), rgba(255, 215, 0, 0.95));
+    border-color: rgba(255, 255, 0, 1);
+    color: #666;
+    box-shadow: 0 6px 20px rgba(255, 255, 0, 0.8), 0 0 60px rgba(255, 215, 0, 0.7);
+}
+
+.player-level.level-star-high::before {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.95), rgba(230, 230, 250, 0.95));
+    border-color: rgba(255, 255, 255, 1);
+    color: #333;
+    box-shadow: 0 6px 20px rgba(255, 255, 255, 0.8), 0 0 60px rgba(255, 255, 255, 0.7);
+}
+
+.player-level.level-planet::before {
+    background: linear-gradient(135deg, rgba(139, 69, 19, 0.95), rgba(101, 67, 33, 0.95));
+    border-color: rgba(139, 69, 19, 0.9);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(139, 69, 19, 0.5), 0 0 30px rgba(101, 67, 33, 0.4);
+}
+
+.player-level.level-earth::before {
+    background: linear-gradient(135deg, rgba(34, 139, 34, 0.95), rgba(0, 100, 0, 0.95));
+    border-color: rgba(34, 139, 34, 0.9);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(34, 139, 34, 0.6), 0 0 40px rgba(0, 100, 0, 0.5);
+}
+
+.player-level.level-sun::before {
+    background: linear-gradient(135deg, rgba(255, 165, 0, 0.95), rgba(255, 140, 0, 0.95));
+    border-color: rgba(255, 165, 0, 1);
+    color: #8b4513;
+    box-shadow: 0 6px 20px rgba(255, 165, 0, 0.8), 0 0 60px rgba(255, 140, 0, 0.7);
+}
+
+.player-level.level-moon::before {
+    background: linear-gradient(135deg, rgba(192, 192, 192, 0.95), rgba(169, 169, 169, 0.95));
+    border-color: rgba(255, 255, 255, 1);
+    color: #333;
+    box-shadow: 0 6px 20px rgba(192, 192, 192, 0.8), 0 0 60px rgba(255, 255, 255, 0.7);
+}
+
+.player-level.level-meteor::before {
+    background: linear-gradient(135deg, rgba(255, 0, 0, 0.95), rgba(139, 0, 0, 0.95));
+    border-color: rgba(255, 0, 0, 1);
+    color: #fff;
+    box-shadow: 0 6px 20px rgba(255, 0, 0, 0.9), 0 0 80px rgba(255, 0, 0, 0.8), 0 0 120px rgba(255, 69, 0, 0.6);
+    font-weight: bold;
+}
+
+/* Level color classes */
+.player-level.level-sprout {
+    border-color: rgba(144, 238, 144, 0.4);
+    background: rgba(144, 238, 144, 0.1);
+}
+
+.player-level.level-star-low {
+    border-color: rgba(255, 255, 255, 0.4);
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.player-level.level-bronze {
+    border-color: rgba(205, 127, 50, 0.5);
+    background: rgba(205, 127, 50, 0.15);
+}
+
+.player-level.level-silver {
+    border-color: rgba(192, 192, 192, 0.5);
+    background: rgba(192, 192, 192, 0.15);
+}
+
+.player-level.level-gold {
+    border-color: rgba(255, 215, 0, 0.6);
+    background: rgba(255, 215, 0, 0.15);
+}
+
+.player-level.level-trophy {
+    border-color: rgba(255, 215, 0, 0.6);
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.player-level.level-medal {
+    border-color: rgba(255, 215, 0, 0.6);
+    background: rgba(255, 215, 0, 0.2);
+}
+
+.player-level.level-target {
+    border-color: rgba(255, 99, 71, 0.5);
+    background: rgba(255, 99, 71, 0.15);
+}
+
+.player-level.level-shining {
+    border-color: rgba(255, 255, 224, 0.6);
+    background: rgba(255, 255, 224, 0.2);
+}
+
+.player-level.level-lightning {
+    border-color: rgba(255, 255, 0, 0.7);
+    background: rgba(255, 255, 0, 0.2);
+}
+
+.player-level.level-fire {
+    border-color: rgba(255, 69, 0, 0.6);
+    background: rgba(255, 69, 0, 0.2);
+}
+
+.player-level.level-star {
+    border-color: rgba(255, 255, 255, 0.5);
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.player-level.level-diamond {
+    border-color: rgba(185, 242, 255, 0.6);
+    background: rgba(185, 242, 255, 0.2);
+}
+
+.player-level.level-royal {
+    border-color: rgba(255, 215, 0, 0.7);
+    background: rgba(255, 215, 0, 0.25);
+}
+
+.player-level.level-champion {
+    border-color: rgba(255, 215, 0, 0.8);
+    background: rgba(255, 215, 0, 0.3);
+}
+
+.player-level.level-sparkle {
+    border-color: rgba(255, 192, 203, 0.6);
+    background: rgba(255, 192, 203, 0.2);
+}
+
+.player-level.level-crystal {
+    border-color: rgba(176, 224, 230, 0.7);
+    background: rgba(176, 224, 230, 0.25);
+}
+
+.player-level.level-atomic {
+    border-color: rgba(0, 191, 255, 0.7);
+    background: rgba(0, 191, 255, 0.25);
+}
+
+.player-level.level-shooting {
+    border-color: rgba(138, 43, 226, 0.7);
+    background: rgba(138, 43, 226, 0.25);
+}
+
+.player-level.level-galaxy {
+    border-color: rgba(75, 0, 130, 0.8);
+    background: rgba(75, 0, 130, 0.3);
+}
+
+.player-level.level-dizzy {
+    border-color: rgba(255, 20, 147, 0.7);
+    background: rgba(255, 20, 147, 0.25);
+}
+
+.player-level.level-glowing {
+    border-color: rgba(255, 255, 0, 0.8);
+    background: rgba(255, 255, 0, 0.3);
+}
+
+.player-level.level-star-high {
+    border-color: rgba(255, 255, 255, 0.8);
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.player-level.level-planet {
+    border-color: rgba(139, 69, 19, 0.7);
+    background: rgba(139, 69, 19, 0.25);
+}
+
+.player-level.level-earth {
+    border-color: rgba(34, 139, 34, 0.7);
+    background: rgba(34, 139, 34, 0.25);
+}
+
+.player-level.level-sun {
+    border-color: rgba(255, 165, 0, 0.9);
+    background: rgba(255, 165, 0, 0.35);
+}
+
+.player-level.level-moon {
+    border-color: rgba(192, 192, 192, 0.9);
+    background: rgba(192, 192, 192, 0.35);
+}
+
+.player-level.level-meteor {
+    border-color: rgba(255, 0, 0, 0.9);
+    background: rgba(255, 0, 0, 0.35);
+    box-shadow: 0 0 15px rgba(255, 0, 0, 0.5);
+}
+
+.level-badge {
+    font-size: 1.3em;
+    display: inline-block;
+    animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+.level-text {
+    color: #dbffff;
+}
+
+/* Level text colors that complement the badge colors */
+.player-level.level-sprout .level-text {
+    color: #90ee90;
+}
+
+.player-level.level-bronze .level-text {
+    color: #cd7f32;
+}
+
+.player-level.level-silver .level-text {
+    color: #c0c0c0;
+}
+
+.player-level.level-gold .level-text,
+.player-level.level-trophy .level-text,
+.player-level.level-medal .level-text {
+    color: #ffd700;
+}
+
+.player-level.level-target .level-text {
+    color: #ff6347;
+}
+
+.player-level.level-shining .level-text {
+    color: #ffffe0;
+}
+
+.player-level.level-lightning .level-text {
+    color: #ffff00;
+}
+
+.player-level.level-fire .level-text {
+    color: #ff4500;
+}
+
+.player-level.level-diamond .level-text {
+    color: #b9f2ff;
+}
+
+.player-level.level-royal .level-text,
+.player-level.level-champion .level-text {
+    color: #ffd700;
+    text-shadow: 0 0 5px rgba(255, 215, 0, 0.5);
+}
+
+.player-level.level-sparkle .level-text {
+    color: #ffc0cb;
+}
+
+.player-level.level-crystal .level-text {
+    color: #b0e0e6;
+}
+
+.player-level.level-atomic .level-text {
+    color: #00bfff;
+}
+
+.player-level.level-shooting .level-text {
+    color: #8a2be2;
+}
+
+.player-level.level-galaxy .level-text {
+    color: #4b0082;
+}
+
+.player-level.level-dizzy .level-text {
+    color: #ff1493;
+}
+
+.player-level.level-glowing .level-text {
+    color: #ffff00;
+    text-shadow: 0 0 8px rgba(255, 255, 0, 0.8);
+}
+
+.player-level.level-star-high .level-text {
+    color: #ffffff;
+    text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+}
+
+.player-level.level-planet .level-text {
+    color: #8b4513;
+}
+
+.player-level.level-earth .level-text {
+    color: #228b22;
+}
+
+.player-level.level-sun .level-text {
+    color: #ffa500;
+    text-shadow: 0 0 10px rgba(255, 165, 0, 0.8);
+}
+
+.player-level.level-moon .level-text {
+    color: #c0c0c0;
+    text-shadow: 0 0 10px rgba(192, 192, 192, 0.8);
+}
+
+.player-level.level-meteor .level-text {
+    color: #ff0000;
+    text-shadow: 0 0 15px rgba(255, 0, 0, 1);
+    font-weight: bold;
+}
+
 .container {
     max-width: 800px;
     width: 90%;
@@ -490,8 +1335,8 @@ body.mode-hell .mode-card[data-mode="hell"] .mode-name {
 }
 
 .menu-actions {
-    display: flex;
-    flex-direction: column;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
 }
 
@@ -566,7 +1411,7 @@ body.mode-hell .play-btn:hover {
 
 .secondary-actions {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 15px;
 }
 
@@ -1325,5 +2170,282 @@ td:first-child {
     .status a {
         font-size: 0.8em;
         padding: 4px 6px;
+    }
+}
+
+/* Level Progression Card Styles */
+.level-progression-card {
+    display: none;
+    margin-bottom: 20px;
+    padding: 25px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.7), rgba(20, 20, 40, 0.7));
+    border-radius: 15px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 20px rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+}
+
+.level-progression-card:hover {
+    border-color: rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6), 0 0 30px rgba(255, 255, 255, 0.15);
+}
+
+.level-progression-title {
+    margin: 0 0 20px 0;
+    color: #dbffff;
+    text-align: center;
+    font-size: 1.8em;
+    font-weight: bold;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8), 0 0 20px rgba(219, 255, 255, 0.3);
+}
+
+.level-progression-content {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.level-display {
+    font-size: 2.2em;
+    font-weight: bold;
+    color: #ffd700;
+    text-shadow: 0 2px 10px rgba(255, 215, 0, 0.6), 0 0 20px rgba(255, 215, 0, 0.4);
+    white-space: nowrap;
+    min-width: 120px;
+}
+
+.xp-progress-container {
+    flex: 1;
+    min-width: 250px;
+}
+
+.xp-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.xp-label {
+    color: #dbffff;
+    font-size: 0.95em;
+    font-weight: 500;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+}
+
+.xp-progress-wrapper {
+    width: 100%;
+    height: 35px;
+    background: rgba(0, 0, 0, 0.6);
+    border-radius: 18px;
+    overflow: hidden;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    position: relative;
+    box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+.xp-progress-bar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4CAF50, #8BC34A, #4CAF50);
+    background-size: 200% 100%;
+    transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding-right: 12px;
+    box-sizing: border-box;
+    border-radius: 16px;
+    box-shadow: 0 0 15px rgba(76, 175, 80, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    animation: progressShine 3s infinite;
+}
+
+@keyframes progressShine {
+    0% {
+        background-position: 200% 0;
+    }
+    100% {
+        background-position: -200% 0;
+    }
+}
+
+.xp-progress-text {
+    color: white;
+    font-weight: bold;
+    font-size: 0.9em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9), 0 0 10px rgba(255, 255, 255, 0.5);
+    white-space: nowrap;
+}
+
+/* Level-based progress bar colors */
+.level-progression-card.level-sprout .xp-progress-bar {
+    background: linear-gradient(90deg, #90EE90, #3CB371, #90EE90);
+    background-size: 200% 100%;
+    box-shadow: 0 0 15px rgba(144, 238, 144, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-star-low .xp-progress-bar {
+    background: linear-gradient(90deg, #FFFFFF, #F0F0F0, #FFFFFF);
+    background-size: 200% 100%;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-bronze .xp-progress-bar {
+    background: linear-gradient(90deg, #CD7F32, #A0522D, #CD7F32);
+    background-size: 200% 100%;
+    box-shadow: 0 0 15px rgba(205, 127, 50, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-silver .xp-progress-bar {
+    background: linear-gradient(90deg, #C0C0C0, #A9A9A9, #C0C0C0);
+    background-size: 200% 100%;
+    box-shadow: 0 0 15px rgba(192, 192, 192, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-gold .xp-progress-bar,
+.level-progression-card.level-trophy .xp-progress-bar,
+.level-progression-card.level-medal .xp-progress-bar {
+    background: linear-gradient(90deg, #FFD700, #FFA500, #FFD700);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6), 0 0 30px rgba(255, 215, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-target .xp-progress-bar {
+    background: linear-gradient(90deg, #FF6347, #FF4500, #FF6347);
+    background-size: 200% 100%;
+    box-shadow: 0 0 15px rgba(255, 99, 71, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-shining .xp-progress-bar {
+    background: linear-gradient(90deg, #FFFFE0, #FFFF00, #FFFFE0);
+    background-size: 200% 100%;
+    box-shadow: 0 0 15px rgba(255, 255, 224, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-lightning .xp-progress-bar {
+    background: linear-gradient(90deg, #FFFF00, #FFD700, #FFFF00);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(255, 255, 0, 0.6), 0 0 30px rgba(255, 255, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-fire .xp-progress-bar {
+    background: linear-gradient(90deg, #FF4500, #FF8C00, #FF4500);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(255, 69, 0, 0.6), 0 0 30px rgba(255, 140, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-star .xp-progress-bar {
+    background: linear-gradient(90deg, #FFFFFF, #E6E6FA, #FFFFFF);
+    background-size: 200% 100%;
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-diamond .xp-progress-bar {
+    background: linear-gradient(90deg, #B9F2FF, #87CEFA, #B9F2FF);
+    background-size: 200% 100%;
+    box-shadow: 0 0 15px rgba(185, 242, 255, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-royal .xp-progress-bar {
+    background: linear-gradient(90deg, #FFD700, #DAA520, #FFD700);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.7), 0 0 40px rgba(255, 215, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-champion .xp-progress-bar {
+    background: linear-gradient(90deg, #FFD700, #FF8C00, #FFD700);
+    background-size: 200% 100%;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.8), 0 0 50px rgba(255, 215, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-sparkle .xp-progress-bar {
+    background: linear-gradient(90deg, #FFC0CB, #FF1493, #FFC0CB);
+    background-size: 200% 100%;
+    box-shadow: 0 0 15px rgba(255, 192, 203, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-crystal .xp-progress-bar {
+    background: linear-gradient(90deg, #B0E0E6, #87CEEB, #B0E0E6);
+    background-size: 200% 100%;
+    box-shadow: 0 0 15px rgba(176, 224, 230, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-atomic .xp-progress-bar {
+    background: linear-gradient(90deg, #00BFFF, #1E90FF, #00BFFF);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(0, 191, 255, 0.6), 0 0 30px rgba(30, 144, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-shooting .xp-progress-bar {
+    background: linear-gradient(90deg, #8A2BE2, #4B0082, #8A2BE2);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(138, 43, 226, 0.6), 0 0 30px rgba(75, 0, 130, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-galaxy .xp-progress-bar {
+    background: linear-gradient(90deg, #4B0082, #191970, #4B0082);
+    background-size: 200% 100%;
+    box-shadow: 0 0 25px rgba(75, 0, 130, 0.7), 0 0 50px rgba(138, 43, 226, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-dizzy .xp-progress-bar {
+    background: linear-gradient(90deg, #FF1493, #C71585, #FF1493);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(255, 20, 147, 0.6), 0 0 30px rgba(199, 21, 133, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-glowing .xp-progress-bar {
+    background: linear-gradient(90deg, #FFFFFF, #FFF5FA, #FFFFFF);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-star-high .xp-progress-bar {
+    background: linear-gradient(90deg, #FFFFFF, #F0F8FF, #FFFFFF);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(255, 255, 255, 0.6), 0 0 30px rgba(255, 255, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-planet .xp-progress-bar {
+    background: linear-gradient(90deg, #4682B4, #1E90FF, #4682B4);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(70, 130, 180, 0.6), 0 0 30px rgba(30, 144, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-earth .xp-progress-bar {
+    background: linear-gradient(90deg, #228B22, #008000, #228B22);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(34, 139, 34, 0.6), 0 0 30px rgba(0, 128, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-sun .xp-progress-bar {
+    background: linear-gradient(90deg, #FFD700, #FF8C00, #FFD700);
+    background-size: 200% 100%;
+    box-shadow: 0 0 25px rgba(255, 215, 0, 0.7), 0 0 50px rgba(255, 140, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-moon .xp-progress-bar {
+    background: linear-gradient(90deg, #C0C0C0, #A9A9A9, #C0C0C0);
+    background-size: 200% 100%;
+    box-shadow: 0 0 20px rgba(192, 192, 192, 0.6), 0 0 30px rgba(255, 255, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+.level-progression-card.level-meteor .xp-progress-bar {
+    background: linear-gradient(90deg, #FF4500, #DC143C, #FF4500);
+    background-size: 200% 100%;
+    box-shadow: 0 0 30px rgba(255, 69, 0, 0.8), 0 0 60px rgba(220, 20, 60, 0.7), 0 0 100px rgba(255, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    animation: progressShine 2s infinite, meteorPulse 1.5s infinite;
+}
+
+@keyframes meteorPulse {
+    0%, 100% {
+        box-shadow: 0 0 30px rgba(255, 69, 0, 0.8), 0 0 60px rgba(220, 20, 60, 0.7), 0 0 100px rgba(255, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    50% {
+        box-shadow: 0 0 40px rgba(255, 69, 0, 1), 0 0 80px rgba(220, 20, 60, 0.9), 0 0 120px rgba(255, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
 }
