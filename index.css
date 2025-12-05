@@ -2360,9 +2360,20 @@ td:first-child {
     align-items: center;
     justify-content: center;
     font-size: 3em;
+    position: absolute;
+    top: 0;
+    left: 0;
 }
 
 .profile-popup-avatar {
+    display: none;
+}
+
+.profile-popup-avatar.show {
+    display: block;
+}
+
+.profile-popup-avatar-placeholder.hide {
     display: none;
 }
 
@@ -2439,24 +2450,112 @@ td:first-child {
 
 @media (max-width: 768px) {
     .player-profile-popup {
-        width: 300px;
+        width: calc(100vw - 20px);
+        max-width: 350px;
+        max-height: calc(100vh - 20px);
+        overflow-y: auto;
+        left: 10px !important;
+        right: 10px !important;
+        top: 10px !important;
+        transform: none !important;
+    }
+    
+    .profile-popup-content {
+        padding: 15px;
     }
     
     .profile-popup-avatar-container {
-        width: 80px;
-        height: 80px;
-        top: -40px;
+        width: 70px;
+        height: 70px;
+        top: -35px;
+        left: 15px;
     }
     
     .profile-popup-avatar,
     .profile-popup-avatar-placeholder {
-        width: 80px;
-        height: 80px;
-        font-size: 2.5em;
+        width: 70px;
+        height: 70px;
+        font-size: 2em;
+        border-width: 3px;
     }
     
     .profile-popup-info {
-        margin-top: 50px;
+        margin-top: 45px;
+    }
+    
+    .profile-popup-name {
+        font-size: 1.3em;
+    }
+    
+    .profile-popup-level {
+        font-size: 1em;
+    }
+    
+    .profile-popup-scores {
+        margin-top: 15px;
+        padding-top: 15px;
+    }
+    
+    .profile-popup-score-item {
+        font-size: 0.9em;
+        padding: 6px 0;
+    }
+}
+
+@media (max-width: 480px) {
+    .player-profile-popup {
+        width: calc(100vw - 16px);
+        max-width: none;
+        left: 8px !important;
+        right: 8px !important;
+        top: 8px !important;
+        border-radius: 12px;
+    }
+    
+    .profile-popup-content {
+        padding: 12px;
+    }
+    
+    .profile-popup-avatar-container {
+        width: 60px;
+        height: 60px;
+        top: -30px;
+        left: 12px;
+    }
+    
+    .profile-popup-avatar,
+    .profile-popup-avatar-placeholder {
+        width: 60px;
+        height: 60px;
+        font-size: 1.8em;
+        border-width: 2px;
+    }
+    
+    .profile-popup-info {
+        margin-top: 40px;
+    }
+    
+    .profile-popup-name {
+        font-size: 1.2em;
+        margin-bottom: 8px;
+    }
+    
+    .profile-popup-level {
+        font-size: 0.95em;
+    }
+    
+    .profile-popup-badge {
+        font-size: 1.3em;
+    }
+    
+    .profile-popup-scores h4 {
+        font-size: 1em;
+        margin-bottom: 10px;
+    }
+    
+    .profile-popup-score-item {
+        font-size: 0.85em;
+        padding: 5px 0;
     }
 }
 

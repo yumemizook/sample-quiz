@@ -1,5 +1,5 @@
 import { getAuth, onAuthStateChanged, signOut } from "./firebase.js";
-import { getFirestore, collection, getDocs, doc, getDoc } from "./firebase.js";
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "./firebase.js";
 
 const auth = getAuth();
 let selectedMode = "normal"; // Default mode
@@ -356,6 +356,20 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelector("[login]")?.classList.add("hide");
             document.querySelector("[signup]")?.classList.add("hide");
             document.querySelector("[logout]")?.classList.remove("hide");
+            
+            // Sync Firebase Auth data to userProfiles (for ranking screen avatar display)
+            try {
+                const db = getFirestore();
+                const userProfileRef = doc(db, 'userProfiles', user.uid);
+                // Sync photoURL, displayName, and email from Firebase Auth
+                await setDoc(userProfileRef, {
+                    displayName: user.displayName || user.email,
+                    email: user.email,
+                    photoURL: user.photoURL || null
+                }, { merge: true });
+            } catch (error) {
+                console.error('Error syncing user profile:', error);
+            }
             
             // Load and display avatar and banner
             try {

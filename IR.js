@@ -280,7 +280,7 @@ function createProfilePopup() {
         <div class="profile-popup-banner"></div>
         <div class="profile-popup-content">
             <div class="profile-popup-avatar-container">
-                <img class="profile-popup-avatar" src="" alt="Avatar" style="display: none;">
+                <img class="profile-popup-avatar" src="" alt="Avatar">
                 <div class="profile-popup-avatar-placeholder">👤</div>
             </div>
             <div class="profile-popup-info">
@@ -510,6 +510,13 @@ async function loadPlayerProfile(playerName) {
     
     const popup = createProfilePopup();
     
+    // Reset avatar to placeholder initially
+    const avatarImg = popup.querySelector('.profile-popup-avatar');
+    const avatarPlaceholder = popup.querySelector('.profile-popup-avatar-placeholder');
+    avatarImg.classList.remove('show');
+    avatarPlaceholder.classList.remove('hide');
+    avatarImg.src = ''; // Clear any previous image
+    
     // Set player name
     popup.querySelector('.profile-popup-name').textContent = playerName;
     
@@ -557,31 +564,64 @@ async function loadPlayerProfile(playerName) {
     
     // Try to load avatar and banner from Firestore
     try {
-        // Query userProfiles to find user by displayName
+        // Query userProfiles to find user by displayName or email
         const userProfilesRef = collection(db, 'userProfiles');
         const userProfilesSnapshot = await getDocs(userProfilesRef);
         
         let foundUser = null;
+        const isEmail = playerName.includes('@');
+        
         userProfilesSnapshot.forEach(doc => {
             const data = doc.data();
-            // Check if this user's displayName matches
-            if (data.displayName === playerName) {
+            // Check if this user's displayName or email matches
+            if (data.displayName === playerName || 
+                (isEmail && data.email === playerName) ||
+                (isEmail && playerName === data.displayName)) {
                 foundUser = { uid: doc.id, ...data };
             }
         });
         
+        // If not found by displayName/email, try to find by matching the name in scores
+        // The name in scores could be either displayName or email from Firebase Auth
+        if (!foundUser) {
+            // Try to find user by checking if playerName matches any user's email or displayName
+            // by looking at the UID in userProfiles and checking if their stored email/displayName matches
+            userProfilesSnapshot.forEach(doc => {
+                const data = doc.data();
+                // Check if playerName matches email (if stored) or displayName
+                if ((data.email && data.email === playerName) || 
+                    (data.displayName && data.displayName === playerName)) {
+                    foundUser = { uid: doc.id, ...data };
+                }
+            });
+        }
+        
+        // Load avatar - prioritize photoURL from Firebase Auth (stored in userProfiles)
+        const avatarImg = popup.querySelector('.profile-popup-avatar');
+        const avatarPlaceholder = popup.querySelector('.profile-popup-avatar-placeholder');
+        
         if (foundUser) {
-            // Load avatar
-            const avatarImg = popup.querySelector('.profile-popup-avatar');
-            const avatarPlaceholder = popup.querySelector('.profile-popup-avatar-placeholder');
+            // Get photoURL from Firebase Auth (stored in userProfiles when user signs in)
+            // Priority: photoURL (from Firebase Auth) > avatarURL (custom upload)
+            const avatarURL = foundUser.photoURL || foundUser.avatarURL;
             
-            if (foundUser.avatarURL || foundUser.photoURL) {
-                avatarImg.src = foundUser.avatarURL || foundUser.photoURL;
-                avatarImg.style.display = 'block';
-                avatarPlaceholder.style.display = 'none';
+            if (avatarURL) {
+                // Set up image loading with error handling
+                avatarImg.onload = () => {
+                    avatarImg.classList.add('show');
+                    avatarPlaceholder.classList.add('hide');
+                };
+                avatarImg.onerror = () => {
+                    // If image fails to load, show placeholder
+                    avatarImg.classList.remove('show');
+                    avatarPlaceholder.classList.remove('hide');
+                    avatarImg.src = ''; // Clear failed src
+                };
+                avatarImg.src = avatarURL;
             } else {
-                avatarImg.style.display = 'none';
-                avatarPlaceholder.style.display = 'flex';
+                avatarImg.classList.remove('show');
+                avatarPlaceholder.classList.remove('hide');
+                avatarImg.src = ''; // Clear src if no URL
             }
             
             // Load banner
@@ -594,16 +634,20 @@ async function loadPlayerProfile(playerName) {
             }
         } else {
             // No profile found, use defaults
-            const avatarImg = popup.querySelector('.profile-popup-avatar');
-            const avatarPlaceholder = popup.querySelector('.profile-popup-avatar-placeholder');
-            avatarImg.style.display = 'none';
-            avatarPlaceholder.style.display = 'flex';
+            avatarImg.classList.remove('show');
+            avatarPlaceholder.classList.remove('hide');
+            avatarImg.src = '';
             
             const bannerEl = popup.querySelector('.profile-popup-banner');
             bannerEl.style.display = 'none';
         }
     } catch (error) {
         console.error('Error loading player profile:', error);
+        // On error, show placeholder
+        const avatarImg = popup.querySelector('.profile-popup-avatar');
+        const avatarPlaceholder = popup.querySelector('.profile-popup-avatar-placeholder');
+        avatarImg.classList.remove('show');
+        avatarPlaceholder.classList.remove('hide');
     }
 }
 
@@ -667,25 +711,35 @@ function attachPlayerNameHovers() {
 function positionPopup(popup, targetElement) {
     const rect = targetElement.getBoundingClientRect();
     const popupRect = popup.getBoundingClientRect();
+    const isMobile = window.innerWidth <= 768;
     
-    let left = rect.right + 15;
-    let top = rect.top;
-    
-    // Adjust if popup would go off screen
-    if (left + popupRect.width > window.innerWidth) {
-        left = rect.left - popupRect.width - 15;
+    if (isMobile) {
+        // On mobile, center the popup on screen
+        const left = (window.innerWidth - popupRect.width) / 2;
+        const top = Math.max(10, (window.innerHeight - popupRect.height) / 2);
+        popup.style.left = `${left}px`;
+        popup.style.top = `${top}px`;
+    } else {
+        // Desktop positioning
+        let left = rect.right + 15;
+        let top = rect.top;
+        
+        // Adjust if popup would go off screen
+        if (left + popupRect.width > window.innerWidth) {
+            left = rect.left - popupRect.width - 15;
+        }
+        
+        if (top + popupRect.height > window.innerHeight) {
+            top = window.innerHeight - popupRect.height - 10;
+        }
+        
+        if (top < 10) {
+            top = 10;
+        }
+        
+        popup.style.left = `${left}px`;
+        popup.style.top = `${top}px`;
     }
-    
-    if (top + popupRect.height > window.innerHeight) {
-        top = window.innerHeight - popupRect.height - 10;
-    }
-    
-    if (top < 10) {
-        top = 10;
-    }
-    
-    popup.style.left = `${left}px`;
-    popup.style.top = `${top}px`;
 }
 
 document.addEventListener("DOMContentLoaded", async () => {

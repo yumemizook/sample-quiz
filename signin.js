@@ -4,7 +4,7 @@ import {
     GoogleAuthProvider,
     signInWithPopup
 } from "./firebase.js";
-import { getFirestore, doc, getDoc } from "./firebase.js";
+import { getFirestore, doc, getDoc, setDoc } from "./firebase.js";
 
 const auth = getAuth();
 const signinForm = document.getElementById("login");
@@ -17,8 +17,15 @@ await signInWithEmailAndPassword(auth, email, password)
 .then(async (userCredential) => {
     const user = userCredential.user;
     const db = getFirestore();
-    // Check if user has seen introduction
+    // Sync Firebase Auth data to userProfiles
     const userProfileRef = doc(db, 'userProfiles', user.uid);
+    await setDoc(userProfileRef, {
+        displayName: user.displayName || user.email,
+        email: user.email,
+        photoURL: user.photoURL || null
+    }, { merge: true });
+    
+    // Check if user has seen introduction
     const userProfileSnap = await getDoc(userProfileRef);
     if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
         window.location.href = "introduction.html";
@@ -59,10 +66,18 @@ googleButton.addEventListener("click", async () => {
         const user = result.user;
         const credential = GoogleAuthProvider.credentialFromResult(result);
         const db = getFirestore();
-        // Check if user has seen introduction
+        // Sync Firebase Auth data to userProfiles
         const userProfileRef = doc(db, 'userProfiles', user.uid);
+        await setDoc(userProfileRef, {
+            displayName: user.displayName || user.email,
+            email: user.email,
+            photoURL: user.photoURL || null
+        }, { merge: true });
+        
+        // Check if user has seen introduction
         const userProfileSnap = await getDoc(userProfileRef);
         if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
+            await setDoc(userProfileRef, { hasSeenIntro: false }, { merge: true });
             window.location.href = "introduction.html";
         } else {
             window.location.href = "index.html";
