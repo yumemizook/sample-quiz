@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <title>Master Mode</title>
     <link rel="stylesheet" href="index.css" />
     <style>
@@ -41,14 +42,14 @@
       <a login href="signin.html">Login</a>
       <a signup href="signup.html">Signup</a>
       <a logout class="hide" href="index.html">Log out</a>
-      <a giveup href="index.html">Give up</a>
+      <a giveup href="index.html" style="display: none;">Give up</a>
       <div class="player-info hide" id="playerInfo">
         <div class="player-info-left">
           <span class="name"></span>
           <span class="player-level" id="playerLevel"></span>
         </div>
         <div class="player-avatar hide" id="playerAvatar">
-          <img id="playerAvatarImg" src="" alt="Avatar">
+          <img id="playerAvatarImg" src="" alt="Avatar" />
           <div class="player-avatar-placeholder">👤</div>
         </div>
       </div>
@@ -182,6 +183,10 @@
         let failedRequests = 0;
 
         for (let i = 0; i < numRequests; i++) {
+          // Update progress
+          const progress = Math.floor(((i + 1) / numRequests) * 100);
+          ques.innerHTML = `<h5>Please Wait!! Loading Questions... (${progress}%)<br>DO NOT PANIC IF IT LOOKS STUCK</h5>`;
+          
           // Add delay between API calls to prevent rate limiting (except before first request)
           if (i > 0) {
             await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
@@ -336,7 +341,7 @@
     let pauseStartTime = 0; // When pause started
     let pausedAnswerTimer = false; // Whether answer timer was running
     let pausedAnswerTime = 0; // Remaining answer time when paused
-    let timerStartTime = null; // Original start time for the timer
+    let timerStartTime = 0; // Original start time for the timer
     let pauseCount = 0; // Number of times the game was paused
     let totalPausedTime = 0; // Total time spent paused (in milliseconds)
     
@@ -675,10 +680,20 @@
         // Reset pause tracking
         pauseCount = 0;
         totalPausedTime = 0;
+        pausedTime = 0;
+        pausedAnswerTimer = false;
+        pausedAnswerTime = 0;
+        selectedPauseButton = 0;
         
         // Show pause button when quiz starts
         if (pauseBtn) {
           pauseBtn.style.display = "block";
+        }
+        
+        // Show give up button after questions are loaded
+        const giveUpBtn = document.querySelector("[giveup]");
+        if (giveUpBtn) {
+          giveUpBtn.style.display = "block";
         }
       }
     }
@@ -1415,7 +1430,7 @@
           return;
         }
         
-        const elapsedTime = Date.now() - timerStartTime;
+        const elapsedTime = Date.now() - timerStartTime - totalPausedTime;
         const miliseconds = Math.floor((elapsedTime % 1000) / 10);
         const seconds = Math.floor((elapsedTime / 1000) % 60);
         quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
@@ -1831,12 +1846,6 @@
 
         try {
           const db = getFirestore();
-          // Format total paused time
-          const pausedMinutes = Math.floor(totalPausedTime / 60000);
-          const pausedSeconds = Math.floor((totalPausedTime % 60000) / 1000);
-          const pausedCentiseconds = Math.floor((totalPausedTime % 1000) / 10);
-          const pausedTimeFormatted = `${pausedMinutes.toString().padStart(2, "0")}:${pausedSeconds.toString().padStart(2, "0")}:${pausedCentiseconds.toString().padStart(2, "0")}`;
-          
           const payload = {
             name: user.displayName || user.email,
             score: totalGradePoints, // Use total grade points instead of correct answer count
@@ -1846,7 +1855,7 @@
             line: line,
             inputType: inputType || 'unknown',
             pauseCount: pauseCount || 0,
-            totalPausedTime: pausedTimeFormatted,
+            totalPausedTime: formatPausedTime(totalPausedTime || 0),
           };
 
           // Global leaderboard entry

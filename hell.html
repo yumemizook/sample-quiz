@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <title>SUFFERING IS ETERNAL</title>
     <link rel="stylesheet" href="index.css" />
     <style>
@@ -96,14 +97,14 @@
       <a login href="signin.html">Login</a>
       <a signup href="signup.html">Signup</a>
       <a logout class="hide" href="index.html">Log out</a>
-      <a giveup href="index.html">Give up</a>
+      <a giveup href="index.html" style="display: none;">Give up</a>
       <div class="player-info hide" id="playerInfo">
         <div class="player-info-left">
           <span class="name"></span>
           <span class="player-level" id="playerLevel"></span>
         </div>
         <div class="player-avatar hide" id="playerAvatar">
-          <img id="playerAvatarImg" src="" alt="Avatar">
+          <img id="playerAvatarImg" src="" alt="Avatar" />
           <div class="player-avatar-placeholder">👤</div>
         </div>
       </div>
@@ -227,6 +228,7 @@
     
     // Pause system variables
     let isPaused = false;
+    let pausedTime = 0; // Time when paused (elapsed time in seconds)
     let pauseStartTime = 0;
     let pausedAnswerTimer = false;
     let pausedAnswerTime = 0;
@@ -563,6 +565,10 @@
         let failedRequests = 0;
 
         for (let i = 0; i < numRequests; i++) {
+          // Update progress
+          const progress = Math.floor(((i + 1) / numRequests) * 100);
+          ques.innerHTML = `<h5>Please Wait!! Loading Questions... (${progress}%)<br>DO NOT PANIC IF IT LOOKS STUCK</h5>`;
+          
           // Add delay between API calls to prevent rate limiting (except before first request)
           if (i > 0) {
             await new Promise((resolve) => setTimeout(resolve, 5000)); // 4 second delay
@@ -629,7 +635,7 @@
     let initialTimeToAnswer = null; // Track initial time allocated for current question
     let quizAbandoned = false; // Track if quiz was abandoned (gave up)
 
-    ques.innerHTML = `<h5>Please be patient. Loading questions will take a long time.</h5>`;
+    ques.innerHTML = `<h5>Please Wait!! Loading Questions... DO NOT PANIC IF IT LOOKS STUCK</h5>`;
     document.querySelector("#btn").style.display = "none";
 
     // Handle give up button
@@ -667,6 +673,12 @@
       } else {
         loadQues();
         stopWatch();
+        
+        // Show give up button after questions are loaded
+        const giveUpBtn = document.querySelector("[giveup]");
+        if (giveUpBtn) {
+          giveUpBtn.style.display = "block";
+        }
       }
     }
     startQuiz();
@@ -1956,7 +1968,7 @@
                     <div style="color: #00ff00; font-family: ${modernDosFont}; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
                         <h1 style="font-family: ${modernDosFont}; font-size: clamp(2em, 6vw, 4em); margin-bottom: 30px; text-align: center; word-wrap: break-word;">YOU ARE</h1>
                         <div style="font-family: ${modernDosFont}; font-size: clamp(3em, 10vw, 6em); margin: 30px 0; text-align: center; font-weight: bold; word-wrap: break-word;">
-                            ${grade || "N/A"}
+                            ${grade || ""}
                         </div>
                         <p style="font-family: ${modernDosFont}; margin: 20px 0; font-size: clamp(0.8em, 2vw, 0.9em);">Thank you for playing.</p>
                     </div>
@@ -1987,7 +1999,7 @@
                             </div>
                             <div style="font-family: ${modernDosFont}; text-align: center;">
                                 <div style="font-family: ${modernDosFont}; font-size: clamp(2.5em, 6vw, 4.5em); font-weight: bold; color: ${line};">
-                                    ${grade || "N/A"}
+                                    ${grade || ""}
                                 </div>
                             </div>
                         </div>

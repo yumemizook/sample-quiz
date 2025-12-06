@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
     <title>Questions</title>
     <link rel="stylesheet" href="index.css">
      <style>
@@ -37,14 +38,14 @@
         <a login href="signin.html">Login</a>
         <a signup href="signup.html">Signup</a>
         <a logout class="hide" href="index.html">Log out</a>
-        <a giveup href="index.html">Give up</a>
+        <a giveup href="index.html" style="display: none;">Give up</a>
         <div class="player-info hide" id="playerInfo">
             <div class="player-info-left">
                 <span class="name"></span>
                 <span class="player-level" id="playerLevel"></span>
             </div>
             <div class="player-avatar hide" id="playerAvatar">
-                <img id="playerAvatarImg" src="" alt="Avatar">
+                <img id="playerAvatarImg" src="" alt="Avatar" />
                 <div class="player-avatar-placeholder">👤</div>
             </div>
         </div>
@@ -107,11 +108,14 @@
 
     async function fetchQuestions() {
         try {
+            ques.innerHTML = `<h5>Please Wait!! Loading Questions... (0%)<br>DO NOT PANIC IF IT LOOKS STUCK</h5>`;
             const response = await fetch('https://opentdb.com/api.php?amount=30&difficulty=easy');
+            ques.innerHTML = `<h5>Please Wait!! Loading Questions... (50%)<br>DO NOT PANIC IF IT LOOKS STUCK</h5>`;
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
+            ques.innerHTML = `<h5>Please Wait!! Loading Questions... (100%)<br>DO NOT PANIC IF IT LOOKS STUCK</h5>`;
             Questions = data.results;
         } catch (error) {
             console.log(error);
@@ -138,6 +142,7 @@
     
     // Pause system variables
     let isPaused = false;
+    let pausedTime = 0; // Time when paused (elapsed time in seconds)
     let pauseStartTime = 0;
     let pausedAnswerTimer = false;
     let pausedAnswerTime = 0;
@@ -464,7 +469,7 @@
     }
     initKeyboard();
 
-    ques.innerHTML = `<h5>Please Wait!! Loading Questions...</h5>`;
+    ques.innerHTML = `<h5>Please Wait!! Loading Questions... DO NOT PANIC IF IT LOOKS STUCK</h5>`;
     if (btn) btn.style.display = "none";
     
     // Handle give up button
@@ -503,6 +508,12 @@
         } else {
             loadQues();
             stopWatch();
+            
+            // Show give up button after questions are loaded
+            const giveUpBtn = document.querySelector("[giveup]");
+            if (giveUpBtn) {
+                giveUpBtn.style.display = "block";
+            }
         }
     }
     startQuiz();
