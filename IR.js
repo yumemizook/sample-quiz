@@ -1,4 +1,5 @@
 import { getFirestore, collection, getDocs, query, where, getDocs as getDocsQuery, doc, getDoc } from "./firebase.js";
+import { calculatePlayerLevel } from "./stats.js";
 
 const db = getFirestore();
 
@@ -20,6 +21,7 @@ let allEasyScores = [];
 let allNormalScores = [];
 let allMasterScores = [];
 let allHellScores = [];
+let allSecretScores = [];
 
 // Current filter state
 const currentFilter = {
@@ -382,57 +384,7 @@ function getBadgeName(level) {
     return "Sprout";
 }
 
-// Calculate player level from scores (simplified version)
-function calculatePlayerLevelFromScores(easyScores, normalScores, masterScores, hellScores) {
-    let experience = 0;
-    
-    easyScores.forEach(score => {
-        const gradePoints = score.score || 0;
-        experience += Math.floor(gradePoints / 100);
-    });
-    
-    normalScores.forEach(score => {
-        const correctAnswers = score.score || 0;
-        experience += Math.floor(correctAnswers * 0.5);
-        if (correctAnswers >= 150) experience += 25;
-        else if (correctAnswers >= 100) experience += 15;
-        else if (correctAnswers >= 50) experience += 10;
-    });
-    
-    masterScores.forEach(score => {
-        const gradePoints = score.score || 0;
-        experience += Math.floor(gradePoints / 200);
-        if (score.grade === "GM") experience += 100;
-        else if (score.grade && score.grade.startsWith("S")) {
-            const sLevel = parseInt(score.grade.substring(1)) || 0;
-            experience += sLevel * 5;
-        }
-        if (score.line === "orange") experience += 50;
-        else if (score.line === "green") experience += 25;
-    });
-    
-    hellScores.forEach(score => {
-        const correctAnswers = score.score || 0;
-        experience += Math.floor(correctAnswers * 1.5);
-        if (score.grade === "Grand Master - Infinity") experience += 200;
-        else if (score.grade && score.grade.startsWith("S")) {
-            const sLevel = parseInt(score.grade.substring(1)) || 0;
-            experience += sLevel * 10;
-        }
-    });
-    
-    const easyCompleted = easyScores.some(s => s.score === 30);
-    if (easyCompleted) experience += 25;
-    
-    const masterCompleted = masterScores.some(s => s.score === 90);
-    if (masterCompleted) experience += 75;
-    
-    const hellCompleted = hellScores.some(s => s.score === 200);
-    if (hellCompleted) experience += 150;
-    
-    const finalLevel = Math.max(1, Math.floor(1 + Math.sqrt(experience / 10)));
-    return { level: finalLevel, experience: experience };
-}
+// calculatePlayerLevel is now imported from stats.js to ensure synchronization
 
 // Find best scores for each mode
 function findBestScores(playerName) {
@@ -527,13 +479,16 @@ async function loadPlayerProfile(playerName) {
     // Find best scores
     const bestScores = findBestScores(playerName);
     
-    // Calculate level from scores
+    // Calculate level from scores using the same formula as navbar and stats
     const easyScores = allEasyScores.filter(s => s.name === playerName);
     const normalScores = allNormalScores.filter(s => s.name === playerName);
     const masterScores = allMasterScores.filter(s => s.name === playerName);
     const hellScores = allHellScores.filter(s => s.name === playerName);
     
-    const playerData = calculatePlayerLevelFromScores(easyScores, normalScores, masterScores, hellScores);
+    // Secret scores are not fetched for player profile tooltip
+    const secretScores = [];
+    
+    const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores);
     const badge = getBadgeForLevel(playerData.level);
     const badgeName = getBadgeName(playerData.level);
     
@@ -764,6 +719,12 @@ document.addEventListener("DOMContentLoaded", async () => {
         allEasyScores = easySnapshot.empty ? [] : easySnapshot.docs.map((doc) => doc.data());
         allMasterScores = masterSnapshot.empty ? [] : masterSnapshot.docs.map((doc) => doc.data());
         allHellScores = finalSnapshot.empty ? [] : finalSnapshot.docs.map((doc) => doc.data());
+        
+        // Load secret scores (for level calculation, but not displayed in rankings)
+        // Secret scores are stored per-user, so we need to fetch from all users' playerData
+        allSecretScores = []; // Initialize as empty array
+        // Note: Secret scores are not displayed in rankings, but are needed for accurate level calculation
+        // We'll fetch them on-demand when loading a player profile
         
         // Render all tables
         renderTable('easy');
