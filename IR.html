@@ -32,11 +32,12 @@
                 <button class="tab-button active" data-tab="easy">Easy Mode</button>
                 <button class="tab-button" data-tab="normal">Normal Mode</button>
                 <button class="tab-button" data-tab="master">Master Mode</button>
+                <button class="tab-button" data-tab="race">Race Mode</button>
                 <button class="tab-button" data-tab="hell">Hell Mode</button>
             </div>
             
             <div class="tab-content active" id="easy-tab">
-                <div class="normal stats-card">
+                <div class="easy stats-card">
                     <h1>Easy mode:</h1>
                     <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <label style="color: white; font-weight: bold;">Filter by input:</label>
@@ -63,7 +64,7 @@
             </div>
             
             <div class="tab-content" id="normal-tab">
-                <div class="hell stats-card">
+                <div class="normal stats-card">
                     <h1>Normal mode:</h1>
                     <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <label style="color: white; font-weight: bold;">Filter by input:</label>
@@ -91,7 +92,7 @@
             </div>
             
             <div class="tab-content" id="master-tab">
-                <div class="normal stats-card">
+                <div class="master stats-card">
                     <h1>Master mode:</h1>
                     <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                         <label style="color: white; font-weight: bold;">Filter by input:</label>
@@ -108,6 +109,33 @@
                                     <th>Name</th>
                                     <th>Score</th>
                                     <th>Grade</th>
+                                    <th>Time</th>
+                                    <th>Input</th>
+                                    <th>Date</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="tab-content" id="race-tab">
+                <div class="race stats-card">
+                    <h1>Race mode:</h1>
+                    <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                        <label style="color: white; font-weight: bold;">Filter by input:</label>
+                        <button class="input-filter-btn active" data-input="all" data-mode="race">All</button>
+                        <button class="input-filter-btn" data-input="keyboard" data-mode="race">⌨️ Keyboard</button>
+                        <button class="input-filter-btn" data-input="controller" data-mode="race">🎮 Controller</button>
+                        <button class="input-filter-btn" data-input="mobile" data-mode="race">📱 Mobile</button>
+                    </div>
+                    <div class="scores">
+                        <table id="scoreTable5">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Name</th>
+                                    <th>Score</th>
                                     <th>Time</th>
                                     <th>Input</th>
                                     <th>Date</th>

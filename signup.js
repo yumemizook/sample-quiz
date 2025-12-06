@@ -32,9 +32,12 @@ signupForm.addEventListener("submit", async (e) => {
       .then(async (userCredential) => {
         const user = userCredential.user;
         const db = getFirestore();
-        // Mark as new user
+        // Mark as new user and set account creation timestamp
         const userProfileRef = doc(db, 'userProfiles', user.uid);
-        await setDoc(userProfileRef, { hasSeenIntro: false }, { merge: true });
+        await setDoc(userProfileRef, { 
+          hasSeenIntro: false,
+          createdAt: new Date().toISOString()
+        }, { merge: true });
         alert("Account created successfully! Redirecting to introduction...");
         window.location.href = "introduction.html";
         console.log("User created:", user);
@@ -70,9 +73,18 @@ googleButton.addEventListener("click", async () => {
         const userProfileRef = doc(db, 'userProfiles', user.uid);
         const userProfileSnap = await getDoc(userProfileRef);
         if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
-            await setDoc(userProfileRef, { hasSeenIntro: false }, { merge: true });
+            await setDoc(userProfileRef, { 
+              hasSeenIntro: false,
+              createdAt: new Date().toISOString()
+            }, { merge: true });
             window.location.href = "introduction.html";
         } else {
+            // Backfill createdAt if it doesn't exist
+            if (!userProfileSnap.data().createdAt) {
+              await setDoc(userProfileRef, { 
+                createdAt: new Date().toISOString()
+              }, { merge: true });
+            }
             window.location.href = "index.html";
         }
         console.log("User signed in with Google:", user);

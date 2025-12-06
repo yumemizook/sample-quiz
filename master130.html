@@ -1,0 +1,1996 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico">
+  <title>Race Mode</title>
+  <link rel="stylesheet" href="index.css" />
+  <style>
+    body {
+      background: url("race.jpg") no-repeat center center fixed;
+      background-size: cover;
+    }
+
+    .container button {
+      width: 100%;
+      padding: 10px;
+      margin-top: 10px;
+      background-color: #4a90e2;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      font-size: 1.2em;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+
+    .container button:hover {
+      background-color: #357abd;
+    }
+
+    a {
+      text-decoration: none;
+      color: #ffffff;
+      font-size: x-large;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="status">
+    <a login href="signin.html">Login</a>
+    <a signup href="signup.html">Signup</a>
+    <a logout class="hide" href="index.html">Log out</a>
+    <a giveup href="index.html" style="display: none;">Give up</a>
+    <div class="player-info hide" id="playerInfo">
+      <div class="player-info-left">
+        <span class="name"></span>
+        <span class="player-level" id="playerLevel"></span>
+      </div>
+      <div class="player-avatar hide" id="playerAvatar">
+        <img id="playerAvatarImg" src="" alt="Avatar" />
+        <div class="player-avatar-placeholder">👤</div>
+      </div>
+    </div>
+  </div>
+  <div class="absolutecontainer" style="display: flex; align-items: flex-start; gap: 20px;">
+    <div id="gradeDisplayLeft"
+      style="font-size: 4em; color: white; font-weight: bold; white-space: nowrap; padding: 20px; min-width: 120px; text-align: center; display: none; flex-direction: column; align-items: center; justify-content: center;">
+      <div id="gradeText"
+        style="line-height: 1; border: 3px solid; border-radius: 0; padding: 10px; box-sizing: border-box;"></div>
+      <div id="nextGradeThreshold"
+        style="font-size: 0.3em; margin-top: 10px; width: 60px; opacity: 0.8; font-weight: normal;"></div>
+    </div>
+    <div class="container" style="width: 800px; max-width: 800px;">
+      <div class="question" id="ques"></div>
+      <div class="options" id="opt"></div>
+      <button onclick="checkAns()" id="btn">SUBMIT</button>
+      <div class="correctanswer"></div>
+      <div class="jum" style="display: flex; justify-content: space-between">
+        <div id="score"></div>
+        <div id="currentgrade" style="font-size: x-large; color: cyan; font-weight: bold;"></div>
+        <div id="timeelapsed"></div>
+      </div>
+      <div class="timerifinvalid"></div>
+      <div class="evalscreen" style="display: none"></div>
+      <div id="notification" class="notification hide"></div>
+    </div>
+  </div>
+  <!-- Pause Menu Overlay -->
+  <div id="pauseMenu" class="pause-menu" style="display: none;">
+    <div class="pause-menu-content">
+      <h2>PAUSED</h2>
+      <div id="pauseStats" class="pause-stats">
+        <div>Pauses: <span id="pauseCountDisplay">0</span></div>
+        <div>Total Paused Time: <span id="totalPausedTimeDisplay">00:00:00</span></div>
+      </div>
+      <button id="resumeBtn" class="pause-menu-button" tabindex="0">Resume</button>
+      <button id="giveUpPauseBtn" class="pause-menu-button" tabindex="0">Give Up</button>
+    </div>
+  </div>
+  <!-- Pause Button (visible on mobile and desktop) -->
+  <button id="pauseBtn" class="pause-button" style="display: none;">⏸ Pause</button>
+  <script type="module" src="./IR.js"></script>
+  <script type="module" src="./firebase.js"></script>
+  <script type="module" src="./hm.js"></script>
+</body>
+<script type="module">
+  import { getAuth, getFirestore, collection, addDoc, getDocs, onAuthStateChanged } from "./firebase.js";
+  const auth = getAuth();
+
+  // Master mode completion requirement removed - race mode is now always accessible
+
+  // Detect mobile device
+  function isMobileDevice() {
+    return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) ||
+      (window.matchMedia && window.matchMedia("(max-width: 768px)").matches);
+  }
+
+  // Track input type used during the quiz
+  let inputType = null; // 'controller', 'keyboard', or 'mobile'
+
+  // Detect initial input type
+  const isMobile = isMobileDevice();
+  if (isMobile) {
+    inputType = 'mobile';
+  }
+
+  let allQuestions = [];
+  // Add controller indicator to submit button
+  const submitBtn = document.querySelector("#btn");
+  let controllerIndicator = null;
+  let keyboardSubmitIndicator = null;
+  if (submitBtn) {
+    controllerIndicator = document.createElement("img");
+    controllerIndicator.className = "controller-submit-indicator";
+    controllerIndicator.src = "btns/cross.png";
+    controllerIndicator.alt = "A/X Button";
+    controllerIndicator.title = "Press A or X button to submit";
+    controllerIndicator.style.cssText = `
+        display: inline-block;
+        margin-left: 8px;
+        width: 28px;
+        height: 28px;
+        vertical-align: middle;
+        object-fit: contain;
+      `;
+    submitBtn.appendChild(controllerIndicator);
+
+    // Add keyboard indicator for submit button
+    keyboardSubmitIndicator = document.createElement("span");
+    keyboardSubmitIndicator.className = "keyboard-submit-indicator";
+    keyboardSubmitIndicator.textContent = "Space/Enter";
+    keyboardSubmitIndicator.title = "Press Space or Enter to submit";
+    keyboardSubmitIndicator.style.cssText = `
+        display: inline-block;
+        margin-left: 8px;
+        padding: 4px 8px;
+        background-color: rgba(255, 255, 255, 0.2);
+        border: 2px solid rgba(255, 255, 255, 0.5);
+        border-radius: 4px;
+        font-size: 14px;
+        font-weight: bold;
+        color: white;
+        vertical-align: middle;
+      `;
+    submitBtn.appendChild(keyboardSubmitIndicator);
+  }
+
+  // Helper function to update button text while preserving controller and keyboard indicators
+  function updateSubmitButtonText(text) {
+    if (submitBtn) {
+      // Remove all children except the controller and keyboard indicators
+      const children = Array.from(submitBtn.childNodes);
+      children.forEach(child => {
+        if (child !== controllerIndicator && child !== keyboardSubmitIndicator) {
+          submitBtn.removeChild(child);
+        }
+      });
+      // Add the new text
+      const textNode = document.createTextNode(text);
+      submitBtn.insertBefore(textNode, controllerIndicator);
+    }
+  }
+
+  submitBtn.addEventListener("click", checkAns);
+  const ques = document.getElementById("ques");
+
+  async function fetchQuestions() {
+    try {
+      // OpenTDB has a 50 question limit per request, so make multiple requests
+      const totalQuestions = 130;
+      const questionsPerRequest = 50;
+      const numRequests = Math.ceil(totalQuestions / questionsPerRequest);
+      const maxRetries = 3; // Maximum retry attempts per request
+
+      allQuestions.length = 0; // Clear any previous questions
+      let failedRequests = 0;
+
+      for (let i = 0; i < numRequests; i++) {
+        // Update progress
+        const progress = Math.floor(((i + 1) / numRequests) * 100);
+        ques.innerHTML = `<h5>Please Wait!! Loading Questions... (${progress}%)<br>DO NOT PANIC IF IT LOOKS STUCK</h5>`;
+
+        // Add delay between API calls to prevent rate limiting (except before first request)
+        if (i > 0) {
+          await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+        }
+
+        const amount =
+          i === numRequests - 1
+            ? totalQuestions - i * questionsPerRequest
+            : questionsPerRequest;
+
+        let requestSuccess = false;
+        let retryCount = 0;
+
+        // Retry logic for each request
+        while (!requestSuccess && retryCount < maxRetries) {
+          try {
+            const response = await fetch(
+              `https://opentdb.com/api.php?amount=${amount}&difficulty=medium`
+            );
+
+            if (!response.ok) {
+              throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+            }
+
+            const data = await response.json();
+
+            // Check for API error response
+            if (data.response_code && data.response_code !== 0) {
+              throw new Error(`API Error Code: ${data.response_code}`);
+            }
+
+            if (data.results && data.results.length > 0) {
+              // Validate we got the expected number of questions
+              const receivedCount = data.results.length;
+              if (receivedCount === amount) {
+                allQuestions.push(...data.results);
+                requestSuccess = true;
+              } else {
+                // Got some questions but not all - add what we got and try to get more
+                allQuestions.push(...data.results);
+                console.warn(
+                  `Request ${i + 1} returned ${receivedCount} questions instead of ${amount}. Got partial results.`
+                );
+
+                // If we got at least some questions, consider it a partial success
+                if (receivedCount > 0) {
+                  requestSuccess = true; // Accept partial results
+                } else {
+                  throw new Error("No questions returned");
+                }
+              }
+            } else {
+              throw new Error("No results in response");
+            }
+          } catch (requestError) {
+            retryCount++;
+            if (retryCount < maxRetries) {
+              console.warn(
+                `Request ${i + 1} attempt ${retryCount} failed: ${requestError.message}. Retrying...`
+              );
+              // Exponential backoff: wait longer between retries
+              await new Promise(resolve => setTimeout(resolve, 5000 * retryCount));
+            } else {
+              console.error(
+                `Request ${i + 1} failed after ${maxRetries} attempts: ${requestError.message}`
+              );
+              failedRequests++;
+            }
+          }
+        }
+      }
+
+      // Validate we got questions
+      if (allQuestions.length === 0) {
+        throw new Error("Failed to fetch any questions. Please try again.");
+      }
+
+      // Warn if we got fewer questions than expected
+      if (allQuestions.length < totalQuestions) {
+        console.warn(
+          `Warning: Expected ${totalQuestions} questions but got ${allQuestions.length}. Continuing with available questions.`
+        );
+
+        // If we're missing too many questions, try to fetch more
+        if (allQuestions.length < totalQuestions * 0.8) {
+          console.warn("Missing more than 20% of questions. Attempting to fetch additional questions...");
+
+          const missingCount = totalQuestions - allQuestions.length;
+          const additionalRequests = Math.ceil(missingCount / questionsPerRequest);
+
+          for (let i = 0; i < additionalRequests && allQuestions.length < totalQuestions; i++) {
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            ques.innerHTML = `<h5>Please Wait!! Fetching Additional Questions...</h5>`;
+            const amount = Math.min(questionsPerRequest, totalQuestions - allQuestions.length);
+
+            try {
+              const response = await fetch(
+                `https://opentdb.com/api.php?amount=${amount}&difficulty=medium`
+              );
+
+              if (response.ok) {
+                const data = await response.json();
+                if (data.results && data.results.length > 0) {
+                  const needed = totalQuestions - allQuestions.length;
+                  const toAdd = data.results.slice(0, needed);
+                  allQuestions.push(...toAdd);
+                  console.log(`Fetched ${toAdd.length} additional questions`);
+                }
+              }
+            } catch (err) {
+              console.warn(`Failed to fetch additional questions: ${err.message}`);
+              break; // Stop trying if we can't fetch more
+            }
+          }
+        }
+      }
+
+      // Final validation
+      if (allQuestions.length === 0) {
+        throw new Error("Failed to fetch any questions. Please try again.");
+      }
+
+      // Ensure we have exactly 130 questions (trim if we got more)
+      if (allQuestions.length > totalQuestions) {
+        allQuestions = allQuestions.slice(0, totalQuestions);
+        console.log(`Trimmed questions to exactly ${totalQuestions} questions.`);
+      }
+
+      console.log(`Successfully loaded ${allQuestions.length} out of ${totalQuestions} requested questions.`);
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      updateSubmitButtonText("Refresh");
+      document.querySelector("#btn").onclick = () => {
+        location.reload();
+      };
+      ques.innerHTML = `<h5 style='color: red'>${error.message || error
+        }</h5>`;
+    }
+  }
+  let currQuestion = 0;
+  let score = 0;
+  let thresholdChecked = { q51: false }; // Track which thresholds have been checked
+  let elapsedQuestions = 0;
+  let quizAbandoned = false; // Track if quiz was abandoned (gave up)
+  let totalGradePoints = 0; // Track accumulated grade points
+  let previousGrade = ""; // Track previous grade for promotion detection
+  let randomFadeInterval = null; // Interval for random text fading
+
+  // Gamepad support
+  let gamepadConnected = false;
+  let gamepadPollInterval = null;
+  let lastDpadState = { up: false, down: false, left: false, right: false };
+  let answerOptions = []; // Store current question's answer options for controller support
+
+  // Pause system variables
+  let isPaused = false;
+  let pausedTime = 0; // Time when paused (elapsed time in seconds)
+  let pauseStartTime = 0; // When pause started
+  let pausedAnswerTimer = false; // Whether answer timer was running
+  let pausedAnswerTime = 0; // Remaining answer time when paused
+  let timerStartTime = 0; // Original start time for the timer
+  let pauseCount = 0; // Number of times the game was paused
+  let totalPausedTime = 0; // Total time spent paused (in milliseconds)
+
+  // Pause menu elements
+  const pauseMenu = document.getElementById("pauseMenu");
+  const pauseBtn = document.getElementById("pauseBtn");
+  const resumeBtn = document.getElementById("resumeBtn");
+  const giveUpPauseBtn = document.getElementById("giveUpPauseBtn");
+  const pauseCountDisplay = document.getElementById("pauseCountDisplay");
+  const totalPausedTimeDisplay = document.getElementById("totalPausedTimeDisplay");
+
+  // Pause menu navigation
+  let selectedPauseButton = 0; // 0 = Resume, 1 = Give Up
+  const pauseButtons = [resumeBtn, giveUpPauseBtn];
+
+  // Show pause button
+  if (pauseBtn) {
+    pauseBtn.style.display = "block";
+    pauseBtn.style.position = "fixed";
+    pauseBtn.style.top = "140px";
+    pauseBtn.style.right = "20px";
+    pauseBtn.style.zIndex = "9999";
+    pauseBtn.style.padding = "10px 20px";
+    pauseBtn.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+    pauseBtn.style.color = "white";
+    pauseBtn.style.border = "2px solid white";
+    pauseBtn.style.borderRadius = "5px";
+    pauseBtn.style.cursor = "pointer";
+    pauseBtn.style.fontSize = "1em";
+    pauseBtn.addEventListener("click", togglePause);
+  }
+
+  // Format paused time for display
+  function formatPausedTime(ms) {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    const centiseconds = Math.floor((ms % 1000) / 10);
+    return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}:${centiseconds.toString().padStart(2, "0")}`;
+  }
+
+  // Update pause menu display
+  function updatePauseMenuDisplay() {
+    if (pauseCountDisplay) {
+      pauseCountDisplay.textContent = pauseCount || 0;
+    }
+    if (totalPausedTimeDisplay) {
+      totalPausedTimeDisplay.textContent = formatPausedTime(totalPausedTime || 0);
+    }
+  }
+
+  // Update pause button highlighting
+  function updatePauseButtonHighlight() {
+    pauseButtons.forEach((btn, index) => {
+      if (btn) {
+        if (index === selectedPauseButton) {
+          btn.classList.add("pause-button-selected");
+          btn.focus();
+        } else {
+          btn.classList.remove("pause-button-selected");
+        }
+      }
+    });
+  }
+
+  // Resume button
+  if (resumeBtn) {
+    resumeBtn.addEventListener("click", togglePause);
+    resumeBtn.addEventListener("mouseenter", () => {
+      selectedPauseButton = 0;
+      updatePauseButtonHighlight();
+    });
+  }
+
+  // Give up from pause menu
+  if (giveUpPauseBtn) {
+    giveUpPauseBtn.addEventListener("click", () => {
+      if (confirm("Are you sure you want to give up?")) {
+        location.href = "index.html";
+      }
+    });
+    giveUpPauseBtn.addEventListener("mouseenter", () => {
+      selectedPauseButton = 1;
+      updatePauseButtonHighlight();
+    });
+  }
+
+  // Handle pause menu button selection
+  function selectPauseButton() {
+    if (selectedPauseButton === 0 && resumeBtn) {
+      togglePause();
+    } else if (selectedPauseButton === 1 && giveUpPauseBtn) {
+      if (confirm("Are you sure you want to give up?")) {
+        location.href = "index.html";
+      }
+    }
+  }
+
+  // Toggle pause function
+  function togglePause() {
+    if (isPaused) {
+      resumeGame();
+    } else {
+      pauseGame();
+    }
+  }
+
+  // Pause the game
+  function pauseGame() {
+    if (isPaused) return; // Already paused
+
+    // Don't pause if eval screen is showing
+    const evalDiv = document.querySelector(".evalscreen");
+    if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
+      return;
+    }
+
+    isPaused = true;
+    pauseStartTime = Date.now();
+    pauseCount++; // Increment pause count
+
+    // Pause main timer (keep it running but it won't update when paused)
+    // We don't clear it, just let it skip updates
+
+    // Pause answer timer
+    if (window.answerTimerId) {
+      pausedAnswerTimer = true;
+      pausedAnswerTime = timeToAnswer || 0;
+      clearInterval(window.answerTimerId);
+      window.answerTimerId = null;
+    }
+
+    // Pause BGM
+    if (currentBGM && !currentBGM.paused) {
+      currentBGM.pause();
+    }
+
+    // Pause random fading
+    if (randomFadeInterval) {
+      clearInterval(randomFadeInterval);
+      randomFadeInterval = null;
+    }
+
+    // Show pause menu
+    if (pauseMenu) {
+      pauseMenu.style.display = "flex";
+      updatePauseMenuDisplay();
+      selectedPauseButton = 0; // Reset to Resume button
+      updatePauseButtonHighlight();
+
+      // Update pause display periodically while paused
+      if (window.pauseDisplayInterval) {
+        clearInterval(window.pauseDisplayInterval);
+      }
+      window.pauseDisplayInterval = setInterval(() => {
+        if (isPaused && pauseMenu && pauseMenu.style.display !== "none") {
+          // Calculate current pause session time
+          const currentPauseTime = Date.now() - pauseStartTime;
+          const totalTime = totalPausedTime + currentPauseTime;
+          if (totalPausedTimeDisplay) {
+            totalPausedTimeDisplay.textContent = formatPausedTime(totalTime);
+          }
+        } else {
+          if (window.pauseDisplayInterval) {
+            clearInterval(window.pauseDisplayInterval);
+            window.pauseDisplayInterval = null;
+          }
+        }
+      }, 100); // Update every 100ms for smooth display
+    }
+
+    // Disable game interaction
+    const container = document.querySelector(".container");
+    if (container) {
+      container.style.pointerEvents = "none";
+      container.style.opacity = "0.5";
+    }
+  }
+
+  // Resume the game
+  function resumeGame() {
+    if (!isPaused) return; // Not paused
+
+    isPaused = false;
+    const pauseDuration = Date.now() - pauseStartTime;
+    totalPausedTime += pauseDuration; // Add to total paused time
+
+    // Resume main timer - adjust start time to account for pause duration
+    if (timerStartTime) {
+      timerStartTime += pauseDuration; // Add pause duration to start time
+      // Timer will continue from where it left off
+    }
+
+    // Resume answer timer if it was running
+    if (pausedAnswerTimer && pausedAnswerTime > 0) {
+      timeToAnswer = pausedAnswerTime;
+      const timerDiv = document.querySelector(".timerifinvalid");
+      if (timerDiv) {
+        window.answerTimerId = setInterval(() => {
+          if (isPaused) return; // Don't count down if paused
+          if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01;
+            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+          } else {
+            clearInterval(window.answerTimerId);
+            evalScreen();
+          }
+        }, 10);
+      }
+      pausedAnswerTimer = false;
+    }
+
+    // Resume BGM
+    if (currentBGM && localStorage.getItem("musicEnabled") !== "false") {
+      currentBGM.play().catch(err => console.log("BGM resume failed:", err));
+    }
+
+    // Resume random fading if we're past question 100
+    if (currQuestion >= 100 && !randomFadeInterval) {
+      startRandomFading();
+    }
+
+    // Hide pause menu
+    if (pauseMenu) {
+      pauseMenu.style.display = "none";
+    }
+
+    // Clear pause display interval
+    if (window.pauseDisplayInterval) {
+      clearInterval(window.pauseDisplayInterval);
+      window.pauseDisplayInterval = null;
+    }
+
+    // Re-enable game interaction
+    const container = document.querySelector(".container");
+    if (container) {
+      container.style.pointerEvents = "auto";
+      container.style.opacity = "1";
+    }
+  }
+
+  // Keyboard support
+  function initKeyboard() {
+    document.addEventListener("keydown", (e) => {
+      // Track keyboard input type
+      if (!inputType || inputType === 'mobile') {
+        inputType = 'keyboard';
+      }
+
+      // Pause with Escape key
+      if (e.key === "Escape") {
+        const evalDiv = document.querySelector(".evalscreen");
+        if (!evalDiv || evalDiv.style.display === "none" || evalDiv.style.display === "") {
+          togglePause();
+          e.preventDefault();
+        }
+        return;
+      }
+
+      // Handle pause menu navigation
+      if (isPaused && pauseMenu && pauseMenu.style.display !== "none") {
+        if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+          e.preventDefault();
+          selectedPauseButton = selectedPauseButton === 0 ? 1 : 0;
+          updatePauseButtonHighlight();
+        } else if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectPauseButton();
+        }
+        return;
+      }
+
+      // Don't process other input if paused
+      if (isPaused) {
+        e.preventDefault();
+        return;
+      }
+
+      // Check if quiz has ended
+      const evalDiv = document.querySelector(".evalscreen");
+      if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
+        return; // Quiz has ended, ignore keyboard input
+      }
+
+      // Check if questions are loaded
+      if (!allQuestions || allQuestions.length === 0) {
+        return;
+      }
+
+      // Answer selection: 1, 2, 3, 4
+      if (e.key >= "1" && e.key <= "4") {
+        const index = parseInt(e.key) - 1;
+        if (answerOptions && answerOptions[index]) {
+          answerOptions[index].checked = true;
+          e.preventDefault();
+        }
+      }
+
+      // Submit: Space or Enter
+      if (e.key === " " || e.key === "Enter") {
+        const submitBtn = document.querySelector("#btn");
+        if (submitBtn && submitBtn.style.display !== "none") {
+          checkAns();
+          e.preventDefault();
+        }
+      }
+    });
+  }
+
+  initKeyboard();
+
+  ques.innerHTML = `<h5>Please Wait!! Loading Questions... DO NOT PANIC IF IT LOOKS STUCK</h5>`;
+  document.querySelector("#btn").style.display = "none";
+
+  // Handle give up button
+  const giveUpBtn = document.querySelector("[giveup]");
+  if (giveUpBtn) {
+    giveUpBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (
+        confirm(
+          "Are you sure you want to give up? Your current progress will be saved."
+        )
+      ) {
+        quizAbandoned = true; // Mark quiz as abandoned
+        evalScreen();
+      }
+    });
+  }
+
+  async function startQuiz() {
+    await fetchQuestions();
+    if (allQuestions.length === 0) {
+      ques.innerHTML = `<h5 style='color: red'>Unable to fetch data, Please try again!!</h5>`;
+      document.querySelector("#btn").style.display = "block";
+      updateSubmitButtonText("Refresh");
+      document.querySelector("#btn").onclick = () => {
+        location.reload();
+      };
+    } else {
+      // Initialize grade display
+      totalGradePoints = 0;
+      previousGrade = ""; // Reset previous grade
+      updateGradeDisplay();
+      loadQues();
+      stopWatch();
+
+      // Reset pause tracking
+      pauseCount = 0;
+      totalPausedTime = 0;
+      pausedTime = 0;
+      pausedAnswerTimer = false;
+      pausedAnswerTime = 0;
+      selectedPauseButton = 0;
+
+      // Show pause button when quiz starts
+      if (pauseBtn) {
+        pauseBtn.style.display = "block";
+      }
+
+      // Show give up button after questions are loaded
+      const giveUpBtn = document.querySelector("[giveup]");
+      if (giveUpBtn) {
+        giveUpBtn.style.display = "block";
+      }
+    }
+  }
+  startQuiz();
+
+  // Add window resize listener to realign grade display
+  let resizeTimeout;
+  window.addEventListener("resize", () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(() => {
+      alignGradeDisplay();
+    }, 100);
+  });
+
+  // Update indicator visibility based on controller connection (hide on mobile)
+  function updateIndicatorVisibility() {
+    if (isMobile) return; // Don't show indicators on mobile
+
+    const controllerIndicators = document.querySelectorAll(".controller-indicator, .controller-submit-indicator");
+    const keyboardIndicators = document.querySelectorAll(".keyboard-indicator, .keyboard-submit-indicator");
+
+    if (gamepadConnected) {
+      // Show controller indicators, hide keyboard indicators
+      controllerIndicators.forEach(indicator => {
+        indicator.style.display = "inline-block";
+      });
+      keyboardIndicators.forEach(indicator => {
+        indicator.style.display = "none";
+      });
+    } else {
+      // Show keyboard indicators, hide controller indicators
+      controllerIndicators.forEach(indicator => {
+        indicator.style.display = "none";
+      });
+      keyboardIndicators.forEach(indicator => {
+        indicator.style.display = "inline-block";
+      });
+    }
+  }
+
+  // Gamepad support functions
+  function initGamepad() {
+    window.addEventListener("gamepadconnected", (e) => {
+      gamepadConnected = true;
+      if (!inputType || inputType === 'keyboard') {
+        inputType = 'controller';
+      }
+      startGamepadPolling();
+      updateIndicatorVisibility();
+    });
+
+    window.addEventListener("gamepaddisconnected", (e) => {
+      gamepadConnected = false;
+      stopGamepadPolling();
+      updateIndicatorVisibility();
+    });
+
+    // Check if gamepad is already connected
+    const gamepads = navigator.getGamepads();
+    for (let i = 0; i < gamepads.length; i++) {
+      if (gamepads[i]) {
+        gamepadConnected = true;
+        if (!inputType || inputType === 'keyboard') {
+          inputType = 'controller';
+        }
+        startGamepadPolling();
+        break;
+      }
+    }
+    // Update visibility based on initial state
+    updateIndicatorVisibility();
+  }
+
+  function startGamepadPolling() {
+    if (gamepadPollInterval) return;
+
+    gamepadPollInterval = setInterval(() => {
+      const gamepads = navigator.getGamepads();
+      for (let i = 0; i < gamepads.length; i++) {
+        const gamepad = gamepads[i];
+        if (gamepad) {
+          handleGamepadInput(gamepad);
+          break; // Only handle first connected gamepad
+        }
+      }
+    }, 50); // Poll every 50ms
+  }
+
+  function stopGamepadPolling() {
+    if (gamepadPollInterval) {
+      clearInterval(gamepadPollInterval);
+      gamepadPollInterval = null;
+    }
+  }
+
+  function handleGamepadInput(gamepad) {
+    // D-pad mapping (left d-pad)
+    // Standard gamepad API: axes[9] and axes[10] for d-pad, or buttons 12-15
+    // Some gamepads use buttons, others use axes
+    let dpadUp = false;
+    let dpadDown = false;
+    let dpadLeft = false;
+    let dpadRight = false;
+
+    // Check button-based d-pad (buttons 12-15: up, down, left, right)
+    if (gamepad.buttons[12]) dpadUp = gamepad.buttons[12].pressed;
+    if (gamepad.buttons[13]) dpadDown = gamepad.buttons[13].pressed;
+    if (gamepad.buttons[14]) dpadLeft = gamepad.buttons[14].pressed;
+    if (gamepad.buttons[15]) dpadRight = gamepad.buttons[15].pressed;
+
+    // Check hat/axes-based d-pad (axes[9] and axes[10] for some controllers)
+    if (gamepad.axes.length >= 10) {
+      const hatX = gamepad.axes[9];
+      const hatY = gamepad.axes[10];
+      if (hatY < -0.5) dpadUp = true;
+      if (hatY > 0.5) dpadDown = true;
+      if (hatX < -0.5) dpadLeft = true;
+      if (hatX > 0.5) dpadRight = true;
+    }
+
+    // Handle d-pad input for answer selection (only on press, not hold)
+    if (dpadUp && !lastDpadState.up && answerOptions.length >= 1) {
+      answerOptions[0].checked = true;
+      lastDpadState.up = true;
+    } else if (!dpadUp) {
+      lastDpadState.up = false;
+    }
+
+    if (dpadRight && !lastDpadState.right && answerOptions.length >= 2) {
+      answerOptions[1].checked = true;
+      lastDpadState.right = true;
+    } else if (!dpadRight) {
+      lastDpadState.right = false;
+    }
+
+    if (dpadDown && !lastDpadState.down && answerOptions.length >= 3) {
+      answerOptions[2].checked = true;
+      lastDpadState.down = true;
+    } else if (!dpadDown) {
+      lastDpadState.down = false;
+    }
+
+    if (dpadLeft && !lastDpadState.left && answerOptions.length >= 4) {
+      answerOptions[3].checked = true;
+      lastDpadState.left = true;
+    } else if (!dpadLeft) {
+      lastDpadState.left = false;
+    }
+
+    // Pause with Start button (button 9)
+    if (gamepad.buttons[9] && gamepad.buttons[9].pressed) {
+      if (!window.gamepadPausePressed) {
+        window.gamepadPausePressed = true;
+        const evalDiv = document.querySelector(".evalscreen");
+        if (!evalDiv || evalDiv.style.display === "none" || evalDiv.style.display === "") {
+          togglePause();
+        }
+      }
+    } else {
+      window.gamepadPausePressed = false;
+    }
+
+    // Handle pause menu navigation with controller
+    if (isPaused && pauseMenu && pauseMenu.style.display !== "none") {
+      // Navigate pause menu with d-pad
+      if (dpadUp && !lastDpadState.up) {
+        selectedPauseButton = 0; // Move to Resume
+        updatePauseButtonHighlight();
+        lastDpadState.up = true;
+      } else if (!dpadUp) {
+        lastDpadState.up = false;
+      }
+
+      if (dpadDown && !lastDpadState.down) {
+        selectedPauseButton = 1; // Move to Give Up
+        updatePauseButtonHighlight();
+        lastDpadState.down = true;
+      } else if (!dpadDown) {
+        lastDpadState.down = false;
+      }
+
+      // Select with A button (button 0) or X button (button 2)
+      if ((gamepad.buttons[0] && gamepad.buttons[0].pressed) ||
+        (gamepad.buttons[2] && gamepad.buttons[2].pressed)) {
+        if (!window.gamepadPauseSelectPressed) {
+          window.gamepadPauseSelectPressed = true;
+          selectPauseButton();
+        }
+      } else {
+        window.gamepadPauseSelectPressed = false;
+      }
+
+      return; // Don't process other input when paused
+    }
+
+    // Don't process other input if paused
+    if (isPaused) {
+      return;
+    }
+
+    // Submit with A button (button 0) or X button (button 2)
+    if ((gamepad.buttons[0] && gamepad.buttons[0].pressed) ||
+      (gamepad.buttons[2] && gamepad.buttons[2].pressed)) {
+      // Only submit once per press
+      if (!window.gamepadSubmitPressed) {
+        window.gamepadSubmitPressed = true;
+        checkAns();
+      }
+    } else {
+      window.gamepadSubmitPressed = false;
+    }
+  }
+
+  // Initialize gamepad support when page loads
+  initGamepad();
+
+  // Global BGM variables to control playback
+  let bgm4, bgm5;
+  let currentBGM = null;
+  let currentStage = -1; // Track which stage we're in to avoid restarting
+
+  function playBGM() {
+    // Check if music is disabled
+    if (localStorage.getItem("musicEnabled") === "false") {
+      if (currentBGM) {
+        currentBGM.pause();
+        currentBGM.currentTime = 0;
+        currentBGM = null;
+        currentStage = -1;
+      }
+      return;
+    }
+
+    // Initialize BGM if not already done
+    if (!bgm4) {
+      bgm4 = new Audio("bgm/stage4.mp3");
+      bgm5 = new Audio("bgm/stage5.mp3");
+
+      // Set BGM to loop
+      bgm4.loop = true;
+      bgm5.loop = true;
+    }
+
+    // Check if we're on the final question (stop BGM)
+    if (currQuestion === 129) {
+      // Stop current BGM if playing
+      if (currentBGM) {
+        currentBGM.pause();
+        currentBGM.currentTime = 0;
+        currentBGM = null;
+        currentStage = -1; // Reset stage tracking
+      }
+      return; // Don't play any BGM on final question
+    }
+
+    // Determine which stage we should be in
+    // Use stage4 before question 100, stage05 after question 100
+    let targetStage;
+    let targetBGM;
+
+    if (currQuestion < 100) {
+      targetStage = 4;
+      targetBGM = bgm4;
+    } else {
+      targetStage = 5;
+      targetBGM = bgm5;
+    }
+
+    // Only change BGM if we've moved to a different stage
+    if (currentStage !== targetStage) {
+      // Stop current BGM if playing
+      if (currentBGM) {
+        currentBGM.pause();
+        currentBGM.currentTime = 0;
+      }
+
+      // Play the new stage's BGM
+      currentBGM = targetBGM;
+      currentStage = targetStage;
+      currentBGM.play().catch(err => console.log("BGM play failed:", err));
+    }
+    // If we're still in the same stage, do nothing - let the BGM continue playing
+  }
+
+  function stopBGM() {
+    if (currentBGM) {
+      currentBGM.pause();
+      currentBGM.currentTime = 0;
+      currentBGM = null;
+      currentStage = -1; // Reset stage tracking
+    }
+    // Also reset BGM objects to null to allow re-initialization if needed
+    bgm4 = null;
+    bgm5 = null;
+  }
+
+  let timeToAnswer;
+  let initialTimeToAnswer; // Track initial time allocated for current question
+  function loadQues() {
+    const opt = document.getElementById("opt");
+    let currentQuestion = allQuestions[currQuestion].question;
+
+    // Change background to raceinvis.jpg after question 100
+    if (currQuestion >= 100) {
+      document.body.style.backgroundImage = 'url("raceinvis.jpg")';
+    } else {
+      document.body.style.backgroundImage = 'url("race.jpg")';
+    }
+
+    // Decode HTML entities in the question and answers
+    function decodeHTMLEntities(text) {
+      if (!text) return "";
+      const txt = document.createElement("textarea");
+      txt.innerHTML = text;
+      return txt.value;
+    }
+    currentQuestion = decodeHTMLEntities(currentQuestion);
+    ques.innerHTML = currentQuestion;
+
+    // Apply gold color to question text after question 50
+    if (currQuestion >= 50) {
+      if (ques.style.opacity !== "0") {
+        ques.style.color = "#ffd700";
+      }
+      // Random fading is handled by the interval timer
+      if (ques.style.opacity !== "0" && ques.style.opacity !== "") {
+        ques.style.opacity = "1";
+      }
+    }
+
+    opt.innerHTML = "";
+    loadScore();
+    const correctAnswer = allQuestions[currQuestion].correct_answer;
+    const incorrectAnswers = allQuestions[currQuestion].incorrect_answers;
+    const options = [correctAnswer, ...incorrectAnswers];
+    options.sort(() => Math.random() - 0.5);
+
+    // Store options for controller support
+    answerOptions = [];
+
+    // Controller button mapping: Up, Right, Down, Left
+    const controllerButtonImages = ["btns/up.png", "btns/right.png", "btns/down.png", "btns/left.png"];
+    const controllerLabels = ["D-Pad Up", "D-Pad Right", "D-Pad Down", "D-Pad Left"];
+
+    options.forEach((option, index) => {
+      const decodedOption = decodeHTMLEntities(option);
+      const choicesdiv = document.createElement("div");
+      const choice = document.createElement("input");
+      const choiceLabel = document.createElement("label");
+      choice.type = "radio";
+      choice.name = "answer";
+      choice.value = decodedOption;
+      choiceLabel.textContent = decodedOption;
+
+      // Apply gold color to option labels after question 50
+      if (currQuestion >= 50) {
+        if (choiceLabel.style.opacity !== "0") {
+          choiceLabel.style.color = "#ffd700";
+        }
+        // Random fading is handled by the interval timer
+        if (choiceLabel.style.opacity !== "0" && choiceLabel.style.opacity !== "") {
+          choiceLabel.style.opacity = "1";
+        }
+      }
+
+      // Add controller button indicator image (hide on mobile)
+      const controllerIndicator = document.createElement("img");
+      controllerIndicator.className = "controller-indicator";
+      controllerIndicator.src = controllerButtonImages[index] || "";
+      controllerIndicator.alt = controllerLabels[index] || "";
+      controllerIndicator.title = controllerLabels[index] || "";
+      controllerIndicator.style.cssText = `
+          display: ${isMobile ? 'none' : 'inline-block'};
+          margin-right: 8px;
+          width: 32px;
+          height: 32px;
+          vertical-align: middle;
+          object-fit: contain;
+        `;
+
+      // Add keyboard indicator (1, 2, 3, 4) (hide on mobile)
+      const keyboardIndicator = document.createElement("span");
+      keyboardIndicator.className = "keyboard-indicator";
+      keyboardIndicator.textContent = (index + 1).toString();
+      keyboardIndicator.title = `Press ${index + 1} to select this answer`;
+      keyboardIndicator.style.cssText = `
+          display: ${isMobile ? 'none' : 'inline-block'};
+          margin-right: 8px;
+          padding: 4px 8px;
+          background-color: rgba(255, 255, 255, 0.2);
+          border: 2px solid rgba(255, 255, 255, 0.5);
+          border-radius: 4px;
+          font-size: 16px;
+          font-weight: bold;
+          color: white;
+          vertical-align: middle;
+          min-width: 24px;
+          text-align: center;
+        `;
+
+      choicesdiv.appendChild(choice);
+      if (!isMobile) {
+        choicesdiv.appendChild(controllerIndicator);
+        choicesdiv.appendChild(keyboardIndicator);
+      }
+      choicesdiv.appendChild(choiceLabel);
+      opt.appendChild(choicesdiv);
+      document.querySelector("#btn").style.display = "block";
+
+      // Align grade display after question loads (container content may have changed)
+      setTimeout(() => alignGradeDisplay(), 0);
+
+      // Set initial visibility based on controller connection state (only if not mobile)
+      if (!isMobile) {
+        if (gamepadConnected) {
+          controllerIndicator.style.display = "inline-block";
+          keyboardIndicator.style.display = "none";
+        } else {
+          controllerIndicator.style.display = "none";
+          keyboardIndicator.style.display = "inline-block";
+        }
+      }
+
+      // Make the div clickable to select the option
+      choicesdiv.addEventListener("click", () => {
+        choice.checked = true;
+      });
+
+      // Store reference for controller support
+      answerOptions.push(choice);
+    });
+
+    let answerTimerId; // Store interval ID for answer timer
+    // Clear any previous interval to prevent multiple timers
+    if (window.answerTimerId) {
+      clearInterval(window.answerTimerId);
+    }
+    const timerDiv = document.querySelector(".timerifinvalid");
+    if (quizMinutes >= 7) {
+      // Add 2s countdown timer for each question when stopwatch hits 7 minutes
+      timeToAnswer = 2; // 2 seconds for master 130 mode
+      initialTimeToAnswer = timeToAnswer; // Store initial time
+      window.answerTimerId = setInterval(() => {
+        if (isPaused) return; // Don't count down if paused
+        if (timeToAnswer > 0) {
+          timeToAnswer -= 0.01;
+          timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+        } else {
+          clearInterval(window.answerTimerId);
+          evalScreen();
+        }
+      }, 10);
+      timerDiv.style.display = "block";
+      timerDiv.style.textAlign = "center";
+      timerDiv.style.fontSize = "xx-large";
+      timerDiv.style.color = "red";
+    } else if (currQuestion < 10) {
+      timeToAnswer = 30;
+      initialTimeToAnswer = timeToAnswer; // Store initial time
+      window.answerTimerId = setInterval(() => {
+        if (isPaused) return; // Don't count down if paused
+        if (timeToAnswer > 0) {
+          timeToAnswer -= 0.01;
+          timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+        } else {
+          clearInterval(window.answerTimerId);
+          evalScreen();
+        }
+      }, 10);
+      timerDiv.style.display = "block";
+      timerDiv.style.textAlign = "center";
+      timerDiv.style.fontSize = "xx-large";
+      timerDiv.style.color = "white";
+    } else if (currQuestion < 20) {
+      timeToAnswer = 26;
+      initialTimeToAnswer = timeToAnswer; // Store initial time
+      window.answerTimerId = setInterval(() => {
+        if (isPaused) return; // Don't count down if paused
+        if (timeToAnswer > 0) {
+          timeToAnswer -= 0.01;
+          timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+        } else {
+          clearInterval(window.answerTimerId);
+          evalScreen();
+        }
+      }, 10);
+      timerDiv.style.display = "block";
+      timerDiv.style.textAlign = "center";
+      timerDiv.style.fontSize = "xx-large";
+      timerDiv.style.color = "white";
+    } else if (currQuestion < 40) {
+      timeToAnswer = 18;
+      initialTimeToAnswer = timeToAnswer; // Store initial time
+      window.answerTimerId = setInterval(() => {
+        if (isPaused) return; // Don't count down if paused
+        if (timeToAnswer > 0) {
+          timeToAnswer -= 0.01;
+          timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+        } else {
+          clearInterval(window.answerTimerId);
+          evalScreen();
+        }
+      }, 10);
+      timerDiv.style.display = "block";
+      timerDiv.style.textAlign = "center";
+      timerDiv.style.fontSize = "xx-large";
+      timerDiv.style.color = "white";
+    } else if (currQuestion < 50) {
+      timeToAnswer = 17;
+      initialTimeToAnswer = timeToAnswer; // Store initial time
+      window.answerTimerId = setInterval(() => {
+        if (isPaused) return; // Don't count down if paused
+        if (timeToAnswer > 0) {
+          timeToAnswer -= 0.01;
+          timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+        } else {
+          clearInterval(window.answerTimerId);
+          evalScreen();
+        }
+      }, 10);
+      timerDiv.style.display = "block";
+      timerDiv.style.textAlign = "center";
+      timerDiv.style.fontSize = "xx-large";
+      timerDiv.style.color = "white";
+    } else if (currQuestion < 70) {
+      timeToAnswer = 15;
+      initialTimeToAnswer = timeToAnswer; // Store initial time
+      window.answerTimerId = setInterval(() => {
+        if (isPaused) return; // Don't count down if paused
+        if (timeToAnswer > 0) {
+          timeToAnswer -= 0.01;
+          timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+        } else {
+          clearInterval(window.answerTimerId);
+          evalScreen();
+        }
+      }, 10);
+      timerDiv.style.display = "block";
+      timerDiv.style.textAlign = "center";
+      timerDiv.style.fontSize = "xx-large";
+      timerDiv.style.color = "white";
+    } else if (currQuestion < 80) {
+      timeToAnswer = 13;
+      initialTimeToAnswer = timeToAnswer; // Store initial time
+      window.answerTimerId = setInterval(() => {
+        if (isPaused) return; // Don't count down if paused
+        if (timeToAnswer > 0) {
+          timeToAnswer -= 0.01;
+          timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+        } else {
+          clearInterval(window.answerTimerId);
+          evalScreen();
+        }
+      }, 10);
+      timerDiv.style.display = "block";
+      timerDiv.style.textAlign = "center";
+      timerDiv.style.fontSize = "xx-large";
+      timerDiv.style.color = "white";
+    } else if (currQuestion < allQuestions.length) {
+      timeToAnswer = 12;
+      initialTimeToAnswer = timeToAnswer; // Store initial time
+      window.answerTimerId = setInterval(() => {
+        if (isPaused) return; // Don't count down if paused
+        if (timeToAnswer > 0) {
+          timeToAnswer -= 0.01;
+          timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+        } else {
+          clearInterval(window.answerTimerId);
+          evalScreen();
+        }
+      }, 10);
+      timerDiv.style.display = "block";
+      timerDiv.style.textAlign = "center";
+      timerDiv.style.fontSize = "xx-large";
+      timerDiv.style.color = "white";
+    }
+    document.querySelector(".correctanswer").innerHTML = "";
+
+    // Update BGM based on current question
+    playBGM();
+
+    // Update indicator visibility after loading question
+    updateIndicatorVisibility();
+
+    // Start or update random fading after question 100
+    if (currQuestion >= 100) {
+      // Check if we need to restart with new interval
+      let needsRestart = false;
+      if (currQuestion === 100 || currQuestion === 110 || currQuestion === 120) {
+        needsRestart = true;
+      }
+
+      if (!randomFadeInterval || needsRestart) {
+        if (randomFadeInterval) {
+          clearInterval(randomFadeInterval);
+          randomFadeInterval = null;
+        }
+        startRandomFading();
+      }
+    }
+
+  }
+
+  // Function to get all visible text elements
+  function getVisibleTextElements() {
+    const elements = [];
+
+    const questionEl = document.getElementById("ques");
+    if (questionEl && questionEl.style.opacity !== "0" && questionEl.style.display !== "none") {
+      elements.push(questionEl);
+    }
+
+    const optionsEl = document.getElementById("opt");
+    if (optionsEl) {
+      const labels = optionsEl.querySelectorAll("label");
+      labels.forEach(label => {
+        if (label.style.opacity !== "0" && label.style.display !== "none") {
+          elements.push(label);
+        }
+      });
+    }
+
+    const scoreEl = document.getElementById("score");
+    if (scoreEl && scoreEl.style.opacity !== "0" && scoreEl.style.display !== "none") {
+      elements.push(scoreEl);
+    }
+
+    const timeElapsedEl = document.getElementById("timeelapsed");
+    if (timeElapsedEl && timeElapsedEl.style.opacity !== "0" && timeElapsedEl.style.display !== "none") {
+      elements.push(timeElapsedEl);
+    }
+
+    const gradeTextEl = document.getElementById("gradeText");
+    if (gradeTextEl && gradeTextEl.style.opacity !== "0" && gradeTextEl.style.display !== "none") {
+      elements.push(gradeTextEl);
+    }
+
+    const gradePointsEl = document.getElementById("currentgrade");
+    if (gradePointsEl && gradePointsEl.style.opacity !== "0" && gradePointsEl.style.display !== "none") {
+      elements.push(gradePointsEl);
+    }
+
+    return elements;
+  }
+
+  // Function to start random text fading
+  function startRandomFading() {
+    if (randomFadeInterval) {
+      clearInterval(randomFadeInterval);
+      randomFadeInterval = null;
+    }
+
+    function fadeRandomElement() {
+      const visibleElements = getVisibleTextElements();
+      if (visibleElements.length === 0) {
+        return; // All elements are already faded
+      }
+
+      // Randomly select one element
+      const randomIndex = Math.floor(Math.random() * visibleElements.length);
+      const element = visibleElements[randomIndex];
+
+      // Fade it to invisible
+      element.style.opacity = "0";
+      element.style.transition = "opacity 0.5s ease";
+    }
+
+    // Determine interval based on current question
+    let intervalMs;
+    if (currQuestion >= 120) {
+      intervalMs = 500; // 0.5 seconds after question 120
+    } else if (currQuestion >= 110) {
+      intervalMs = 1000; // 1 second after question 110
+    } else {
+      intervalMs = 2000; // 2 seconds after question 100
+    }
+
+    // Start the interval
+    randomFadeInterval = setInterval(() => {
+      fadeRandomElement();
+    }, intervalMs);
+  }
+  let quizMinutes = 0; // Global variable to track minutes
+  let timer; // Global variable to store the timer interval
+  let grade;
+
+  function stopWatch() {
+    timerStartTime = Date.now();
+    const timeDisplay = document.getElementById("timeelapsed");
+    let lastMinute = -1; // Track last minute to detect changes
+    const totalTimeLimit = 7 * 60 * 1000; // 7 minutes in milliseconds
+    timer = setInterval(() => {
+      // Don't update if paused
+      if (isPaused) {
+        return;
+      }
+
+      const elapsedTime = Date.now() - timerStartTime - totalPausedTime;
+      const timeRemaining = totalTimeLimit - elapsedTime;
+
+      // Check if time is up
+      if (timeRemaining <= 0) {
+        // Time's up - end the quiz immediately
+        timeDisplay.style.color = "red";
+        timeDisplay.style.textShadow = "0 0 10px red, 0 0 20px red";
+        if (timer) {
+          clearInterval(timer);
+        }
+        alert("Time's up! The race is over.");
+        evalScreen();
+        return;
+      }
+
+      const miliseconds = Math.floor((elapsedTime % 1000) / 10);
+      const seconds = Math.floor((elapsedTime / 1000) % 60);
+      quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+      timeDisplay.innerHTML = `${quizMinutes
+        .toString()
+        .padStart(2, "0")}:${seconds
+          .toString()
+          .padStart(2, "0")}:${miliseconds.toString().padStart(2, "0")}`;
+
+      // Update grade display when minute changes
+      if (quizMinutes !== lastMinute) {
+        lastMinute = quizMinutes;
+        updateGradeDisplay();
+      }
+
+      // Calculate remaining seconds
+      const remainingSeconds = Math.floor(timeRemaining / 1000);
+
+      // Flash red at 10 seconds remaining
+      if (remainingSeconds <= 10 && remainingSeconds > 0) {
+        const flashRate = 5; // Flash 5 times per second
+        const shouldFlash = Math.floor((totalTimeLimit - elapsedTime) / 100) % 2 === 0;
+        timeDisplay.style.color = shouldFlash ? "red" : "#ffffff";
+        timeDisplay.style.textShadow = shouldFlash ? "0 0 10px red, 0 0 20px red" : "none";
+      } else {
+        timeDisplay.style.color = "white";
+        timeDisplay.style.textShadow = "none";
+      }
+    }, 10);
+    timeDisplay.style.fontSize = "xx-large";
+    timeDisplay.style.textAlign = "center";
+  }
+
+  function loadScore() {
+    const totalScore = document.getElementById("score");
+    totalScore.innerHTML = `${score}`;
+    totalScore.style.fontSize = "xx-large";
+    totalScore.style.color = "pink";
+    // Update grade display in real-time
+    updateGradeDisplay();
+  }
+
+
+  // Update grade display in real-time based on current totalGradePoints
+  function updateGradeDisplay() {
+    const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+    const gradePointsDisplay = document.getElementById("currentgrade");
+    if (!gradeDisplayLeft || !gradePointsDisplay) return;
+
+    // Keep grade display container hidden
+    gradeDisplayLeft.style.display = "none";
+
+    // Check if all questions are completed
+    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1;
+
+    // Get text color (white normally, gold after question 50)
+    let textColor = "#ffffff"; // White
+    if (currQuestion >= 50) {
+      textColor = "#ffd700"; // Gold after question 50
+    }
+
+    // Apply gold color to all text elements after question 50
+    // Note: Random fading is handled separately in loadQues()
+    if (currQuestion >= 50) {
+      const questionEl = document.getElementById("ques");
+      if (questionEl && questionEl.style.opacity !== "0") {
+        questionEl.style.color = textColor;
+      }
+
+      const optionsEl = document.getElementById("opt");
+      if (optionsEl) {
+        const labels = optionsEl.querySelectorAll("label");
+        labels.forEach(label => {
+          if (label.style.opacity !== "0") {
+            label.style.color = textColor;
+          }
+        });
+      }
+
+      const scoreEl = document.getElementById("score");
+      if (scoreEl && scoreEl.style.opacity !== "0") {
+        scoreEl.style.color = textColor;
+      }
+
+      const timeElapsedEl = document.getElementById("timeelapsed");
+      if (timeElapsedEl && timeElapsedEl.style.opacity !== "0") {
+        timeElapsedEl.style.color = textColor;
+      }
+    }
+
+    // Only show GM grade when all questions are completed
+    const gradeText = document.getElementById("gradeText");
+    if (gradeText) {
+      if (allQuestionsCompleted) {
+        // Check if player qualifies for GM (only grade in race mode)
+        let line = "white";
+
+        gradeText.textContent = "GM";
+      }
+
+      else {
+        // All questions completed but not GM - hide grade display
+        gradeText.textContent = "";
+        gradeText.style.display = "none";
+      }
+
+      if (gradeText.textContent === "GM") {
+        const bgColor = getGradeBackgroundColor("GM", line);
+        const borderColor = getGradeBorderColor("GM", line);
+        gradeText.style.color = textColor;
+        gradeText.style.backgroundColor = bgColor;
+        gradeText.style.borderColor = borderColor;
+        gradeText.style.display = "block";
+
+        // Make grade display box square (width = height)
+        void gradeText.offsetHeight;
+        const height = gradeText.offsetHeight;
+        gradeText.style.width = height + "px";
+        gradeText.style.minWidth = height + "px";
+        gradeText.style.maxWidth = height + "px";
+      }
+    } else {
+      // Hide grade display during gameplay
+      gradeText.textContent = "";
+      gradeText.style.display = "none";
+    }
+
+    // Hide next threshold display (no grades to show)
+    const nextThresholdEl = document.getElementById("nextGradeThreshold");
+    if (nextThresholdEl) {
+      nextThresholdEl.innerHTML = "";
+    }
+
+    // Display grade points in the old position
+    gradePointsDisplay.innerHTML = totalGradePoints.toLocaleString() || "0";
+    gradePointsDisplay.style.color = currQuestion >= 50 ? textColor : "cyan";
+
+    // Align grade display with container top after all updates
+    alignGradeDisplay();
+  }
+    
+
+  // Separate function to align grade display with container top
+  function alignGradeDisplay() {
+    requestAnimationFrame(() => {
+      const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+      const container = document.querySelector(".container");
+      if (gradeDisplayLeft && container) {
+        const containerRect = container.getBoundingClientRect();
+        const wrapperRect = container.parentElement ? container.parentElement.getBoundingClientRect() : { top: 0 };
+        gradeDisplayLeft.style.top = (containerRect.top - wrapperRect.top - 20) + "px";
+      }
+    });
+  }
+
+  function internalGrade() {
+    // Validate quiz state
+    if (!allQuestions || allQuestions.length === 0) {
+      console.warn("No questions loaded");
+      return 0;
+    }
+
+    if (currQuestion < 0 || currQuestion >= allQuestions.length) {
+      console.warn("Invalid question index");
+      return 0;
+    }
+
+    // Get selected answer from DOM
+    const selectedAns = document.querySelector('input[name="answer"]:checked');
+    if (!selectedAns) {
+      // No answer selected, return 0 points
+      return 0;
+    }
+
+    // Decode HTML entities for comparison
+    function decodeHTMLEntities(text) {
+      if (!text) return "";
+      const txt = document.createElement("textarea");
+      txt.innerHTML = text;
+      return txt.value;
+    }
+
+    const answerValue = selectedAns.value;
+    const correctAnswer = allQuestions[currQuestion].correct_answer;
+    const decodedAnswerValue = decodeHTMLEntities(answerValue);
+    const decodedCorrectAnswer = decodeHTMLEntities(correctAnswer);
+
+    // Check if answer is correct
+    const isCorrect = decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer;
+
+    if (!isCorrect) {
+      // Wrong answer, return 0 points
+      return 0;
+    }
+
+    // Calculate remaining time factor
+    // Ensure we have valid initial time
+    if (!initialTimeToAnswer || initialTimeToAnswer <= 0) {
+      console.warn("Invalid initial time for question");
+      return 0;
+    }
+
+    // Get remaining time (clamp to 0 if negative)
+    const remainingTime = Math.max(0, timeToAnswer || 0);
+
+    // Calculate remaining time ratio (0.0 to 1.0)
+    // More remaining time = higher ratio = better grade
+    const timeRatio = remainingTime * 10 / initialTimeToAnswer;
+
+    // Base score for each question
+    const quesScore = 500;
+
+    // Difficulty multiplier based on question number
+    let multiplier;
+    if (currQuestion < 25) {
+      multiplier = 1;
+    } else if (currQuestion < 50) {
+      multiplier = 2;
+    } else if (currQuestion < 75) {
+      multiplier = 3;
+    } else if (currQuestion < 100) {
+      multiplier = 4;
+    } else {
+      multiplier = 5; // Questions 100-130
+    }
+
+    // Calculate grade points with remaining time as a factor
+    // Formula: baseScore * difficultyMultiplier * timeRatio
+    // This rewards faster answers (more remaining time = higher score)
+    // Time ratio ranges from 0.0 (no time left) to 1.0 (all time remaining)
+    const questionPoints = quesScore * multiplier * timeRatio;
+
+
+    return Math.round(questionPoints);
+  }
+  function evalScreen() {
+    // Stop BGM when quiz ends
+    stopBGM();
+
+    // Stop random fading interval
+    if (randomFadeInterval) {
+      clearInterval(randomFadeInterval);
+      randomFadeInterval = null;
+    }
+
+    // Hide the give up button when evaluation screen is displayed
+    const giveUpBtn = document.querySelector("[giveup]");
+    if (giveUpBtn) {
+      giveUpBtn.style.display = "none";
+    }
+
+    // Hide pause button when eval screen is shown
+    if (pauseBtn) {
+      pauseBtn.style.display = "none";
+    }
+
+    // If paused, resume first
+    if (isPaused) {
+      resumeGame();
+    }
+
+    document.getElementById("opt").remove();
+    document.getElementById("ques").remove();
+    document.getElementById("btn").remove();
+    document.getElementById("score").remove();
+
+    // Check if all questions were completed (in master mode, you can only progress if correct, so completion means all correct)
+    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1;
+
+    if (!quizAbandoned && allQuestionsCompleted && localStorage.getItem("musicEnabled") !== "false") {
+      let completeSound = new Audio("bgm/complete.wav");
+      completeSound.play().catch(err => console.log("Complete sound play failed:", err));
+    }
+
+    if (localStorage.getItem("musicEnabled") !== "false") {
+      let creditsBGM = new Audio("bgm/credits.mp3");
+      creditsBGM.play();
+    }
+    const evalDiv = document.querySelector(".evalscreen");
+    let grade = "";
+    let line = "white";
+    // Only assign GM grade if all questions were completed
+    if (allQuestionsCompleted) {
+      grade = "GM";
+      // If all questions completed but not GM, grade remains empty (no grade system)
+    }
+
+    clearInterval(timer);
+    if (window.answerTimerId) {
+      clearInterval(window.answerTimerId);
+    }
+
+    // Hide grade displays when quiz is finished or abandoned
+    const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+    const gradePointsDisplay = document.getElementById("currentgrade");
+    if (gradeDisplayLeft) {
+      gradeDisplayLeft.style.display = "none";
+    }
+    if (gradePointsDisplay) {
+      gradePointsDisplay.style.display = "none";
+    }
+
+    const timeElapsedDiv = document.getElementById("timeelapsed");
+    const timerDiv = document.querySelector(".timerifinvalid");
+    timerDiv.style.display = "none";
+
+    // Get input type icon
+    let inputTypeIcon = '';
+    if (inputType === 'controller') {
+      inputTypeIcon = '🎮';
+    } else if (inputType === 'keyboard') {
+      inputTypeIcon = '⌨️';
+    } else if (inputType === 'mobile') {
+      inputTypeIcon = '📱';
+    } else {
+      inputTypeIcon = '❓';
+    }
+
+    // Only show GM grade if all questions completed, otherwise show nothing
+    let gradeDisplay = "";
+    if (allQuestionsCompleted && grade === "GM") {
+      gradeDisplay = `<div id=grade>
+                    <span class="grade" style="font-size:6em; color: ${line}">${grade}</span>
+                    </div>`;
+    }
+
+    evalDiv.innerHTML = `<h3>Game Over.</h3>
+                    <p style="font-size:larger">Your score is:</p>
+                    <div class="eval" style="display:flex; justify-content:space-between;">
+                    <div id="score" >
+                    <span class="score" style="font-size:4em">${score}</span> <span style="font-size:xx-large">/ ${allQuestions.length}</span>
+                    </div>
+                    ${gradeDisplay}
+                    </div>
+                    <p style="font-size:medium; margin-top: 10px;">Total Grade Points: ${totalGradePoints.toLocaleString()}</p>
+                    <p>Thank you for playing!</p>
+                <button onclick="location.reload()">Play Again</button>
+                <button class="submitsuffering">Submit your suffe- I mean score</button>
+                <button class="home" onclick="location.href='index.html'">Home</button>`;
+    evalDiv.style.display = "block";
+    evalDiv.style.textAlign = "center";
+    // Attach event listener after button is created
+    const user = auth.currentUser;
+    const submitBtn = document.querySelector(".submitsuffering");
+
+    if (!submitBtn) {
+      return;
+    }
+
+    if (!user) {
+      submitBtn.textContent = "Login to submit score";
+      submitBtn.onclick = () => {
+        location.href = "signin.html";
+      };
+      return;
+    }
+
+    let isSubmitting = false;
+
+    async function submitMasterScore() {
+      if (isSubmitting || submitBtn.disabled) return;
+
+      // Prevent abandoned scores from being submitted
+      if (quizAbandoned) {
+        alert("Abandoned runs cannot be submitted to the leaderboards.");
+        return;
+      }
+
+      // Race mode ends at 7 minutes, so this check is not needed
+      // The quiz will end automatically when time runs out
+
+      isSubmitting = true;
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Submitting...";
+
+      try {
+        const db = getFirestore();
+        const payload = {
+          name: user.displayName || user.email,
+          score: totalGradePoints, // Use total grade points instead of correct answer count
+          grade: grade,
+          time: document.getElementById("timeelapsed").textContent,
+          date: new Date().toLocaleString(),
+          line: line,
+          inputType: inputType || 'unknown',
+          pauseCount: pauseCount || 0,
+          totalPausedTime: formatPausedTime(totalPausedTime || 0),
+        };
+
+        // Global leaderboard entry
+        await addDoc(collection(db, "scoresrace"), payload);
+        // Per‑player data entry
+        await addDoc(
+          collection(db, "playerData", user.uid, "race"),
+          payload
+        );
+
+        alert("Score submitted successfully!");
+        submitBtn.textContent = "Score submitted!";
+        submitBtn.style.backgroundColor = "cyan";
+        submitBtn.style.color = "white";
+        submitBtn.style.cursor = "not-allowed";
+      } catch (error) {
+        console.error("Error submitting score:", error);
+        alert("Failed to submit score. Please try again.");
+        submitBtn.disabled = false;
+        isSubmitting = false;
+        submitBtn.textContent = "Submit your suffe- I mean score";
+      }
+    }
+
+    // Manual click (kept for UX)
+    submitBtn.addEventListener("click", submitMasterScore);
+
+    // Automatic upload for logged‑in users (only if not abandoned and auto-submit is enabled)
+    if (!quizAbandoned && localStorage.getItem("autoSubmitEnabled") !== "false") {
+      submitMasterScore();
+    } else {
+      // If abandoned, disable the submit button and show message
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Abandoned runs cannot be submitted";
+      submitBtn.style.cursor = "not-allowed";
+    }
+  }
+  function nextQuestion() {
+    if (currQuestion < allQuestions.length - 1) {
+      currQuestion++;
+      // Play section change sound every 10 questions
+      if (currQuestion % 10 === 0 && localStorage.getItem("musicEnabled") !== "false") {
+        const sectionChangeSound = new Audio("bgm/sectionchange.wav");
+        sectionChangeSound.play().catch(err => console.log("Section change sound play failed:", err));
+      }
+      loadQues();
+      document.querySelector(".correctanswer").innerHTML = "";
+
+      // Update BGM based on current question
+      playBGM();
+    } else {
+      evalScreen();
+    }
+  }
+
+  function showNotification(message, isSuccess = false) {
+    const notification = document.getElementById("notification");
+    notification.textContent = message;
+    notification.classList.remove("hide", "success");
+    if (isSuccess) {
+      notification.classList.add("success");
+    }
+    setTimeout(() => {
+      notification.classList.add("hide");
+    }, 3000);
+  }
+
+  function checkAns() {
+    // Validate quiz state
+    if (!allQuestions || allQuestions.length === 0) {
+      console.warn("No questions loaded");
+      return;
+    }
+
+    if (currQuestion < 0 || currQuestion >= allQuestions.length) {
+      console.warn("Invalid question index");
+      return;
+    }
+
+    // Check if quiz has ended (evalScreen is shown)
+    const evalDiv = document.querySelector(".evalscreen");
+    if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
+      return; // Quiz has ended, don't process answers
+    }
+
+    const selectedAns = document.querySelector(
+      'input[name="answer"]:checked'
+    );
+
+    if (selectedAns) {
+      const answerValue = selectedAns.value;
+      const correctAnswer = allQuestions[currQuestion].correct_answer;
+
+      // Decode HTML entities for comparison (answers are stored with entities)
+      function decodeHTMLEntities(text) {
+        if (!text) return "";
+        const txt = document.createElement("textarea");
+        txt.innerHTML = text;
+        return txt.value;
+      }
+
+      const decodedAnswerValue = decodeHTMLEntities(answerValue);
+      const decodedCorrectAnswer = decodeHTMLEntities(correctAnswer);
+
+      // Compare both decoded and original values to handle encoding differences
+      if (decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer) {
+        score++;
+        // Calculate and accumulate grade points for this question
+        const questionPoints = internalGrade();
+        totalGradePoints += questionPoints;
+        // Update grade display in real-time
+        updateGradeDisplay();
+        // Clear the question timer before moving to next question
+        if (window.answerTimerId) {
+          clearInterval(window.answerTimerId);
+        }
+        showNotification("Correct!", true);
+        nextQuestion();
+      } else {
+        // Don't expose the correct answer
+        showNotification(
+          "Wrong! You cannot progress with an incorrect answer."
+        );
+        return;
+      }
+    } else {
+      showNotification("Please select an answer.");
+    }
+  }
+
+
+
+  // Get background color based on grade
+  function getGradeBackgroundColor(grade, line) {
+    if (grade === "GM") {
+      if (line === "orange") return "rgba(255, 136, 0, 0.3)";
+      if (line === "green") return "rgba(0, 255, 0, 0.3)";
+      return "rgba(255, 255, 255, 0.2)";
+    }
+    if (grade.startsWith("S")) {
+      return "rgba(255, 215, 0, 0.3)"; // Gold for S grades
+    }
+    // Numeric grades
+    const num = parseInt(grade);
+    if (num >= 1 && num <= 3) {
+      return "rgba(0, 255, 0, 0.3)"; // Green for grades 1-3
+    }
+    if (num >= 4 && num <= 6) {
+      return "rgba(255, 255, 0, 0.3)"; // Yellow for grades 4-6
+    }
+    return "rgba(255, 0, 0, 0.3)"; // Red for grades 7-9
+  }
+
+  // Get border color based on grade
+  function getGradeBorderColor(grade, line) {
+    if (grade === "GM") {
+      if (line === "orange") return "#ff8800";
+      if (line === "green") return "#00ff00";
+      return "#ffffff";
+    }
+    if (grade.startsWith("S")) {
+      return "#ffd700"; // Gold for S grades
+    }
+    // Numeric grades
+    const num = parseInt(grade);
+    if (num >= 1 && num <= 3) {
+      return "#00ff00"; // Green for grades 1-3
+    }
+    if (num >= 4 && num <= 6) {
+      return "#ffff00"; // Yellow for grades 4-6
+    }
+    return "#ff0000"; // Red for grades 7-9
+  }
+
+</script>
+
+</html>

@@ -89,6 +89,10 @@
         border-left-color: #4a90e2;
       }
 
+      .mode-info.race {
+        border-left-color: #ff8c42;
+      }
+
       .mode-info.hell {
         border-left-color: #ff6b6b;
       }
@@ -276,6 +280,7 @@
       <a login href="signin.html">Login</a>
       <a signup href="signup.html">Signup</a>
       <a logout class="hide" href="index.html">Log out</a>
+      <a href="index.html">Home</a>
       <div class="player-info hide" id="playerInfo">
         <div class="player-info-left">
           <span class="name"></span>
@@ -286,7 +291,6 @@
           <div class="player-avatar-placeholder">👤</div>
         </div>
       </div>
-      <a href="index.html">Home</a>
     </div>
 
     <div class="wiki-container">
@@ -442,8 +446,8 @@
               <ul>
                 <li>Questions 0-24: 1x</li>
                 <li>Questions 25-49: 2x</li>
-                <li>Questions 50-74: 4x</li>
-                <li>Questions 75-99: 7x</li>
+                <li>Questions 50-74: 3x</li>
+                <li>Questions 75-99: 4x</li>
               </ul>
             </li>
             <li>
@@ -557,6 +561,118 @@
           <ul class="feature-list">
             <li>TGM1-style grading system</li>
             <li>TGM2-style BGM</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="wiki-section">
+        <h2>⚡ Race Mode</h2>
+        <div class="mode-info race">
+          <h3>Speed Challenge</h3>
+          <div class="info-grid">
+            <div class="info-item">
+              <strong>Questions:</strong>
+              <span>130 questions</span>
+            </div>
+            <div class="info-item">
+              <strong>Difficulty:</strong>
+              <span>Extreme Challenge</span>
+            </div>
+            <div class="info-item">
+              <strong>Time Limit:</strong>
+              <span>Shrinking per-question timers</span>
+            </div>
+            <div class="info-item">
+              <strong>Kill Timer:</strong>
+              <span>7 minutes total (ends immediately)</span>
+            </div>
+          </div>
+
+          <h4>Scoring System</h4>
+          <p>Grade points are calculated using:</p>
+          <ul>
+            <li><strong>Base Score:</strong> 500 points per question</li>
+            <li>
+              <strong>Multiplier:</strong> Varies by question range:
+              <ul>
+                <li>Questions 0-24: 1x</li>
+                <li>Questions 25-49: 2x</li>
+                <li>Questions 50-74: 3x</li>
+                <li>Questions 75-99: 4x</li>
+                <li>Questions 100-130: 5x</li>
+              </ul>
+            </li>
+            <li>
+              <strong>Time Bonus:</strong> Based on remaining time per question
+            </li>
+          </ul>
+
+          <h4>Time Limits</h4>
+          <p>Per-question timers shrink as you progress:</p>
+          <table class="time-table">
+            <thead>
+              <tr>
+                <th>Question Range</th>
+                <th class="time-limit">Time Limit</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="question-range">1-10</td>
+                <td class="time-limit">30 seconds</td>
+              </tr>
+              <tr>
+                <td class="question-range">11-20</td>
+                <td class="time-limit">26 seconds</td>
+              </tr>
+              <tr>
+                <td class="question-range">21-40</td>
+                <td class="time-limit">18 seconds</td>
+              </tr>
+              <tr>
+                <td class="question-range">41-50</td>
+                <td class="time-limit">17 seconds</td>
+              </tr>
+              <tr>
+                <td class="question-range">51-70</td>
+                <td class="time-limit">15 seconds</td>
+              </tr>
+              <tr>
+                <td class="question-range">71-80</td>
+                <td class="time-limit">13 seconds</td>
+              </tr>
+              <tr>
+                <td class="question-range">81-130</td>
+                <td class="time-limit">12 seconds</td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h4>Grade System</h4>
+          <p>Race Mode uses a simplified grade system:</p>
+          <ul class="grade-list">
+            <li>
+              <strong>No Grades During Play:</strong> Grade points are tracked but no grades are displayed during gameplay
+            </li>
+            <li>
+              <span class="grade-badge orange">GM</span> - Only awarded when all 130 questions are completed. Can be achieved with orange line (under 5 minutes) or green line (under 6 minutes).
+            </li>
+          </ul>
+
+          <h4>Special Features</h4>
+          <ul class="feature-list">
+            <li><strong>7 Minute Hard Limit:</strong> The mode ends immediately after 7 minutes, with the timer flashing red at 10 seconds remaining</li>
+            <li><strong>Fading Text Elements:</strong> After question 100, random text elements fade to invisible:
+              <ul>
+                <li>After Q100: One element fades every 2 seconds</li>
+                <li>After Q110: One element fades every 1 second</li>
+                <li>After Q120: One element fades every 0.5 seconds</li>
+              </ul>
+            </li>
+            <li><strong>Background Changes:</strong> Background changes from race.jpg to raceinvis.jpg after question 100</li>
+            <li><strong>BGM Changes:</strong> Uses stage4.mp3 before question 100, switches to stage5.mp3 after question 100</li>
+            <li><strong>Mode Toggle:</strong> Click the Master/Race mode button 5 times to toggle between Master and Race mode</li>
+            <li><strong>Completion Tracking:</strong> Statistics show completion count (times completed with GM grade) instead of grades</li>
           </ul>
         </div>
       </div>
@@ -803,6 +919,16 @@
           <li>Complete all questions in under 6 minutes for orange line</li>
         </ul>
 
+        <h3>Race Mode Tips</h3>
+        <ul class="feature-list">
+          <li>Speed is essential - you only have 7 minutes total</li>
+          <li>Practice the timer transitions to maintain rhythm</li>
+          <li>After question 100, prepare for visual chaos with fading elements</li>
+          <li>Watch the timer carefully - it flashes red at 10 seconds remaining</li>
+          <li>Focus on completing all 130 questions for the GM grade</li>
+          <li>Don't get distracted by the fading text - stay focused on the questions</li>
+        </ul>
+
         <h3>Hell Mode Tips</h3>
         <ul class="feature-list">
           <li>Memorize common question patterns</li>
@@ -915,7 +1041,7 @@
                 <h4>Special Features</h4>
                 <ul class="feature-list">
                   <li>Simplistic theme from the start (black background, green text)</li>
-                  <li>ModernDOS font applied to all text elements</li>
+                  <li>DOS font applied to all text elements</li>
                   <li>Extreme time pressure - 1.5 seconds per question</li>
                   <li>No visual changes during gameplay - pure focus on speed and accuracy</li>
                   <li>Unique BGM for the ultimate challenge</li>

@@ -1,10 +1,34 @@
-import { getAuth, getFirestore, collection, getDocs, onAuthStateChanged } from "./firebase.js";
+import { getAuth, getFirestore, collection, getDocs, onAuthStateChanged, doc, getDoc } from "./firebase.js";
 
 const auth = getAuth();
 const db = getFirestore();
 
+// Format relative timestamp (e.g., "2 days ago", "3 months ago")
+function formatRelativeTime(timestamp) {
+    if (!timestamp) return "Unknown";
+    
+    const now = new Date();
+    const then = new Date(timestamp);
+    const diffMs = now - then;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    const diffWeeks = Math.floor(diffDays / 7);
+    const diffMonths = Math.floor(diffDays / 30);
+    const diffYears = Math.floor(diffDays / 365);
+    
+    if (diffSecs < 60) return "just now";
+    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    if (diffWeeks < 4) return `${diffWeeks} week${diffWeeks !== 1 ? 's' : ''} ago`;
+    if (diffMonths < 12) return `${diffMonths} month${diffMonths !== 1 ? 's' : ''} ago`;
+    return `${diffYears} year${diffYears !== 1 ? 's' : ''} ago`;
+}
+
 // Calculate main input method based on play counts
-function calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores) {
+function calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores = []) {
     const inputCounts = {
         keyboard: 0,
         controller: 0,
@@ -13,7 +37,7 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
     };
     
     // Count input types across all modes
-    const allScores = [...easyScores, ...normalScores, ...masterScores, ...hellScores, ...secretScores];
+    const allScores = [...easyScores, ...normalScores, ...masterScores, ...hellScores, ...secretScores, ...raceScores];
     allScores.forEach(score => {
         const inputType = (score.inputType || "unknown").toLowerCase();
         if (inputType === "keyboard" || inputType === "⌨️") {
@@ -69,7 +93,7 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
 }
 
 // Calculate player level and XP based on achievements and grade points
-function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores) {
+function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores = []) {
     let experience = 0;
     
     // Base XP from scores earned (scaled appropriately for each mode)
@@ -129,6 +153,18 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
         }
     });
     
+    // Race mode: score field contains totalGradePoints (similar to master mode)
+    raceScores.forEach(score => {
+        const gradePoints = score.score || 0;
+        experience += Math.floor(gradePoints / 120); // 1 XP per 120 grade points (slightly less than master)
+        
+        // Bonus XP for GM grade
+        if (score.grade === "GM") {
+            experience += 250; // Higher bonus for race mode GM (harder to achieve)
+        }
+
+    });
+    
     // Achievement bonuses (one-time)
     const easyCompleted = easyScores.some(s => s.score === 30);
     if (easyCompleted) experience += 15; // Reduced from 25
@@ -139,7 +175,9 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
     const hellCompleted = hellScores.some(s => s.score === 200);
     if (hellCompleted) experience += 150;
     
-    // Calculate level using exponential scaling
+    const raceCompleted = raceScores.some(s => s.score >= 1264000); // Completed all 130 questions with good score
+    if (raceCompleted) experience += 100;
+        // Calculate level using exponential scaling
     // Level formula: level = floor(1 + sqrt(experience / 30))
     // This gives: Lv 1 = 0 XP, Lv 2 = 90 XP, Lv 3 = 240 XP, Lv 4 = 450 XP, etc.
     // Increased threshold: changed divisor from 20 to 30 (requires more XP per level)
@@ -245,13 +283,14 @@ function compareMasterGrades(grade1, grade2, line1 = "", line2 = "") {
     return gradeComparison;
 }
 
-function summarizeScores(list, hasGrade = false, isHellMode = false, isMasterMode = false) {
+function summarizeScores(list, hasGrade = false, isHellMode = false, isMasterMode = false, isRaceMode = false) {
     if (!list.length) {
         return {
             games: 0,
             bestScore: "-",
             avgScore: "-",
             bestGrade: hasGrade ? "-" : undefined,
+            completions: isRaceMode ? 0 : undefined,
         };
     }
     const games = list.length;
@@ -303,7 +342,14 @@ function summarizeScores(list, hasGrade = false, isHellMode = false, isMasterMod
             }
         }
     }
-    return { games, bestScore, avgScore, bestGrade };
+    
+    // Calculate completion count for race mode (GM grade means all 130 questions completed)
+    let completions = undefined;
+    if (isRaceMode) {
+        completions = list.filter(s => s.grade === "GM").length;
+    }
+    
+    return { games, bestScore, avgScore, bestGrade, completions };
 }
 
 // Store raw data lists for filtering
@@ -311,6 +357,7 @@ let allEasyList = [];
 let allNormalList = [];
 let allMasterList = [];
 let allHellList = [];
+let allRaceList = [];
 
 // Get badge for level (matches hm.js badge system, extended to level 1000)
 function getBadgeForLevelStats(level) {
@@ -345,7 +392,7 @@ function getBadgeForLevelStats(level) {
 }
 
 // Update level progression display
-function updateLevelProgression(playerData, totalPlays = 0, mainInput = null) {
+function updateLevelProgression(playerData, totalPlays = 0, mainInput = null, createdAt = null) {
     const levelProgressionCard = document.getElementById("levelProgression");
     const levelDisplay = document.getElementById("playerLevelDisplay");
     const currentXP = document.getElementById("currentXP");
@@ -384,22 +431,38 @@ function updateLevelProgression(playerData, totalPlays = 0, mainInput = null) {
     currentXP.textContent = `${experience.toLocaleString()} XP`;
     nextLevelXP.textContent = `${xpForNextLevel.toLocaleString()} XP`;
     
-    // Display main input method if available
+    // Display timestamp and main input method in mainInputDisplay
+    const mainInputDisplay = document.getElementById("mainInputDisplay");
+    
+    // Build content: timestamp first (if available), then main input method (if available)
+    let contentParts = [];
+    
+    if (createdAt) {
+        contentParts.push(`<div style="color: rgba(255, 255, 255, 0.8); font-size: 0.9em;">Joined ${formatRelativeTime(createdAt)}</div>`);
+    }
+    
+    // Add <hr> separator if both timestamp and main input method are present
+    if (createdAt && mainInput && mainInput.total > 0) {
+        contentParts.push(`<hr style="margin: 10px 0; border: none; border-top: 1px solid rgba(255, 255, 255, 0.2);">`);
+    }
+    
     if (mainInput && mainInput.total > 0) {
-        const mainInputDisplay = document.getElementById("mainInputDisplay");
+        contentParts.push(`<strong style="color: #dbffff;">Main Input Method:</strong><br><span style="font-size: 1.2em; margin-top: 5px; display: inline-block;">${mainInput.icon} ${mainInput.name}</span>`);
+    }
+    
+    if (contentParts.length > 0) {
         if (!mainInputDisplay) {
             // Create main input display element
             const mainInputDiv = document.createElement("div");
             mainInputDiv.id = "mainInputDisplay";
-            mainInputDiv.style.cssText = "margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255, 255, 255, 0.2); text-align: center; color: rgba(255, 255, 255, 0.9); font-size: 0.95em;";
-            mainInputDiv.innerHTML = `<strong style="color: #dbffff;">Main Input Method:</strong><br><span style="font-size: 1.2em; margin-top: 5px; display: inline-block;">${mainInput.icon} ${mainInput.name}</span>`;
+            mainInputDiv.style.cssText = "margin-top: 15px; padding-top: 15px; text-align: center; color: rgba(255, 255, 255, 0.9); font-size: 0.95em;";
+            mainInputDiv.innerHTML = contentParts.join('');
             levelProgressionCard.querySelector(".level-progression-content").appendChild(mainInputDiv);
         } else {
-            mainInputDisplay.innerHTML = `<strong style="color: #dbffff;">Main Input Method:</strong><br><span style="font-size: 1.2em; margin-top: 5px; display: inline-block;">${mainInput.icon} ${mainInput.name}</span>`;
+            mainInputDisplay.innerHTML = contentParts.join('');
         }
     } else {
-        // Remove main input display if no data
-        const mainInputDisplay = document.getElementById("mainInputDisplay");
+        // Remove main input display if no content
         if (mainInputDisplay) {
             mainInputDisplay.remove();
         }
@@ -407,12 +470,12 @@ function updateLevelProgression(playerData, totalPlays = 0, mainInput = null) {
     
     // Get badge name for tooltip
     function getBadgeNameStats(level) {
-        if (level >= 1000) return "Meteor";
-        if (level >= 900) return "Moon";
-        if (level >= 800) return "Sun";
-        if (level >= 700) return "Earth";
-        if (level >= 600) return "Planet";
-        if (level >= 500) return "Star";
+        if (level >= 2000) return "Meteor";
+        if (level >= 1500) return "Moon";
+        if (level >= 1250) return "Sun";
+        if (level >= 1000) return "Earth";
+        if (level >= 800) return "Planet";
+        if (level >= 600) return "Star";
         if (level >= 400) return "Glowing Star";
         if (level >= 300) return "Dizzy Star";
         if (level >= 250) return "Galaxy";
@@ -517,6 +580,7 @@ const currentFilter = {
     easy: 'all',
     normal: 'all',
     master: 'all',
+    race: 'all',
     hell: 'all'
 };
 
@@ -615,13 +679,18 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
             // Read per‑player data from Firestore subcollections
             const uid = user.uid;
-        const [easySnap, normalSnap, masterSnap, hellSnap, secretSnap] = await Promise.all([
+        const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap, secretSnap, userProfileSnap] = await Promise.all([
                 getDocs(collection(db, "playerData", uid, "easy")),
                 getDocs(collection(db, "playerData", uid, "normal")),
                 getDocs(collection(db, "playerData", uid, "master")),
                 getDocs(collection(db, "playerData", uid, "hell")),
+                getDocs(collection(db, "playerData", uid, "race")),
                 getDocs(collection(db, "playerData", uid, "secret")).catch(() => ({ empty: true, docs: [] })),
+                getDoc(doc(db, "userProfiles", uid)).catch(() => null),
             ]);
+            
+            const userProfile = userProfileSnap && userProfileSnap.exists() ? userProfileSnap.data() : null;
+            const createdAt = userProfile ? userProfile.createdAt : null;
 
             const listFromSnap = (snap) => {
                 if (snap.empty) return [];
@@ -633,18 +702,20 @@ document.addEventListener("DOMContentLoaded", () => {
             allNormalList = listFromSnap(normalSnap);
             allMasterList = listFromSnap(masterSnap);
             allHellList = listFromSnap(hellSnap);
+            allRaceList = listFromSnap(raceSnap);
             const secretList = listFromSnap(secretSnap);
 
             // Calculate and display player level and XP
-            const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList);
-            const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + (secretList ? secretList.length : 0);
-            const mainInput = calculateMainInputMethod(allEasyList, allNormalList, allMasterList, allHellList, secretList);
-            updateLevelProgression(playerData, totalPlays, mainInput);
+            const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList);
+            const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + allRaceList.length + (secretList ? secretList.length : 0);
+            const mainInput = calculateMainInputMethod(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList);
+            updateLevelProgression(playerData, totalPlays, mainInput, createdAt);
 
             // Render all modes
             renderModeStats('easy');
             renderModeStats('normal');
             renderModeStats('master');
+            renderModeStats('race');
             renderModeStats('hell');
         } catch (error) {
             console.error("Error loading player stats:", error);
@@ -675,6 +746,11 @@ function renderModeStats(mode) {
             hasGrade = true;
             isMaster = true;
             break;
+        case 'race':
+            dataList = filterScores(allRaceList, currentFilter.race);
+            hasGrade = false; // No grades in race mode
+            isMaster = false;
+            break;
         case 'hell':
             dataList = filterScores(allHellList, currentFilter.hell);
             hasGrade = true;
@@ -683,7 +759,8 @@ function renderModeStats(mode) {
     }
     
     // Calculate stats
-    const stats = summarizeScores(dataList, hasGrade, isHell, isMaster);
+    const isRace = mode === 'race';
+    const stats = summarizeScores(dataList, hasGrade, isHell, isMaster, isRace);
     
     // Get table IDs
     const statsTableId = `${mode}Stats`;
@@ -691,7 +768,7 @@ function renderModeStats(mode) {
     const chartId = `${mode}Chart`;
     
     // Fill stats table
-    const fillRow = (tableId, stats, hasGrade = false, isMaster = false, dataList = []) => {
+    const fillRow = (tableId, stats, hasGrade = false, isMaster = false, dataList = [], mode = '') => {
         const table = document.querySelector(`#${tableId}`);
         if (!table) return;
         // Clear existing rows first
@@ -751,6 +828,14 @@ function renderModeStats(mode) {
                 <td>${formatScore(stats.avgScore)}</td>
                 <td>${gradeDisplay}</td>
             `;
+        } else if (mode === 'race' && stats.completions !== undefined) {
+            // Race mode: show completion count instead of grade
+            row.innerHTML = `
+                <td>${stats.games}</td>
+                <td class="${stats.bestScore !== "-" ? "high-score" : ""}">${formatScore(stats.bestScore)}</td>
+                <td>${formatScore(stats.avgScore)}</td>
+                <td>${stats.completions}</td>
+            `;
         } else {
             row.innerHTML = `
                 <td>${stats.games}</td>
@@ -761,7 +846,7 @@ function renderModeStats(mode) {
         tbody.appendChild(row);
     };
     
-    fillRow(statsTableId, stats, hasGrade, isMaster, dataList);
+    fillRow(statsTableId, stats, hasGrade, isMaster, dataList, mode);
     
     // Fill history table
     const fillHistoryTable = (tableId, dataList, hasGrade = false, isMaster = false) => {
@@ -947,13 +1032,18 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             // Read per‑player data from Firestore subcollections
             const uid = user.uid;
-            const [easySnap, normalSnap, masterSnap, hellSnap, secretSnap] = await Promise.all([
+            const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap, secretSnap, userProfileSnap] = await Promise.all([
                 getDocs(collection(db, "playerData", uid, "easy")),
                 getDocs(collection(db, "playerData", uid, "normal")),
                 getDocs(collection(db, "playerData", uid, "master")),
                 getDocs(collection(db, "playerData", uid, "hell")),
+                getDocs(collection(db, "playerData", uid, "race")),
                 getDocs(collection(db, "playerData", uid, "secret")).catch(() => ({ empty: true, docs: [] })),
+                getDoc(doc(db, "userProfiles", uid)).catch(() => null),
             ]);
+            
+            const userProfile = userProfileSnap && userProfileSnap.exists() ? userProfileSnap.data() : null;
+            const createdAt = userProfile ? userProfile.createdAt : null;
 
             const listFromSnap = (snap) => {
                 if (snap.empty) return [];
@@ -965,18 +1055,20 @@ document.addEventListener("DOMContentLoaded", () => {
             allNormalList = listFromSnap(normalSnap);
             allMasterList = listFromSnap(masterSnap);
             allHellList = listFromSnap(hellSnap);
+            allRaceList = listFromSnap(raceSnap);
             const secretList = listFromSnap(secretSnap);
 
             // Calculate and display player level and XP
-            const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList);
-            const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + (secretList ? secretList.length : 0);
-            const mainInput = calculateMainInputMethod(allEasyList, allNormalList, allMasterList, allHellList, secretList);
-            updateLevelProgression(playerData, totalPlays, mainInput);
+            const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList);
+            const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + allRaceList.length + (secretList ? secretList.length : 0);
+            const mainInput = calculateMainInputMethod(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList);
+            updateLevelProgression(playerData, totalPlays, mainInput, createdAt);
 
             // Render all modes
             renderModeStats('easy');
             renderModeStats('normal');
             renderModeStats('master');
+            renderModeStats('race');
             renderModeStats('hell');
     } catch (error) {
         console.error("Error loading player stats:", error);

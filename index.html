@@ -61,16 +61,27 @@
             <div class="mode-difficulty normal-diff">Standard Challenge</div>
           </div>
 
-          <div class="mode-card" data-mode="master">
+          <div class="mode-card" data-mode="master" id="masterModeCard">
             <div class="mode-card-header">
               <span class="mode-icon">👑</span>
               <h3 class="mode-name">Master</h3>
             </div>
             <p class="mode-description">
               Answer questions with a slowly shrinking time limit. Can you be
-              the Grand Master?
+              the Grand Master?<br><small style="opacity: 0.7;">💡 Click 5 times to toggle Race mode</small>
             </p>
             <div class="mode-difficulty master-diff">Expert Level</div>
+          </div>
+
+          <div class="mode-card hide" data-mode="master130" id="raceModeCard">
+            <div class="mode-card-header">
+              <span class="mode-icon">⚡</span>
+              <h3 class="mode-name">Race</h3>
+            </div>
+            <p class="mode-description">
+              Race against time! 130 questions with a 7 minute time limit. Text elements fade randomly after question 100.<br><small style="opacity: 0.7;">💡 Click 5 times to toggle Master mode</small>
+            </p>
+            <div class="mode-difficulty master-diff">Extreme Challenge</div>
           </div>
 
           <div class="mode-card" data-mode="hell">

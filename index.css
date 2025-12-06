@@ -29,6 +29,10 @@ body.mode-master {
     background-image: url('master.jpg');
 }
 
+body.mode-master130 {
+    background-image: url('race.jpg');
+}
+
 body.mode-hell {
     background-image: url('hell1.jpg');
 }
@@ -1507,6 +1511,20 @@ body.mode-master .mode-card[data-mode="master"].active::before {
     background: linear-gradient(90deg, #4a90e2, #357abd);
 }
 
+body.mode-master130 .mode-card[data-mode="master130"].active {
+    border-color: #ff8c42;
+    background: linear-gradient(135deg, rgba(255, 140, 66, 0.15) 0%, rgba(255, 107, 0, 0.1) 100%);
+    box-shadow: 0 0 20px rgba(255, 140, 66, 0.3);
+}
+
+body.mode-master130 .mode-card[data-mode="master130"].active::before {
+    background: linear-gradient(90deg, #ff8c42, #ff6b00);
+}
+
+body.mode-master130 .mode-card[data-mode="master130"] .mode-name {
+    color: #ff8c42;
+}
+
 body.mode-hell .mode-card[data-mode="hell"].active {
     border-color: #ff6b6b;
     background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 68, 68, 0.1) 100%);
@@ -1988,6 +2006,26 @@ th {
     z-index: 10;
 }
 
+.easy th {
+    background: linear-gradient(135deg, rgba(144, 238, 144, 0.2) 0%, rgba(124, 252, 0, 0.15) 100%);
+    color: #90ee90;
+}
+
+.normal th {
+    background: linear-gradient(135deg, rgba(135, 206, 235, 0.2) 0%, rgba(70, 130, 180, 0.15) 100%);
+    color: #87ceeb;
+}
+
+.race th {
+    background: linear-gradient(135deg, rgba(255, 140, 66, 0.2) 0%, rgba(255, 107, 0, 0.15) 100%);
+    color: #ff8c42;
+}
+
+.master th {
+    background: linear-gradient(135deg, rgba(255, 250, 250, 0.2) 0%, rgba(240, 248, 255, 0.15) 100%);
+    color: #fffafa;
+}
+
 .hell th {
     background: linear-gradient(135deg, rgba(255, 186, 186, 0.2) 0%, rgba(255, 107, 107, 0.15) 100%);
     color: #ffbaba;
@@ -2012,6 +2050,22 @@ tbody tr:hover {
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
+.easy tbody tr:hover {
+    background-color: rgba(144, 238, 144, 0.1);
+}
+
+.normal tbody tr:hover {
+    background-color: rgba(135, 206, 235, 0.1);
+}
+
+.race tbody tr:hover {
+    background-color: rgba(255, 140, 66, 0.1);
+}
+
+.master tbody tr:hover {
+    background-color: rgba(255, 250, 250, 0.1);
+}
+
 .hell tbody tr:hover {
     background-color: rgba(255, 186, 186, 0.1);
 }
@@ -2023,50 +2077,194 @@ td:first-child {
     color: #dbffff;
 }
 
-.normal, .hell {
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 20, 40, 0.9) 100%);
+/* Easy mode - Green */
+.easy {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 60, 20, 0.9) 100%);
     padding: 25px;
     border-radius: 15px;
-    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.1);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(144, 238, 144, 0.2);
     backdrop-filter: blur(10px);
     transition: transform 0.3s ease, box-shadow 0.3s ease;
     position: relative;
     overflow: hidden;
 }
 
-.normal::before, .hell::before {
+.easy::before {
     content: "";
     position: absolute;
     top: 0;
     left: 0;
     right: 0;
     height: 4px;
-    background: linear-gradient(90deg, #dbffff, #b8f0e0, #dbffff);
+    background: linear-gradient(90deg, #90ee90, #7cfc00, #90ee90);
     opacity: 0.8;
 }
 
-.hell::before {
-    background: linear-gradient(90deg, #ff6b6b, #ff4444, #ff6b6b);
-}
-
-.normal:hover, .hell:hover {
+.easy:hover {
     transform: translateY(-5px);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.15);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(144, 238, 144, 0.3);
 }
 
-.normal h1, .hell h1 {
+.easy h1 {
     text-align: center;
     margin-bottom: 20px;
     font-size: 1.8em;
-    color: #dbffff;
-    text-shadow: 0 2px 10px rgba(219, 255, 255, 0.3);
+    color: #90ee90;
+    text-shadow: 0 2px 10px rgba(144, 238, 144, 0.3);
     font-weight: 600;
     letter-spacing: 1px;
 }
 
+/* Normal mode - Blue */
+.normal {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 40, 60, 0.9) 100%);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(135, 206, 250, 0.2);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.normal::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #87ceeb, #4682b4, #87ceeb);
+    opacity: 0.8;
+}
+
+.normal:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(135, 206, 250, 0.3);
+}
+
+.normal h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    color: #87ceeb;
+    text-shadow: 0 2px 10px rgba(135, 206, 250, 0.3);
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* Race mode - Orange */
+.race {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(60, 40, 20, 0.9) 100%);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 140, 66, 0.2);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.race::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ff8c42, #ff6b00, #ff8c42);
+    opacity: 0.8;
+}
+
+.race:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 140, 66, 0.3);
+}
+
+.race h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    color: #ff8c42;
+    text-shadow: 0 2px 10px rgba(255, 140, 66, 0.3);
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* Master mode - Snow White */
+.master {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(40, 40, 40, 0.9) 100%);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 250, 250, 0.2);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.master::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #fffafa, #f0f8ff, #fffafa);
+    opacity: 0.8;
+}
+
+.master:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 250, 250, 0.3);
+}
+
+.master h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.8em;
+    color: #fffafa;
+    text-shadow: 0 2px 10px rgba(255, 250, 250, 0.3);
+    font-weight: 600;
+    letter-spacing: 1px;
+}
+
+/* Hell mode - Red */
+.hell {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(60, 20, 20, 0.9) 100%);
+    padding: 25px;
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 107, 107, 0.2);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.hell::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 4px;
+    background: linear-gradient(90deg, #ff6b6b, #ff4444, #ff6b6b);
+    opacity: 0.8;
+}
+
+.hell:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 107, 107, 0.3);
+}
+
 .hell h1 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 1.8em;
     color: #ffbaba;
     text-shadow: 0 2px 10px rgba(255, 186, 186, 0.3);
+    font-weight: 600;
+    letter-spacing: 1px;
 }
 
 .scores {
@@ -2084,8 +2282,20 @@ td:first-child {
     margin-top: 80px;
 }
 
+.container2 .easy {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 60, 20, 0.9) 100%);
+}
+
 .container2 .normal {
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(20, 40, 60, 0.9) 100%);
+}
+
+.container2 .race {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(60, 40, 20, 0.9) 100%);
+}
+
+.container2 .master {
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.85) 0%, rgba(40, 40, 40, 0.9) 100%);
 }
 
 .container2 .hell {
@@ -2344,11 +2554,11 @@ td:first-child {
         margin-bottom: 15px;
     }
     
-    .normal, .hell {
+    .easy, .normal, .race, .master, .hell {
         padding: 20px 15px;
     }
     
-    .normal h1, .hell h1 {
+    .easy h1, .normal h1, .race h1, .master h1, .hell h1 {
         font-size: 1.5em;
     }
     

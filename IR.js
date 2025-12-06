@@ -3,6 +3,30 @@ import { calculatePlayerLevel } from "./stats.js";
 
 const db = getFirestore();
 
+// Format relative timestamp (e.g., "2 days ago", "3 months ago")
+function formatRelativeTime(timestamp) {
+    if (!timestamp) return "Unknown";
+    
+    const now = new Date();
+    const then = new Date(timestamp);
+    const diffMs = now - then;
+    const diffSecs = Math.floor(diffMs / 1000);
+    const diffMins = Math.floor(diffSecs / 60);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    const diffWeeks = Math.floor(diffDays / 7);
+    const diffMonths = Math.floor(diffDays / 30);
+    const diffYears = Math.floor(diffDays / 365);
+    
+    if (diffSecs < 60) return "just now";
+    if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    if (diffDays < 7) return `${diffDays} day${diffDays !== 1 ? 's' : ''} ago`;
+    if (diffWeeks < 4) return `${diffWeeks} week${diffWeeks !== 1 ? 's' : ''} ago`;
+    if (diffMonths < 12) return `${diffMonths} month${diffMonths !== 1 ? 's' : ''} ago`;
+    return `${diffYears} year${diffYears !== 1 ? 's' : ''} ago`;
+}
+
 // Helper function to compare line colors (orange > green > white)
 // Returns: 1 if line1 > line2, -1 if line1 < line2, 0 if equal
 function compareLineColors(line1, line2) {
@@ -13,6 +37,7 @@ function compareLineColors(line1, line2) {
 }
 const highScoresRef = collection(db, 'scoresnormal');
 const masterModeRef = collection(db, 'scoresmaster');
+const raceModeRef = collection(db, 'scoresrace');
 const easyModeRef = collection(db, 'scoreseasy');
 const finalModeRef = collection(db, 'scoresfinal');
 
@@ -20,6 +45,7 @@ const finalModeRef = collection(db, 'scoresfinal');
 let allEasyScores = [];
 let allNormalScores = [];
 let allMasterScores = [];
+let allRaceScores = [];
 let allHellScores = [];
 let allSecretScores = [];
 
@@ -177,6 +203,17 @@ function renderTable(mode) {
                 return parseTime(a.time) - parseTime(b.time);
             };
             break;
+        case 'race':
+            scores = filterScores(allRaceScores, filterType);
+            tableId = 'scoreTable5';
+            hasGrade = false; // No grades in race mode
+            sortFunction = (a, b) => {
+                if (a.score !== b.score) {
+                    return b.score - a.score;
+                }
+                return parseTime(a.time) - parseTime(b.time);
+            };
+            break;
     }
     
     const table = document.querySelector(`#${tableId}`);
@@ -294,6 +331,9 @@ function createProfilePopup() {
                 <div class="profile-popup-level">
                     <span class="profile-popup-badge"></span>
                     <span class="profile-popup-level-text"></span>
+                </div>
+                <div class="profile-popup-created" style="margin-top: 8px; font-size: 0.85em; color: rgba(255, 255, 255, 0.7);">
+                    <span class="profile-popup-created-text"></span>
                 </div>
             </div>
             <div class="profile-popup-scores">
@@ -560,6 +600,14 @@ async function loadPlayerProfile(playerName) {
         const avatarPlaceholder = popup.querySelector('.profile-popup-avatar-placeholder');
         
         if (foundUser) {
+            // Display account creation timestamp
+            const createdTextEl = popup.querySelector('.profile-popup-created-text');
+            if (createdTextEl && foundUser.createdAt) {
+                createdTextEl.textContent = `Joined ${formatRelativeTime(foundUser.createdAt)}`;
+            } else if (createdTextEl) {
+                createdTextEl.textContent = '';
+            }
+            
             // Get photoURL from Firebase Auth (stored in userProfiles when user signs in)
             // Priority: photoURL (from Firebase Auth) > avatarURL (custom upload)
             const avatarURL = foundUser.photoURL || foundUser.avatarURL;
@@ -711,6 +759,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     try {
         const snapshot = await getDocs(highScoresRef);
         const masterSnapshot = await getDocs(masterModeRef);
+        const raceSnapshot = await getDocs(raceModeRef);
         const easySnapshot = await getDocs(easyModeRef);
         const finalSnapshot = await getDocs(finalModeRef);
         
@@ -718,6 +767,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         allNormalScores = snapshot.empty ? [] : snapshot.docs.map((doc) => doc.data());
         allEasyScores = easySnapshot.empty ? [] : easySnapshot.docs.map((doc) => doc.data());
         allMasterScores = masterSnapshot.empty ? [] : masterSnapshot.docs.map((doc) => doc.data());
+        allRaceScores = raceSnapshot.empty ? [] : raceSnapshot.docs.map((doc) => doc.data());
         allHellScores = finalSnapshot.empty ? [] : finalSnapshot.docs.map((doc) => doc.data());
         
         // Load secret scores (for level calculation, but not displayed in rankings)
@@ -730,6 +780,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         renderTable('easy');
         renderTable('normal');
         renderTable('master');
+        renderTable('race');
         renderTable('hell');
     } catch (error) {
         console.error("Error fetching high scores:", error);

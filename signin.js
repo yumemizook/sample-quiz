@@ -19,14 +19,21 @@ await signInWithEmailAndPassword(auth, email, password)
     const db = getFirestore();
     // Sync Firebase Auth data to userProfiles
     const userProfileRef = doc(db, 'userProfiles', user.uid);
-    await setDoc(userProfileRef, {
+    const userProfileSnap = await getDoc(userProfileRef);
+    const existingData = userProfileSnap.exists() ? userProfileSnap.data() : {};
+    
+    // Backfill createdAt if it doesn't exist
+    const updateData = {
         displayName: user.displayName || user.email,
         email: user.email,
         photoURL: user.photoURL || null
-    }, { merge: true });
+    };
+    if (!existingData.createdAt) {
+        updateData.createdAt = new Date().toISOString();
+    }
+    await setDoc(userProfileRef, updateData, { merge: true });
     
     // Check if user has seen introduction
-    const userProfileSnap = await getDoc(userProfileRef);
     if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
         window.location.href = "introduction.html";
     } else {
@@ -68,14 +75,21 @@ googleButton.addEventListener("click", async () => {
         const db = getFirestore();
         // Sync Firebase Auth data to userProfiles
         const userProfileRef = doc(db, 'userProfiles', user.uid);
-        await setDoc(userProfileRef, {
+        const userProfileSnap = await getDoc(userProfileRef);
+        const existingData = userProfileSnap.exists() ? userProfileSnap.data() : {};
+        
+        // Backfill createdAt if it doesn't exist
+        const updateData = {
             displayName: user.displayName || user.email,
             email: user.email,
             photoURL: user.photoURL || null
-        }, { merge: true });
+        };
+        if (!existingData.createdAt) {
+            updateData.createdAt = new Date().toISOString();
+        }
+        await setDoc(userProfileRef, updateData, { merge: true });
         
         // Check if user has seen introduction
-        const userProfileSnap = await getDoc(userProfileRef);
         if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
             await setDoc(userProfileRef, { hasSeenIntro: false }, { merge: true });
             window.location.href = "introduction.html";

@@ -1721,6 +1721,11 @@
       // Check if all questions were completed (in master mode, you can only progress if correct, so completion means all correct)
       const allQuestionsCompleted = currQuestion >= allQuestions.length - 1;
       
+      // Mark master mode as completed in localStorage
+      if (!quizAbandoned && allQuestionsCompleted) {
+        localStorage.setItem("masterModeCompleted", "true");
+      }
+      
       if (!quizAbandoned && allQuestionsCompleted && localStorage.getItem("musicEnabled") !== "false") {
         let completeSound = new Audio("bgm/complete.wav");
         completeSound.play().catch(err => console.log("Complete sound play failed:", err));

@@ -10,9 +10,13 @@ let hellClickTimeout = null; // Timeout to reset click counter
 let secretClickCount = 0; // Track clicks on secret mode card
 let secretClickTimeout = null; // Timeout to reset click counter
 let isSecretModeVisible = false; // Track if secret mode is currently visible
+let hasCompletedMaster = false; // Track if user has completed master mode
+let masterClickCount = 0; // Track clicks on master mode card
+let masterClickTimeout = null; // Timeout to reset click counter
+let isRaceModeVisible = false; // Track if race mode is currently visible
 
 // Calculate main input method based on play counts
-function calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores) {
+function calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores = []) {
     const inputCounts = {
         keyboard: 0,
         controller: 0,
@@ -21,7 +25,7 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
     };
     
     // Count input types across all modes
-    const allScores = [...easyScores, ...normalScores, ...masterScores, ...hellScores, ...secretScores];
+    const allScores = [...easyScores, ...normalScores, ...masterScores, ...hellScores, ...secretScores, ...raceScores];
     allScores.forEach(score => {
         const inputType = (score.inputType || "unknown").toLowerCase();
         if (inputType === "keyboard" || inputType === "⌨️") {
@@ -193,11 +197,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     secretSnap = { empty: true, docs: [] };
                 }
                 
-                const [easySnap, normalSnap, masterSnap, hellSnap] = await Promise.all([
+                const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap] = await Promise.all([
                     getDocs(collection(db, "playerData", uid, "easy")),
                     getDocs(collection(db, "playerData", uid, "normal")),
                     getDocs(collection(db, "playerData", uid, "master")),
-                    getDocs(collection(db, "playerData", uid, "hell"))
+                    getDocs(collection(db, "playerData", uid, "hell")),
+                    getDocs(collection(db, "playerData", uid, "race"))
                 ]);
                 
                 const easyScores = easySnap.empty ? [] : easySnap.docs.map(doc => doc.data());
@@ -205,18 +210,23 @@ document.addEventListener("DOMContentLoaded", () => {
                 const masterScores = masterSnap.empty ? [] : masterSnap.docs.map(doc => doc.data());
                 const hellScores = hellSnap.empty ? [] : hellSnap.docs.map(doc => doc.data());
                 const secretScores = secretSnap.empty ? [] : secretSnap.docs.map(doc => doc.data());
+                const raceScores = raceSnap.empty ? [] : raceSnap.docs.map(doc => doc.data());
                 
                 // Check hell mode completion
                 hasCompletedHell = hellScores.some(score => score.score === 200);
                 
+                // Master mode completion check removed - race mode is now always accessible
+                // Keep the variable for toggle functionality
+                hasCompletedMaster = true; // Always allow toggle between master and race mode
+                
                 // Calculate total plays
-                const totalPlays = easyScores.length + normalScores.length + masterScores.length + hellScores.length + secretScores.length;
+                const totalPlays = easyScores.length + normalScores.length + masterScores.length + hellScores.length + secretScores.length + raceScores.length;
                 
                 // Calculate main input method
-                const mainInput = calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores);
+                const mainInput = calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
                 
                 // Calculate and display player level
-                const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores);
+                const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
                 const levelDisplay = document.getElementById("playerLevel");
                 const playerInfo = document.getElementById("playerInfo");
                 if (levelDisplay && playerInfo) {
@@ -394,10 +404,21 @@ document.addEventListener("DOMContentLoaded", () => {
     // Initialize mode selection with cards
     const modeCards = document.querySelectorAll(".mode-card");
     
+    // Master mode completion check removed - race mode is now always accessible
+    hasCompletedMaster = true; // Always allow toggle between master and race mode
+    
+    // Initialize race mode visibility - hide race mode by default
+    const raceCard = document.getElementById("raceModeCard");
+    const masterCard = document.getElementById("masterModeCard");
+    if (raceCard) {
+        // Race mode starts hidden - will be shown when toggled
+        raceCard.classList.add("hide");
+    }
+    
     // Function to update background and styling based on mode
     function updateModeStyling(mode) {
         // Remove all mode classes from body
-        document.body.classList.remove("mode-easy", "mode-normal", "mode-master", "mode-hell", "mode-secret");
+        document.body.classList.remove("mode-easy", "mode-normal", "mode-master", "mode-hell", "mode-secret", "mode-master130");
         // Add the appropriate mode class
         document.body.classList.add(`mode-${mode}`);
     }
@@ -410,6 +431,48 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         
         card.addEventListener("click", (e) => {
+            // Helper function to toggle between master and race mode
+            function toggleMasterRaceMode() {
+                const masterCard = document.getElementById("masterModeCard");
+                const raceCard = document.getElementById("raceModeCard");
+                
+                if (masterCard && raceCard) {
+                    isRaceModeVisible = !isRaceModeVisible;
+                    
+                    if (isRaceModeVisible) {
+                        // Show race mode, hide master mode
+                        masterCard.classList.add("hide");
+                        raceCard.classList.remove("hide");
+                        // Auto-select race mode
+                        modeCards.forEach(c => c.classList.remove("active"));
+                        raceCard.classList.add("active");
+                        selectedMode = "master130";
+                        updateModeStyling("master130");
+                    } else {
+                        // Show master mode, hide race mode
+                        masterCard.classList.remove("hide");
+                        raceCard.classList.add("hide");
+                        // Auto-select master mode
+                        modeCards.forEach(c => c.classList.remove("active"));
+                        masterCard.classList.add("active");
+                        selectedMode = "master";
+                        updateModeStyling("master");
+                    }
+                    
+                    // Sync navigation focus - get all visible cards
+                    const visibleCards = Array.from(modeCards).filter(c => !c.classList.contains("hide"));
+                    const activeCard = isRaceModeVisible ? raceCard : masterCard;
+                    const cardIndex = visibleCards.indexOf(activeCard);
+                    if (cardIndex !== -1) {
+                        import("./menuNavigation.js").then(module => {
+                            if (module.syncModeSelection) {
+                                module.syncModeSelection(cardIndex);
+                            }
+                        }).catch(() => {});
+                    }
+                }
+            }
+            
             // Helper function to toggle between hell and secret mode
             function toggleHellSecretMode() {
                 const hellCard = document.querySelector('[data-mode="hell"]');
@@ -500,6 +563,54 @@ document.addEventListener("DOMContentLoaded", () => {
                 }
             }
             
+            // Special handling for master mode card - 5 clicks to toggle race mode
+            if (card.dataset.mode === "master") {
+                masterClickCount++;
+                
+                // Clear existing timeout
+                if (masterClickTimeout) {
+                    clearTimeout(masterClickTimeout);
+                }
+                
+                // Reset counter after 2 seconds of no clicks
+                masterClickTimeout = setTimeout(() => {
+                    masterClickCount = 0;
+                }, 2000);
+                
+                // If clicked 5 times, toggle between master and race mode
+                if (masterClickCount >= 5) {
+                    e.stopPropagation(); // Prevent normal click handling
+                    masterClickCount = 0;
+                    clearTimeout(masterClickTimeout);
+                    toggleMasterRaceMode();
+                    return; // Don't process as normal click
+                }
+            }
+            
+            // Special handling for race mode card - 5 clicks to toggle back to master mode
+            if (card.dataset.mode === "master130") {
+                masterClickCount++;
+                
+                // Clear existing timeout
+                if (masterClickTimeout) {
+                    clearTimeout(masterClickTimeout);
+                }
+                
+                // Reset counter after 2 seconds of no clicks
+                masterClickTimeout = setTimeout(() => {
+                    masterClickCount = 0;
+                }, 2000);
+                
+                // If clicked 5 times, toggle back to master mode
+                if (masterClickCount >= 5) {
+                    e.stopPropagation(); // Prevent normal click handling
+                    masterClickCount = 0;
+                    clearTimeout(masterClickTimeout);
+                    toggleMasterRaceMode();
+                    return; // Don't process as normal click
+                }
+            }
+            
             // Normal click handling - skip if card is hidden
             if (card.classList.contains("hide")) {
                 return;
@@ -543,6 +654,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location.href = "easy.html";
             } else if (selectedMode === "secret") {
                 window.location.href = "secret.html";
+            } else if (selectedMode === "master130") {
+                window.location.href = "master130.html";
             }
         });
     }
