@@ -39,12 +39,14 @@
         <a logout class="hide" href="index.html">Log out</a>
         <a giveup href="index.html">Give up</a>
         <div class="player-info hide" id="playerInfo">
-            <span class="name"></span>
-            <span class="player-level" id="playerLevel"></span>
-        </div>
-        <div class="player-avatar hide" id="playerAvatar">
-            <img id="playerAvatarImg" src="" alt="Avatar">
-            <div class="player-avatar-placeholder">👤</div>
+            <div class="player-info-left">
+                <span class="name"></span>
+                <span class="player-level" id="playerLevel"></span>
+            </div>
+            <div class="player-avatar hide" id="playerAvatar">
+                <img id="playerAvatarImg" src="" alt="Avatar">
+                <div class="player-avatar-placeholder">👤</div>
+            </div>
         </div>
     </div>
     <div class="container">
@@ -61,6 +63,20 @@
         <div class="evalscreen" style="display:none"></div>
         <div id="notification" class="notification hide"></div>
     </div>
+    <!-- Pause Menu -->
+    <div id="pauseMenu" class="pause-menu" style="display: none;">
+      <div class="pause-menu-content">
+        <h2>PAUSED</h2>
+        <div id="pauseStats" class="pause-stats">
+          <div>Pauses: <span id="pauseCountDisplay">0</span></div>
+          <div>Total Paused Time: <span id="totalPausedTimeDisplay">00:00:00</span></div>
+        </div>
+        <button id="resumeBtn" class="pause-menu-button" tabindex="0">Resume</button>
+        <button id="giveUpPauseBtn" class="pause-menu-button" tabindex="0">Give Up</button>
+      </div>
+    </div>
+    <!-- Pause Button (visible on mobile and desktop) -->
+    <button id="pauseBtn" class="pause-button" style="display: none;">⏸ Pause</button>
     <script type="module" src="./IR.js"></script>
     <script type="module" src="./firebase.js"></script>
     <script type="module" src="./hm.js"></script>
@@ -120,6 +136,223 @@
     let lastDpadState = { up: false, down: false, left: false, right: false };
     let answerOptions = []; // Store current question's answer options for controller support
     
+    // Pause system variables
+    let isPaused = false;
+    let pauseStartTime = 0;
+    let pausedAnswerTimer = false;
+    let pausedAnswerTime = 0;
+    let timerStartTime = 0;
+    let pauseCount = 0;
+    let totalPausedTime = 0;
+    let selectedPauseButton = 0; // 0 for Resume, 1 for Give Up
+    
+    // Pause menu elements
+    const pauseMenu = document.getElementById("pauseMenu");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resumeBtn = document.getElementById("resumeBtn");
+    const giveUpPauseBtn = document.getElementById("giveUpPauseBtn");
+    const pauseCountDisplay = document.getElementById("pauseCountDisplay");
+    const totalPausedTimeDisplay = document.getElementById("totalPausedTimeDisplay");
+    const pauseButtons = [resumeBtn, giveUpPauseBtn];
+    
+    // Format paused time for display
+    function formatPausedTime(ms) {
+        const minutes = Math.floor(ms / 60000);
+        const seconds = Math.floor((ms % 60000) / 1000);
+        const centiseconds = Math.floor((ms % 1000) / 10);
+        return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}:${centiseconds.toString().padStart(2, "0")}`;
+    }
+    
+    // Update pause menu display
+    function updatePauseMenuDisplay() {
+        if (pauseCountDisplay) {
+            pauseCountDisplay.textContent = pauseCount || 0;
+        }
+        if (totalPausedTimeDisplay) {
+            totalPausedTimeDisplay.textContent = formatPausedTime(totalPausedTime || 0);
+        }
+    }
+    
+    // Update pause button highlighting
+    function updatePauseButtonHighlight() {
+        pauseButtons.forEach((btn, index) => {
+            if (btn) {
+                if (index === selectedPauseButton) {
+                    btn.classList.add("pause-button-selected");
+                    btn.focus();
+                } else {
+                    btn.classList.remove("pause-button-selected");
+                }
+            }
+        });
+    }
+    
+    // Show pause button
+    if (pauseBtn) {
+        pauseBtn.style.display = "block";
+        pauseBtn.style.position = "fixed";
+        pauseBtn.style.top = "140px";
+        pauseBtn.style.right = "20px";
+        pauseBtn.style.zIndex = "9999";
+        pauseBtn.style.padding = "10px 20px";
+        pauseBtn.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+        pauseBtn.style.color = "white";
+        pauseBtn.style.border = "2px solid white";
+        pauseBtn.style.borderRadius = "5px";
+        pauseBtn.style.cursor = "pointer";
+        pauseBtn.style.fontSize = "1em";
+        pauseBtn.addEventListener("click", togglePause);
+    }
+    
+    // Resume button
+    if (resumeBtn) {
+        resumeBtn.addEventListener("click", togglePause);
+        resumeBtn.addEventListener("mouseenter", () => {
+            selectedPauseButton = 0;
+            updatePauseButtonHighlight();
+        });
+    }
+    
+    // Give up from pause menu
+    if (giveUpPauseBtn) {
+        giveUpPauseBtn.addEventListener("click", () => {
+            if (confirm("Are you sure you want to give up?")) {
+                location.href = "index.html";
+            }
+        });
+        giveUpPauseBtn.addEventListener("mouseenter", () => {
+            selectedPauseButton = 1;
+            updatePauseButtonHighlight();
+        });
+    }
+    
+    // Handle pause menu button selection
+    function selectPauseButton() {
+        if (selectedPauseButton === 0 && resumeBtn) {
+            togglePause();
+        } else if (selectedPauseButton === 1 && giveUpPauseBtn) {
+            if (confirm("Are you sure you want to give up?")) {
+                location.href = "index.html";
+            }
+        }
+    }
+    
+    // Toggle pause function
+    function togglePause() {
+        if (isPaused) {
+            resumeGame();
+        } else {
+            pauseGame();
+        }
+    }
+    
+    // Pause the game
+    function pauseGame() {
+        if (isPaused) return;
+        
+        const evalDiv = document.querySelector(".evalscreen");
+        if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
+            return;
+        }
+        
+        isPaused = true;
+        pauseStartTime = Date.now();
+        pauseCount++;
+        
+        // Pause answer timer
+        if (window.answerTimerId) {
+            pausedAnswerTimer = true;
+            pausedAnswerTime = timeToAnswer || 0;
+            clearInterval(window.answerTimerId);
+            window.answerTimerId = null;
+        }
+        
+        // Show pause menu
+        if (pauseMenu) {
+            pauseMenu.style.display = "flex";
+            updatePauseMenuDisplay();
+            selectedPauseButton = 0;
+            updatePauseButtonHighlight();
+            
+            // Update pause display periodically while paused
+            if (window.pauseDisplayInterval) {
+                clearInterval(window.pauseDisplayInterval);
+            }
+            window.pauseDisplayInterval = setInterval(() => {
+                if (isPaused && pauseMenu && pauseMenu.style.display !== "none") {
+                    const currentPauseTime = Date.now() - pauseStartTime;
+                    const totalTime = totalPausedTime + currentPauseTime;
+                    if (totalPausedTimeDisplay) {
+                        totalPausedTimeDisplay.textContent = formatPausedTime(totalTime);
+                    }
+                } else {
+                    if (window.pauseDisplayInterval) {
+                        clearInterval(window.pauseDisplayInterval);
+                        window.pauseDisplayInterval = null;
+                    }
+                }
+            }, 100);
+        }
+        
+        // Disable game interaction
+        const container = document.querySelector(".container");
+        if (container) {
+            container.style.pointerEvents = "none";
+            container.style.opacity = "0.5";
+        }
+    }
+    
+    // Resume the game
+    function resumeGame() {
+        if (!isPaused) return;
+        
+        isPaused = false;
+        const pauseDuration = Date.now() - pauseStartTime;
+        totalPausedTime += pauseDuration;
+        
+        // Resume main timer - adjust start time to account for pause duration
+        if (timerStartTime) {
+            timerStartTime += pauseDuration;
+        }
+        
+        // Resume answer timer if it was running
+        if (pausedAnswerTimer && pausedAnswerTime > 0) {
+            timeToAnswer = pausedAnswerTime;
+            const timerDiv = document.querySelector(".timerifinvalid");
+            if (timerDiv) {
+                window.answerTimerId = setInterval(() => {
+                    if (isPaused) return;
+                    if (timeToAnswer > 0) {
+                        timeToAnswer -= 0.01;
+                        timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                    } else {
+                        clearInterval(window.answerTimerId);
+                        evalScreen();
+                    }
+                }, 10);
+            }
+            pausedAnswerTimer = false;
+        }
+        
+        // Hide pause menu
+        if (pauseMenu) {
+            pauseMenu.style.display = "none";
+        }
+        
+        // Clear pause display interval
+        if (window.pauseDisplayInterval) {
+            clearInterval(window.pauseDisplayInterval);
+            window.pauseDisplayInterval = null;
+        }
+        
+        // Re-enable game interaction
+        const container = document.querySelector(".container");
+        if (container) {
+            container.style.pointerEvents = "auto";
+            container.style.opacity = "1";
+        }
+    }
+    
     // Cache DOM elements for better performance
     const btn = document.querySelector('#btn');
     const opt = document.getElementById("opt");
@@ -169,6 +402,34 @@
     // Keyboard support
     function initKeyboard() {
         document.addEventListener("keydown", (e) => {
+            // Track keyboard input type
+            if (!inputType || inputType === 'mobile') {
+                inputType = 'keyboard';
+            }
+            
+            // Pause with Escape key
+            if (e.key === "Escape") {
+                const evalDiv = document.querySelector(".evalscreen");
+                if (!evalDiv || evalDiv.style.display === "none" || evalDiv.style.display === "") {
+                    togglePause();
+                    e.preventDefault();
+                }
+                return;
+            }
+            
+            // Handle pause menu navigation
+            if (isPaused && pauseMenu && pauseMenu.style.display !== "none") {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                    e.preventDefault();
+                    selectedPauseButton = selectedPauseButton === 0 ? 1 : 0;
+                    updatePauseButtonHighlight();
+                } else if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    selectPauseButton();
+                }
+                return;
+            }
+            
             const evalDiv = document.querySelector(".evalscreen");
             if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
                 return;
@@ -176,6 +437,12 @@
             if (!Questions || Questions.length === 0) {
                 return;
             }
+            
+            // Don't process other input if paused
+            if (isPaused) {
+                return;
+            }
+            
             // Set input type to keyboard when keyboard is used
             if (!isMobile) {
                 inputType = 'keyboard';
@@ -217,6 +484,14 @@
     }
 
     async function startQuiz() {
+        // Reset pause tracking variables
+        pauseCount = 0;
+        totalPausedTime = 0;
+        pausedTime = 0;
+        pausedAnswerTimer = false;
+        pausedAnswerTime = 0;
+        selectedPauseButton = 0;
+        
         await fetchQuestions();
         if (Questions.length === 0) {
             ques.innerHTML = `<h5 style='color: red'>Unable to fetch data, Please try again!!</h5>`;
@@ -316,6 +591,67 @@
     }
     
     function handleGamepadInput(gamepad) {
+        // Pause with Start button (button 9)
+        if (gamepad.buttons[9] && gamepad.buttons[9].pressed) {
+            if (!window.gamepadPausePressed) {
+                window.gamepadPausePressed = true;
+                const evalDiv = document.querySelector(".evalscreen");
+                if (!evalDiv || evalDiv.style.display === "none" || evalDiv.style.display === "") {
+                    togglePause();
+                }
+            }
+        } else {
+            window.gamepadPausePressed = false;
+        }
+        
+        // Handle pause menu navigation with controller
+        if (isPaused && pauseMenu && pauseMenu.style.display !== "none") {
+            let dpadUp = false;
+            let dpadDown = false;
+            
+            if (gamepad.buttons[12]) dpadUp = gamepad.buttons[12].pressed;
+            if (gamepad.buttons[13]) dpadDown = gamepad.buttons[13].pressed;
+            
+            if (gamepad.axes.length >= 10) {
+                const hatY = gamepad.axes[10];
+                if (hatY < -0.5) dpadUp = true;
+                if (hatY > 0.5) dpadDown = true;
+            }
+            
+            if (dpadUp && !lastDpadState.up) {
+                selectedPauseButton = 0;
+                updatePauseButtonHighlight();
+                lastDpadState.up = true;
+            } else if (!dpadUp) {
+                lastDpadState.up = false;
+            }
+            
+            if (dpadDown && !lastDpadState.down) {
+                selectedPauseButton = 1;
+                updatePauseButtonHighlight();
+                lastDpadState.down = true;
+            } else if (!dpadDown) {
+                lastDpadState.down = false;
+            }
+            
+            if ((gamepad.buttons[0] && gamepad.buttons[0].pressed) || 
+                (gamepad.buttons[2] && gamepad.buttons[2].pressed)) {
+                if (!window.gamepadPauseSelectPressed) {
+                    window.gamepadPauseSelectPressed = true;
+                    selectPauseButton();
+                }
+            } else {
+                window.gamepadPauseSelectPressed = false;
+            }
+            
+            return;
+        }
+        
+        // Don't process other input if paused
+        if (isPaused) {
+            return;
+        }
+        
         let dpadUp = false, dpadDown = false, dpadLeft = false, dpadRight = false;
         
         if (gamepad.buttons[12]) dpadUp = gamepad.buttons[12].pressed;
@@ -510,6 +846,7 @@
             timerDiv.style.color = "red";
             
             window.questionTimerId = setInterval(() => {
+                if (isPaused) return; // Don't count down if paused
                 if (timeToAnswer > 0) {
                     timeToAnswer -= 0.01;
                     timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
@@ -597,9 +934,11 @@
     let timer; // Global variable to store the timer interval
     function stopWatch() {
         quizStartTime = Date.now(); // Store quiz start time for 5-minute bonus calculation
+        timerStartTime = quizStartTime;
         const startTime = quizStartTime;
         timer = setInterval(() => {
-            const elapsedTime = Date.now() - startTime;
+            if (isPaused) return; // Don't update timer when paused
+            const elapsedTime = Date.now() - startTime - totalPausedTime;
             const miliseconds = Math.floor((elapsedTime % 1000) / 10);
             const seconds = Math.floor((elapsedTime / 1000) % 60);
             quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
@@ -646,6 +985,16 @@
         updateGradePointsDisplay();
     }
     function evalScreen(gaveUp = false) {
+        // Resume game if paused
+        if (isPaused) {
+            resumeGame();
+        }
+        
+        // Hide pause button
+        if (pauseBtn) {
+            pauseBtn.style.display = "none";
+        }
+        
         // Stop BGM when quiz ends
         stopBGM();
         
@@ -783,7 +1132,9 @@
                     score: totalGradePoints, // Use grade points instead of score
                     time: timeDisplay.textContent,
                     date: new Date().toLocaleString(),
-                    inputType: inputType || 'unknown'
+                    inputType: inputType || 'unknown',
+                    pauseCount: pauseCount,
+                    totalPausedTime: formatPausedTime(totalPausedTime)
                 };
 
                 // Global leaderboard entry

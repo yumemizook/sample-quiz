@@ -1,5 +1,6 @@
 import { getAuth, onAuthStateChanged, signOut } from "./firebase.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "./firebase.js";
+import { calculatePlayerLevel } from "./stats.js";
 
 const auth = getAuth();
 let selectedMode = "normal"; // Default mode
@@ -76,94 +77,8 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
 }
 
 // Calculate player level and XP based on achievements and grade points
-function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores) {
-    let experience = 0;
-    
-    // Base XP from scores earned (scaled appropriately for each mode)
-    // Easy mode: score field contains totalGradePoints
-    easyScores.forEach(score => {
-        const gradePoints = score.score || 0; // In easy mode, score is grade points
-        experience += Math.floor(gradePoints / 200); // 1 XP per 200 grade points (reduced from 100)
-    });
-    
-    // Normal mode: score field contains correct answers (0-150)
-    normalScores.forEach(score => {
-        const correctAnswers = score.score || 0;
-        // Award XP based on questions answered (more questions = more XP)
-        experience += Math.floor(correctAnswers * 0.5); // 0.5 XP per question
-        
-        // Milestone bonuses
-        if (correctAnswers >= 150) experience += 25; // Full completion bonus
-        else if (correctAnswers >= 100) experience += 15;
-        else if (correctAnswers >= 50) experience += 10;
-    });
-    
-    // Master mode: score field contains totalGradePoints
-    masterScores.forEach(score => {
-        const gradePoints = score.score || 0;
-        experience += Math.floor(gradePoints / 200); // 1 XP per 200 grade points
-        
-        // Bonus XP for grades
-        if (score.grade === "GM") {
-            experience += 100; // Grand Master bonus
-        } else if (score.grade && score.grade.startsWith("S")) {
-            const sLevel = parseInt(score.grade.substring(1)) || 0;
-            experience += sLevel * 5; // S1 = +5, S9 = +45
-        }
-        
-        // Line color bonuses
-        if (score.line === "orange") experience += 50;
-        else if (score.line === "green") experience += 25;
-    });
-    
-    // Hell mode: score field contains correct answers (0-200)
-    hellScores.forEach(score => {
-        const correctAnswers = score.score || 0;
-        experience += Math.floor(correctAnswers * 1.5); // 1.5 XP per question completed
-        
-        // Grade bonuses (significant rewards for hell mode achievements)
-        if (score.grade === "Grand Master - Infinity") {
-            experience += 200;
-        } else if (score.grade && score.grade.startsWith("S")) {
-            const sLevel = parseInt(score.grade.substring(1)) || 0;
-            experience += sLevel * 10; // S1 = +10, S20 = +200
-        }
-    });
-    
-    // Achievement bonuses (one-time)
-    const easyCompleted = easyScores.some(s => s.score === 30);
-    if (easyCompleted) experience += 15; // Reduced from 25
-    
-    const masterCompleted = masterScores.some(s => s.score === 90);
-    if (masterCompleted) experience += 75;
-    
-    const hellCompleted = hellScores.some(s => s.score === 200);
-    if (hellCompleted) {
-        experience += 150;
-        hasCompletedHell = true;
-    }
-    
-    // Calculate level using exponential scaling
-    // Level formula: level = floor(1 + sqrt(experience / 30))
-    // This gives: Lv 1 = 0 XP, Lv 2 = 90 XP, Lv 3 = 240 XP, Lv 4 = 450 XP, etc.
-    // Increased threshold: changed divisor from 20 to 30 (requires more XP per level)
-    const finalLevel = Math.max(1, Math.floor(1 + Math.sqrt(experience / 30)));
-    
-    // Calculate XP needed for current level and next level
-    const xpForCurrentLevel = Math.pow((finalLevel - 1), 2) * 30;
-    const xpForNextLevel = Math.pow(finalLevel, 2) * 30;
-    const xpInCurrentLevel = experience - xpForCurrentLevel;
-    const xpNeededForNextLevel = xpForNextLevel - xpForCurrentLevel;
-    
-    return { 
-        level: finalLevel, 
-        experience: experience,
-        xpForCurrentLevel: xpForCurrentLevel,
-        xpForNextLevel: xpForNextLevel,
-        xpInCurrentLevel: xpInCurrentLevel,
-        xpNeededForNextLevel: xpNeededForNextLevel
-    };
-}
+// calculatePlayerLevel is now imported from stats.js to ensure synchronization
+// The function has been removed from here to use the shared version
 
 // Get badge based on level (extended to level 1000)
 function getBadgeForLevel(level) {
@@ -303,7 +218,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Calculate and display player level
                 const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores);
                 const levelDisplay = document.getElementById("playerLevel");
-                if (levelDisplay) {
+                const playerInfo = document.getElementById("playerInfo");
+                if (levelDisplay && playerInfo) {
                     const badge = getBadgeForLevel(playerData.level);
                     const badgeName = getBadgeName(playerData.level);
                     levelDisplay.innerHTML = `<span class="level-badge" title="${badgeName}">${badge}</span> <span class="level-text">Lv. ${playerData.level}</span>`;
@@ -322,9 +238,10 @@ document.addEventListener("DOMContentLoaded", () => {
                     levelDisplay.setAttribute("data-badge", badgeName);
                     levelDisplay.setAttribute("data-xp", playerData.experience.toLocaleString());
                     levelDisplay.setAttribute("data-plays", totalPlays.toLocaleString());
-                    // Add color class based on level (preserve hide class if needed)
+                    // Add color class based on level to playerInfo for background color
                     const colorClass = getLevelColorClass(playerData.level);
-                    levelDisplay.className = `player-level ${colorClass}`;
+                    playerInfo.className = `player-info ${colorClass}`;
+                    levelDisplay.className = `player-level`;
                     levelDisplay.classList.remove("hide");
                 }
             } catch (error) {
@@ -333,8 +250,13 @@ document.addEventListener("DOMContentLoaded", () => {
         } else {
             // Hide level display when logged out
             const levelDisplay = document.getElementById("playerLevel");
+            const playerInfo = document.getElementById("playerInfo");
             if (levelDisplay) {
                 levelDisplay.classList.add("hide");
+            }
+            if (playerInfo) {
+                // Remove color class when logged out
+                playerInfo.className = "player-info hide";
             }
         }
     });

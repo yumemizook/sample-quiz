@@ -228,6 +228,10 @@ function renderTable(mode) {
         const inputTypeDisplay = formatInputType(scoreData.inputType);
         const playerName = scoreData.name || '';
         
+        // Format pause count display
+        const pauseCount = scoreData.pauseCount || 0;
+        const pauseDisplay = pauseCount > 0 ? `<div style="font-size: 0.8em; color: #888; margin-top: 2px;">Pauses: ${pauseCount}</div>` : '';
+        
         if (hasGrade) {
             const gradeDisplay = scoreData.grade 
                 ? `<span class="grade-badge" style="color: ${getLineColor(scoreData)}">${formatGrade(scoreData.grade)}</span>` 
@@ -237,7 +241,7 @@ function renderTable(mode) {
                 <td><span class="player-name-hover" data-player-name="${playerName}">${playerName}</span></td>
                 <td class="high-score">${scoreData.score}</td>
                 <td>${gradeDisplay}</td>
-                <td>${scoreData.time}</td>
+                <td>${scoreData.time}${pauseDisplay}</td>
                 <td>${inputTypeDisplay}</td>
                 <td>${scoreData.date}</td>
             `;
@@ -246,7 +250,7 @@ function renderTable(mode) {
                 <td>${rank}</td>
                 <td><span class="player-name-hover" data-player-name="${playerName}">${playerName}</span></td>
                 <td class="high-score">${scoreData.score}</td>
-                <td>${scoreData.time}</td>
+                <td>${scoreData.time}${pauseDisplay}</td>
                 <td>${inputTypeDisplay}</td>
                 <td>${scoreData.date}</td>
             `;

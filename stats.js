@@ -76,7 +76,7 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
     // Easy mode: score field contains totalGradePoints
     easyScores.forEach(score => {
         const gradePoints = score.score || 0; // In easy mode, score is grade points
-        experience += Math.floor(gradePoints / 200); // 1 XP per 200 grade points (reduced from 100)
+        experience += Math.floor(gradePoints / 500); // 1 XP per 500 grade points
     });
     
     // Normal mode: score field contains correct answers (0-150)
@@ -86,33 +86,39 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
         experience += Math.floor(correctAnswers * 0.5); // 0.5 XP per question
         
         // Milestone bonuses
-        if (correctAnswers >= 150) experience += 25; // Full completion bonus
-        else if (correctAnswers >= 100) experience += 15;
+        if (correctAnswers >= 100) experience += 25;
+        else if (correctAnswers >= 75) experience += 15;
         else if (correctAnswers >= 50) experience += 10;
+        else if (correctAnswers >= 25) experience += 5;
     });
     
     // Master mode: score field contains totalGradePoints
     masterScores.forEach(score => {
         const gradePoints = score.score || 0;
-        experience += Math.floor(gradePoints / 200); // 1 XP per 200 grade points
+        experience += Math.floor(gradePoints / 100); // 1 XP per 100 grade points
         
         // Bonus XP for grades
         if (score.grade === "GM") {
-            experience += 100; // Grand Master bonus
+            experience += 200; // Grand Master bonus
         } else if (score.grade && score.grade.startsWith("S")) {
             const sLevel = parseInt(score.grade.substring(1)) || 0;
-            experience += sLevel * 5; // S1 = +5, S9 = +45
+            experience += sLevel * 10; // S1 = +5, S9 = +45
         }
         
         // Line color bonuses
-        if (score.line === "orange") experience += 50;
-        else if (score.line === "green") experience += 25;
+        if (score.grade === "GM" && score.line === "orange") {
+            experience += 150;
+        } else if (score.grade === "GM" && score.line === "green") {
+            experience += 50;
+        } 
+        if (score.line === "orange") {experience += 50;}
+        else if (score.line === "green") {experience += 25;}
     });
     
     // Hell mode: score field contains correct answers (0-200)
     hellScores.forEach(score => {
         const correctAnswers = score.score || 0;
-        experience += Math.floor(correctAnswers * 1.5); // 1.5 XP per question completed
+        experience += Math.floor(correctAnswers * 8); // 8 XP per question completed
         
         // Grade bonuses (significant rewards for hell mode achievements)
         if (score.grade === "Grand Master - Infinity") {
@@ -154,6 +160,9 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
         xpNeededForNextLevel: xpNeededForNextLevel
     };
 }
+
+// Export the function so it can be used by other modules (e.g., hm.js for navbar)
+export { calculatePlayerLevel };
 
 // Helper function to compare line colors (orange > green > white)
 // Returns: 1 if line1 > line2, -1 if line1 < line2, 0 if equal
@@ -846,6 +855,10 @@ function renderModeStats(mode) {
             }) : "Unknown";
             const inputTypeDisplay = formatInputType(entry.inputType);
             
+            // Format pause count display
+            const pauseCount = entry.pauseCount || 0;
+            const pauseDisplay = pauseCount > 0 ? `<div style="font-size: 0.8em; color: #888; margin-top: 2px;">Pauses: ${pauseCount}</div>` : '';
+            
             if (hasGrade) {
                 const gradeDisplay = entry.grade 
                     ? `<span class="grade-badge" style="color: ${getLineColor(entry)}">${formatGrade(entry.grade)}</span>` 
@@ -854,14 +867,14 @@ function renderModeStats(mode) {
                     <td>${dateStr}</td>
                     <td class="${entry.score ? "high-score" : ""}">${formatScore(entry.score)}</td>
                     <td>${gradeDisplay}</td>
-                    <td>${entry.time || "-"}</td>
+                    <td>${entry.time || "-"}${pauseDisplay}</td>
                     <td>${inputTypeDisplay}</td>
                 `;
             } else {
                 row.innerHTML = `
                     <td>${dateStr}</td>
                     <td class="${entry.score ? "high-score" : ""}">${formatScore(entry.score)}</td>
-                    <td>${entry.time || "-"}</td>
+                    <td>${entry.time || "-"}${pauseDisplay}</td>
                     <td>${inputTypeDisplay}</td>
                 `;
             }
