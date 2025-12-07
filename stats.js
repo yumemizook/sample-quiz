@@ -504,14 +504,14 @@ function updateLevelProgression(playerData, totalPlays = 0, mainInput = null, cr
         return "Sprout";
     }
     
-    // Get color class based on level
+    // Get color class based on level (synchronized with getBadgeNameStats thresholds)
     function getLevelColorClassStats(level) {
         if (level >= 2000) return "level-meteor";
-        if (level >= 900) return "level-moon";
-        if (level >= 800) return "level-sun";
-        if (level >= 700) return "level-earth";
-        if (level >= 600) return "level-planet";
-        if (level >= 500) return "level-star-high";
+        if (level >= 1500) return "level-moon";
+        if (level >= 1250) return "level-sun";
+        if (level >= 1000) return "level-earth";
+        if (level >= 800) return "level-planet";
+        if (level >= 600) return "level-star-high";
         if (level >= 400) return "level-glowing";
         if (level >= 300) return "level-dizzy";
         if (level >= 250) return "level-galaxy";
@@ -951,6 +951,25 @@ function renderModeStats(mode) {
             return "❓";
         };
         
+        // Format modifiers display
+        const formatModifiers = (modifiers) => {
+            if (!modifiers || Object.keys(modifiers).length === 0) return "";
+            const parts = [];
+            if (modifiers.lives) {
+                parts.push(`❤️ ${modifiers.lives}`);
+            }
+            if (modifiers.timeMultiplier && modifiers.timeMultiplier !== 1) {
+                parts.push(`⏱️ ${modifiers.timeMultiplier.toFixed(2)}x`);
+            }
+            if (modifiers.fadingMode) {
+                parts.push(`👁️ ${modifiers.fadingMode}s`);
+            }
+            if (modifiers.startQuestion) {
+                parts.push(`🎯 ${modifiers.startQuestion + 1}`);
+            }
+            return parts.length > 0 ? `<div style="font-size: 0.75em; color: #aaa; margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap;">${parts.join(' ')}</div>` : "";
+        };
+        
         // Add rows (limit to most recent 50 entries)
         sortedList.slice(0, 50).forEach((entry) => {
             const row = document.createElement("tr");
@@ -967,22 +986,30 @@ function renderModeStats(mode) {
             const pauseCount = entry.pauseCount || 0;
             const pauseDisplay = pauseCount > 0 ? `<div style="font-size: 0.8em; color: #888; margin-top: 2px;">Pauses: ${pauseCount}</div>` : '';
             
+            // Format modifiers display
+            const modifiersDisplay = formatModifiers(entry.modifiers);
+            
+            // Format clear type display
+            const clearTypeDisplay = entry.clearType ? `<span style="color: #4CAF50; font-weight: bold;">${entry.clearType}</span>` : '';
+            
             if (hasGrade) {
                 const gradeDisplay = entry.grade 
                     ? `<span class="grade-badge" style="color: ${getLineColor(entry)}">${formatGrade(entry.grade)}</span>` 
                     : "-";
                 row.innerHTML = `
                     <td>${dateStr}</td>
-                    <td class="${entry.score ? "high-score" : ""}">${formatScore(entry.score)}</td>
+                    <td class="${entry.score ? "high-score" : ""}">${formatScore(entry.score)}${modifiersDisplay}</td>
                     <td>${gradeDisplay}</td>
                     <td>${entry.time || "-"}${pauseDisplay}</td>
+                    <td>${clearTypeDisplay || "-"}</td>
                     <td>${inputTypeDisplay}</td>
                 `;
             } else {
                 row.innerHTML = `
                     <td>${dateStr}</td>
-                    <td class="${entry.score ? "high-score" : ""}">${formatScore(entry.score)}</td>
+                    <td class="${entry.score ? "high-score" : ""}">${formatScore(entry.score)}${modifiersDisplay}</td>
                     <td>${entry.time || "-"}${pauseDisplay}</td>
+                    <td>${clearTypeDisplay || "-"}</td>
                     <td>${inputTypeDisplay}</td>
                 `;
             }

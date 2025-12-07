@@ -15,6 +15,9 @@ A TGM-style quiz game featuring multiple difficulty modes, time limits, grade sy
   - Personal statistics and history tracking
   - Input type tracking (keyboard/controller/mobile)
   - Filter scores by input method
+  - Clear type tracking (failed, normal clear, hard, brave, absolute, catastrophe, all correct!)
+  - Modifier tracking (lives, time multiplier, fading mode, start question)
+  - Modifiers displayed under score in rankings and stats
 
 - **Controls:**
   - Keyboard support (1-4 for answers, Space/Enter to submit)
@@ -27,12 +30,17 @@ A TGM-style quiz game featuring multiple difficulty modes, time limits, grade sy
   - Background music and sound effects
   - Progressive visual changes in Hell mode
   - Comprehensive wiki documentation
+  - Mode settings menu (collapsed by default)
+  - Game modifiers: Lives system, Time multiplier, Fading mode, Start question
+  - Clear type system tracking completion conditions
 
 ## Getting Started
 
 1. Open `index.html` in a web browser
 2. Sign up or log in to save your scores
-3. Select a game mode and start playing!
+3. Select a game mode (the mode settings menu will appear, collapsed by default)
+4. Optionally customize modifiers (lives, time multiplier, fading mode, start question)
+5. Start playing!
 
 ## Technologies
 

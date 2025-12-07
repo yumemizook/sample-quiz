@@ -318,6 +318,9 @@
           <li>Input type tracking (keyboard/controller/mobile)</li>
           <li>Anti-stall mechanism (15-minute time limit)</li>
           <li>Background music and sound effects(If you know which game does the soundtracks came from, you are a real one)</li>
+          <li>Mode settings menu with customizable modifiers (collapsed by default)</li>
+          <li>Clear type system tracking completion conditions</li>
+          <li>Modifier tracking and display in rankings and stats</li>
         </ul>
       </div>
 
@@ -860,7 +863,32 @@
           <li>Abandoned runs cannot be submitted</li>
           <li>Invalid runs (15+ minutes) cannot be submitted</li>
           <li>Input type (keyboard/controller/mobile) is tracked</li>
+          <li>Modifiers used (lives, time multiplier, fading mode, start question) are tracked</li>
+          <li>Clear type is calculated and saved based on completion conditions</li>
         </ul>
+
+        <h3>Clear Types</h3>
+        <p>Each play receives a clear type based on how it was completed:</p>
+        <ul class="grade-list">
+          <li><strong>Failed</strong> - Ran out of lives or time</li>
+          <li><strong>Normal Clear</strong> - Completed with default settings</li>
+          <li><strong>Hard</strong> - Completed with lives enabled (30 or fewer)</li>
+          <li><strong>Brave</strong> - Completed with time multiplier enabled (less than 1.0x)</li>
+          <li><strong>Absolute</strong> - Completed with both lives and time multiplier enabled</li>
+          <li><strong>Catastrophe</strong> - Completed with lives enabled and ran out of time on a question</li>
+          <li><strong>All Correct!</strong> - Completed with 100% accuracy (all questions answered correctly)</li>
+        </ul>
+        <p>Clear types are displayed in rankings and player statistics, with the best clear type shown on your stats page.</p>
+
+        <h3>Modifiers</h3>
+        <p>Game modifiers can be customized in the mode settings menu:</p>
+        <ul class="grade-list">
+          <li><strong>Lives:</strong> Set a limited number of lives (Unlimited, 100, 30, 10, 5, or 1). Each wrong answer deducts 1 life (up to 3 times per question).</li>
+          <li><strong>Time Multiplier:</strong> Adjust the time limit multiplier (0.5x to 2.0x). Lower multipliers make questions harder, higher multipliers make them easier.</li>
+          <li><strong>Fading Mode:</strong> Enable text elements to fade after a certain number of seconds (2s, 3s, 4s, 5s, 6s, 7s, 8s, 9s, 10s).</li>
+          <li><strong>Start Question:</strong> Begin the quiz from a specific question number (useful for practice or speedruns).</li>
+        </ul>
+        <p>Modifiers are displayed under the score in rankings and stats, showing which modifiers were active during each play.</p>
 
         <h3>Leaderboards</h3>
         <ul class="feature-list">
@@ -868,14 +896,67 @@
           <li>Filter by input type (keyboard/controller/mobile)</li>
           <li>Sorted by score, then grade, then time</li>
           <li>Line colors (orange > green > white) used for tiebreaking</li>
+          <li>Clear type displayed for each score</li>
+          <li>Modifiers displayed under score for each entry</li>
         </ul>
 
         <h3>Player Statistics</h3>
         <ul class="feature-list">
           <li>Track your personal best scores and grades</li>
-          <li>View your game history</li>
+          <li>View your game history with clear types and modifiers</li>
           <li>Progress graphs showing score trends</li>
           <li>Filter statistics by input type</li>
+          <li>Best clear type displayed on stats page</li>
+          <li>Modifiers displayed under score in history table</li>
+        </ul>
+      </div>
+
+      <div class="wiki-section">
+        <h2>⚙️ Mode Settings</h2>
+        <p>The mode settings menu appears when you select a game mode (except Secret Mode). It is collapsed by default to keep the interface clean.</p>
+        
+        <h3>Accessing Settings</h3>
+        <ul class="feature-list">
+          <li>Click on a mode button (Easy, Normal, Master, Race, or Hell) to show the settings menu</li>
+          <li>The menu starts collapsed - click the title or toggle button to expand/collapse</li>
+          <li>Settings are saved in the URL, so you can bookmark specific configurations</li>
+        </ul>
+
+        <h3>Available Modifiers</h3>
+        <div class="info-grid">
+          <div class="info-item">
+            <strong>Lives:</strong>
+            <span>Unlimited, 100, 30, 10, 5, or 1</span>
+          </div>
+          <div class="info-item">
+            <strong>Time Multiplier:</strong>
+            <span>0.5x to 2.0x (in 0.1x increments)</span>
+          </div>
+          <div class="info-item">
+            <strong>Fading Mode:</strong>
+            <span>2s to 10s (or disabled)</span>
+          </div>
+          <div class="info-item">
+            <strong>Start Question:</strong>
+            <span>1 to max questions for mode</span>
+          </div>
+        </div>
+
+        <h3>Modifier Effects</h3>
+        <ul>
+          <li><strong>Lives:</strong> When enabled, wrong answers deduct lives. You can retry up to 3 times per question, but each wrong answer costs 1 life. The quiz ends when lives reach 0.</li>
+          <li><strong>Time Multiplier:</strong> Multiplies all per-question time limits. 0.5x = half time, 2.0x = double time. Does not affect the 15-minute kill timer.</li>
+          <li><strong>Fading Mode:</strong> Text elements (question, options, score, etc.) fade to invisible after the specified time. This adds visual difficulty to the challenge.</li>
+          <li><strong>Start Question:</strong> Begin the quiz from a specific question number. Useful for practicing specific sections or speedrunning from a checkpoint.</li>
+        </ul>
+
+        <h3>Modifier Icons</h3>
+        <p>During gameplay, active modifiers are displayed as icons below the pause button:</p>
+        <ul>
+          <li>❤️ - Lives (shows number of lives)</li>
+          <li>⏱️ - Time Multiplier (shows multiplier value)</li>
+          <li>👁️ - Fading Mode (shows fade time in seconds)</li>
+          <li>🎯 - Start Question (shows starting question number)</li>
         </ul>
       </div>
 

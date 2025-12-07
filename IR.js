@@ -229,7 +229,7 @@ function renderTable(mode) {
     table.appendChild(newTbody);
     
     if (scores.length === 0) {
-        const colspan = hasGrade ? 7 : 6;
+        const colspan = hasGrade ? 8 : 7;
         newTbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 20px; color: rgba(255, 255, 255, 0.7);">No scores available yet</td></tr>`;
         return;
     }
@@ -262,6 +262,25 @@ function renderTable(mode) {
         return "❓";
     };
     
+    // Format modifiers display
+    const formatModifiers = (modifiers) => {
+        if (!modifiers || Object.keys(modifiers).length === 0) return "";
+        const parts = [];
+        if (modifiers.lives) {
+            parts.push(`❤️ ${modifiers.lives}`);
+        }
+        if (modifiers.timeMultiplier && modifiers.timeMultiplier !== 1) {
+            parts.push(`⏱️ ${modifiers.timeMultiplier.toFixed(2)}x`);
+        }
+        if (modifiers.fadingMode) {
+            parts.push(`👁️ ${modifiers.fadingMode}s`);
+        }
+        if (modifiers.startQuestion) {
+            parts.push(`🎯 ${modifiers.startQuestion + 1}`);
+        }
+        return parts.length > 0 ? `<div style="font-size: 0.75em; color: #aaa; margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap;">${parts.join(' ')}</div>` : "";
+    };
+    
     // Render rows
     sortedScores.forEach((scoreData, index) => {
         const rank = index + 1;
@@ -273,6 +292,12 @@ function renderTable(mode) {
         const pauseCount = scoreData.pauseCount || 0;
         const pauseDisplay = pauseCount > 0 ? `<div style="font-size: 0.8em; color: #888; margin-top: 2px;">Pauses: ${pauseCount}</div>` : '';
         
+        // Format modifiers display
+        const modifiersDisplay = formatModifiers(scoreData.modifiers);
+        
+        // Format clear type display
+        const clearTypeDisplay = scoreData.clearType ? `<span style="color: #4CAF50; font-weight: bold;">${scoreData.clearType}</span>` : '';
+        
         if (hasGrade) {
             const gradeDisplay = scoreData.grade 
                 ? `<span class="grade-badge" style="color: ${getLineColor(scoreData)}">${formatGrade(scoreData.grade)}</span>` 
@@ -280,9 +305,10 @@ function renderTable(mode) {
             listItem.innerHTML = `
                 <td>${rank}</td>
                 <td><span class="player-name-hover" data-player-name="${playerName}">${playerName}</span></td>
-                <td class="high-score">${scoreData.score}</td>
+                <td class="high-score">${scoreData.score}${modifiersDisplay}</td>
                 <td>${gradeDisplay}</td>
                 <td>${scoreData.time}${pauseDisplay}</td>
+                <td>${clearTypeDisplay || "-"}</td>
                 <td>${inputTypeDisplay}</td>
                 <td>${scoreData.date}</td>
             `;
@@ -290,8 +316,9 @@ function renderTable(mode) {
             listItem.innerHTML = `
                 <td>${rank}</td>
                 <td><span class="player-name-hover" data-player-name="${playerName}">${playerName}</span></td>
-                <td class="high-score">${scoreData.score}</td>
+                <td class="high-score">${scoreData.score}${modifiersDisplay}</td>
                 <td>${scoreData.time}${pauseDisplay}</td>
+                <td>${clearTypeDisplay || "-"}</td>
                 <td>${inputTypeDisplay}</td>
                 <td>${scoreData.date}</td>
             `;

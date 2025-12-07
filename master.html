@@ -70,12 +70,12 @@
         <div id="livesDisplay" style="font-size: x-large; color: #ff6b6b; font-weight: bold;">❤️ <span id="livesCount"></span></div>
         <div id="timeelapsed"></div>
       </div>
-      <div id="modifierIcons" style="display: flex; gap: 10px; justify-content: center; margin-top: 10px; flex-wrap: wrap;"></div>
       <div class="timerifinvalid"></div>
       <div class="evalscreen" style="display: none"></div>
       <div id="notification" class="notification hide"></div>
       </div>
     </div>
+    <div id="modifierIcons" style="position: fixed; top: 200px; right: 20px; display: flex; flex-direction: row; gap: 8px; z-index: 9998;"></div>
     <!-- Pause Menu Overlay -->
     <div id="pauseMenu" class="pause-menu" style="display: none;">
       <div class="pause-menu-content">
@@ -341,7 +341,11 @@
     let currQuestion = startQuestionParam; // Start at specified question
     let currentLives = lives; // Track current lives (-1 means unlimited)
     const livesEnabled = lives !== -1; // Check if lives system is enabled
-    let currentQuestionAnswered = false; // Track if current question has been answered to prevent multiple deductions
+    let currentQuestionAnswered = false; // Track if current question has been answered correctly
+    let wrongAnswersForCurrentQuestion = 0; // Track wrong answers for current question (max 3 life deductions)
+    let initialLives = lives; // Store initial lives for clear type calculation
+    let totalWrongAnswers = 0; // Track total wrong answers for clear type calculation
+    let questionTimedOut = false; // Track if player ran out of time on a question
     
     // Fading mode variables
     let fadeInterval = null;
@@ -383,6 +387,93 @@
     // Pause menu navigation
     let selectedPauseButton = 0; // 0 = Resume, 1 = Give Up
     const pauseButtons = [resumeBtn, giveUpPauseBtn];
+    
+    // Function to display modifier icons
+    function updateModifierIconsDisplay() {
+      const modifierIconsContainer = document.getElementById("modifierIcons");
+      if (!modifierIconsContainer) return;
+      
+      // Get pause button height to match icon size
+      const pauseBtnElement = document.getElementById("pauseBtn");
+      let iconSize = 60; // Bigger default size
+      if (pauseBtnElement && pauseBtnElement.offsetHeight > 0) {
+        iconSize = pauseBtnElement.offsetHeight * 1.3; // Make icons 30% bigger than pause button
+      }
+      
+      // Position container below pause button, aligned to the right
+      if (pauseBtnElement) {
+        const pauseBtnTop = pauseBtnElement.offsetTop || 140;
+        const pauseBtnHeight = pauseBtnElement.offsetHeight || 45;
+        modifierIconsContainer.style.top = `${pauseBtnTop + pauseBtnHeight + 8}px`;
+        modifierIconsContainer.style.right = "20px";
+      } else {
+        modifierIconsContainer.style.top = "200px"; // Fallback if pause button not found
+        modifierIconsContainer.style.right = "20px";
+      }
+      
+      // Clear existing icons
+      modifierIconsContainer.innerHTML = "";
+      
+      // Lives icon (only show if not unlimited)
+      if (livesEnabled && currentLives !== -1) {
+        const livesIcon = document.createElement("div");
+        livesIcon.className = "modifier-icon";
+        livesIcon.title = `${currentLives} Lives`;
+        livesIcon.innerHTML = `<span style="font-size: 2.2em;">❤️</span><br><span style="font-size: 1.1em; font-weight: bold;">${currentLives === 100 ? "100" : currentLives.toString()}</span>`;
+        livesIcon.style.width = `${iconSize}px`;
+        livesIcon.style.height = `${iconSize}px`;
+        livesIcon.style.display = "flex";
+        livesIcon.style.flexDirection = "column";
+        livesIcon.style.alignItems = "center";
+        livesIcon.style.justifyContent = "center";
+        modifierIconsContainer.appendChild(livesIcon);
+      }
+      
+      // Start question icon (only if not starting from beginning)
+      if (startQuestionParam > 0) {
+        const startIcon = document.createElement("div");
+        startIcon.className = "modifier-icon";
+        startIcon.title = `Start at Question ${startQuestionParam + 1}`;
+        startIcon.innerHTML = `<span style="font-size: 2.2em;">🎯</span><br><span style="font-size: 1.1em; font-weight: bold;">${startQuestionParam + 1}</span>`;
+        startIcon.style.width = `${iconSize}px`;
+        startIcon.style.height = `${iconSize}px`;
+        startIcon.style.display = "flex";
+        startIcon.style.flexDirection = "column";
+        startIcon.style.alignItems = "center";
+        startIcon.style.justifyContent = "center";
+        modifierIconsContainer.appendChild(startIcon);
+      }
+      
+      // Time multiplier icon (only if not 1x)
+      if (timeMultiplier !== 1) {
+        const timeIcon = document.createElement("div");
+        timeIcon.className = "modifier-icon";
+        timeIcon.title = `Time Multiplier: ${timeMultiplier.toFixed(2)}x`;
+        timeIcon.innerHTML = `<span style="font-size: 2.2em;">⏱️</span><br><span style="font-size: 1.1em; font-weight: bold;">${timeMultiplier.toFixed(2)}x</span>`;
+        timeIcon.style.width = `${iconSize}px`;
+        timeIcon.style.height = `${iconSize}px`;
+        timeIcon.style.display = "flex";
+        timeIcon.style.flexDirection = "column";
+        timeIcon.style.alignItems = "center";
+        timeIcon.style.justifyContent = "center";
+        modifierIconsContainer.appendChild(timeIcon);
+      }
+      
+      // Fading mode icon (only if enabled)
+      if (fadingMode && fadingMode !== "off") {
+        const fadeIcon = document.createElement("div");
+        fadeIcon.className = "modifier-icon";
+        fadeIcon.title = `Fading Mode: ${fadingMode}s`;
+        fadeIcon.innerHTML = `<span style="font-size: 2.2em;">👁️</span><br><span style="font-size: 1.1em; font-weight: bold;">${fadingMode}s</span>`;
+        fadeIcon.style.width = `${iconSize}px`;
+        fadeIcon.style.height = `${iconSize}px`;
+        fadeIcon.style.display = "flex";
+        fadeIcon.style.flexDirection = "column";
+        fadeIcon.style.alignItems = "center";
+        fadeIcon.style.justifyContent = "center";
+        modifierIconsContainer.appendChild(fadeIcon);
+      }
+    }
     
     // Show pause button
     if (pauseBtn) {
@@ -671,6 +762,12 @@
 
     ques.innerHTML = `<h5>Please Wait!! Loading Questions... DO NOT PANIC IF IT LOOKS STUCK</h5>`;
     document.querySelector("#btn").style.display = "none";
+    
+    // Hide lives display while loading
+    const livesDisplay = document.getElementById("livesDisplay");
+    if (livesDisplay) {
+        livesDisplay.style.display = "none";
+    }
 
     // Handle give up button
     const giveUpBtn = document.querySelector("[giveup]");
@@ -702,8 +799,20 @@
         totalGradePoints = 0;
         previousGrade = ""; // Reset previous grade
         updateGradeDisplay();
+        
+        // Show lives display after questions are loaded (if lives are enabled)
+        const livesDisplay = document.getElementById("livesDisplay");
+        if (livesDisplay && livesEnabled && currentLives !== -1) {
+            livesDisplay.style.display = "";
+        }
+        
         loadQues();
         stopWatch();
+        
+        // Display modifier icons (with slight delay to ensure pause button is rendered)
+        setTimeout(() => {
+          updateModifierIconsDisplay();
+        }, 100);
         
         // Reset pause tracking
         pauseCount = 0;
@@ -1054,6 +1163,8 @@
       opt.innerHTML = "";
       // Reset answered flag when loading a new question
       currentQuestionAnswered = false;
+      wrongAnswersForCurrentQuestion = 0;
+      questionTimedOut = false; // Reset timeout flag for new question
       loadScore();
       const correctAnswer = allQuestions[currQuestion].correct_answer;
       const incorrectAnswers = allQuestions[currQuestion].incorrect_answers;
@@ -1166,6 +1277,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1183,6 +1295,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1200,6 +1313,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1217,6 +1331,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1234,6 +1349,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1251,6 +1367,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1268,6 +1385,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1285,6 +1403,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1302,6 +1421,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1319,6 +1439,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1336,6 +1457,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1354,6 +1476,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1371,6 +1494,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1388,6 +1512,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1405,6 +1530,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1422,6 +1548,7 @@
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
+            questionTimedOut = true; // Mark that player ran out of time on this question
             evalScreen();
           }
         }, 10);
@@ -1958,6 +2085,49 @@
 
         try {
           const db = getFirestore();
+          
+          // Calculate clear type
+          let clearType = "";
+          const allQuestionsCompleted = currQuestion >= allQuestions.length - 1;
+          const ranOutOfLives = livesEnabled && currentLives <= 0;
+          
+          if (ranOutOfLives || questionTimedOut) {
+            clearType = "Failed";
+          } else if (allQuestionsCompleted) {
+            if (!livesEnabled) {
+              clearType = "Clear";
+            } else if (initialLives === 100) {
+              clearType = "Hard";
+            } else if (initialLives === 30) {
+              clearType = "Brave";
+            } else if (initialLives === 10) {
+              clearType = "Absolute";
+            } else if (initialLives === 5) {
+              clearType = "Catastrophy";
+            } else if (initialLives === 1 && totalWrongAnswers === 0) {
+              clearType = "All Correct!";
+            } else {
+              clearType = "Clear"; // Default for other life counts
+            }
+          } else {
+            clearType = "Failed"; // Not completed
+          }
+          
+          // Build modifiers object
+          const modifiers = {};
+          if (livesEnabled && initialLives !== -1) {
+            modifiers.lives = initialLives;
+          }
+          if (timeMultiplier !== 1) {
+            modifiers.timeMultiplier = timeMultiplier;
+          }
+          if (fadingMode && fadingMode !== "off") {
+            modifiers.fadingMode = fadingMode;
+          }
+          if (startQuestionParam > 0) {
+            modifiers.startQuestion = startQuestionParam;
+          }
+          
           const payload = {
             name: user.displayName || user.email,
             score: totalGradePoints, // Use total grade points instead of correct answer count
@@ -1968,6 +2138,8 @@
             inputType: inputType || 'unknown',
             pauseCount: pauseCount || 0,
             totalPausedTime: formatPausedTime(totalPausedTime || 0),
+            clearType: clearType,
+            modifiers: modifiers,
           };
 
           // Global leaderboard entry
@@ -2008,6 +2180,7 @@
     function nextQuestion() {
       // Reset answered flag for new question
       currentQuestionAnswered = false;
+      questionTimedOut = false; // Reset timeout flag for new question
       
       if (currQuestion < allQuestions.length - 1) {
         currQuestion++;
@@ -2082,10 +2255,7 @@
         return; // Quiz has ended, don't process answers
       }
       
-      // Prevent multiple submissions for the same question
-      if (currentQuestionAnswered) {
-        return; // Question already answered, ignore duplicate submissions
-      }
+      // Allow retries on wrong answers (removed check to allow retries)
       
       const selectedAns = document.querySelector(
         'input[name="answer"]:checked'
@@ -2124,10 +2294,12 @@
           showNotification("Correct!", true);
           nextQuestion();
         } else {
-          // Wrong answer handling
-          if (livesEnabled && !currentQuestionAnswered) {
-            // Mark question as answered and deduct life (only once per question)
-            currentQuestionAnswered = true;
+          // Wrong answer handling - player must get correct answer to progress
+          totalWrongAnswers++; // Track total wrong answers for clear type
+          
+          if (livesEnabled && wrongAnswersForCurrentQuestion < 3) {
+            // Deduct life (up to 3 times per question)
+            wrongAnswersForCurrentQuestion++;
             currentLives -= 1;
             
             // Update lives display
@@ -2161,17 +2333,29 @@
             }
             
             // Show notification with remaining lives
-            showNotification(`Wrong! ${currentLives} ${currentLives === 1 ? 'life' : 'lives'} remaining.`);
+            showNotification(`Wrong! ${currentLives} ${currentLives === 1 ? 'life' : 'lives'} remaining. You must select the correct answer to continue.`);
+          } else if (livesEnabled && wrongAnswersForCurrentQuestion >= 3) {
+            // Already deducted max lives for this question, just show notification
+            showNotification("Wrong! You must select the correct answer to continue.");
           } else {
             // Lives disabled - just show wrong notification
-            showNotification("Wrong! Try again next time.");
+            showNotification("Wrong! You must select the correct answer to continue.");
           }
-          return;
+          
+          // Clear the selected answer so player can try again
+          if (selectedAns) {
+            selectedAns.checked = false;
+          }
+          
+          // Do NOT progress - player must get correct answer to continue
+          // Do NOT mark as answered - allow retry
         }
       } else {
         showNotification("Please select an answer.");
       }
     }
+    // Make checkAns available globally for onclick handlers
+    window.checkAns = checkAns;
 
     // Convert total grade points to grade (S9 to S1, then 1 to 9)
     function getGradeFromPoints(points) {
