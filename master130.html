@@ -111,12 +111,15 @@
   }
 
   // Track input type used during the quiz
-  let inputType = null; // 'controller', 'keyboard', or 'mobile'
+  let inputType = null; // 'controller', 'keyboard', 'mobile', or 'mouse'
 
   // Detect initial input type
   const isMobile = isMobileDevice();
   if (isMobile) {
     inputType = 'mobile';
+  } else {
+    // Default to mouse for desktop users who haven't used keyboard/controller yet
+    inputType = 'mouse';
   }
 
   let allQuestions = [];
@@ -1753,6 +1756,8 @@
       inputTypeIcon = '⌨️';
     } else if (inputType === 'mobile') {
       inputTypeIcon = '📱';
+    } else if (inputType === 'mouse') {
+      inputTypeIcon = '🖱️';
     } else {
       inputTypeIcon = '❓';
     }
@@ -1816,14 +1821,42 @@
 
       try {
         const db = getFirestore();
+        
+        // Calculate elapsed time (7 minutes - time remaining)
+        // Use the same calculation as in stopWatch()
+        const totalTimeLimit = 7 * 60 * 1000; // 7 minutes in milliseconds
+        let elapsedTimeMs = 0;
+        
+        if (timerStartTime > 0) {
+          // Calculate from timer variables (most accurate)
+          elapsedTimeMs = Date.now() - timerStartTime - totalPausedTime;
+          // Clamp to 0-7 minutes
+          elapsedTimeMs = Math.max(0, Math.min(elapsedTimeMs, totalTimeLimit));
+        } else {
+          // Fallback: calculate from displayed time remaining
+          const timeElapsedEl = document.getElementById("timeelapsed");
+          const timeRemainingText = timeElapsedEl ? timeElapsedEl.textContent : "00:00:00";
+          if (timeRemainingText === "00:00:00") {
+            // Time ran out, elapsed time is exactly 7 minutes
+            elapsedTimeMs = totalTimeLimit;
+          } else {
+            // Parse remaining time and subtract from total
+            const [mins, secs, cs] = timeRemainingText.split(':').map(Number);
+            const timeRemainingMs = (mins * 60 * 1000) + (secs * 1000) + (cs * 10);
+            elapsedTimeMs = totalTimeLimit - timeRemainingMs;
+          }
+        }
+        
+        const elapsedTimeFormatted = formatPausedTime(Math.max(0, elapsedTimeMs));
+        
         const payload = {
           name: user.displayName || user.email,
           score: score, // Use total grade points instead of correct answer count
           grade: grade,
-          time: document.getElementById("timeelapsed").textContent,
+          time: elapsedTimeFormatted, // Use elapsed time instead of time remaining
           date: new Date().toLocaleString(),
           line: line,
-          inputType: inputType || 'unknown',
+          inputType: inputType || 'mouse',
           pauseCount: pauseCount || 0,
           totalPausedTime: formatPausedTime(totalPausedTime || 0),
         };

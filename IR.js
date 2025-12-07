@@ -54,6 +54,7 @@ const currentFilter = {
     easy: 'all',
     normal: 'all',
     master: 'all',
+    race: 'all',
     hell: 'all'
 };
 
@@ -257,6 +258,7 @@ function renderTable(mode) {
         if (inputType === 'controller') return "🎮";
         if (inputType === 'keyboard') return "⌨️";
         if (inputType === 'mobile') return "📱";
+        if (inputType === 'mouse') return "🖱️";
         return "❓";
     };
     
@@ -658,11 +660,29 @@ async function loadPlayerProfile(playerName) {
             
             // Load banner
             const bannerEl = popup.querySelector('.profile-popup-banner');
+            const avatarContainer = popup.querySelector('.profile-popup-avatar-container');
+            const infoEl = popup.querySelector('.profile-popup-info');
             if (foundUser.bannerURL) {
                 bannerEl.style.backgroundImage = `url(${foundUser.bannerURL})`;
                 bannerEl.style.display = 'block';
+                // Reset avatar position when banner is shown
+                if (avatarContainer) {
+                    avatarContainer.style.top = '-50px';
+                }
+                // Reset info margin when banner is shown
+                if (infoEl) {
+                    infoEl.style.marginTop = '60px';
+                }
             } else {
                 bannerEl.style.display = 'none';
+                // Move avatar down when no banner
+                if (avatarContainer) {
+                    avatarContainer.style.top = '20px';
+                }
+                // Shift info down when no banner (avatar is at 20px, height 100px, so bottom at 120px, add 10px gap = 130px)
+                if (infoEl) {
+                    infoEl.style.marginTop = '130px';
+                }
             }
         } else {
             // No profile found, use defaults
@@ -671,7 +691,17 @@ async function loadPlayerProfile(playerName) {
             avatarImg.src = '';
             
             const bannerEl = popup.querySelector('.profile-popup-banner');
+            const avatarContainer = popup.querySelector('.profile-popup-avatar-container');
+            const infoEl = popup.querySelector('.profile-popup-info');
             bannerEl.style.display = 'none';
+            // Move avatar down when no banner
+            if (avatarContainer) {
+                avatarContainer.style.top = '20px';
+            }
+            // Shift info down when no banner (avatar is at 20px, height 100px, so bottom at 120px, add 10px gap = 130px)
+            if (infoEl) {
+                infoEl.style.marginTop = '130px';
+            }
         }
     } catch (error) {
         console.error('Error loading player profile:', error);
@@ -780,24 +810,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (container2) {
         // Remove any hide class and ensure display is not none
         container2.classList.remove('hide');
-        if (container2.style.display === 'none') {
-            container2.style.display = '';
-        }
         container2.style.display = 'flex';
+        container2.style.visibility = 'visible';
     }
     
     // Initialize tabs
     initTabs();
     
-    // Initialize input filters
+    // Initialize input filters and set all to "All" filter
     initInputFilters();
     
+    // Ensure all "All" filter buttons are active on page load
+    const allFilterButtons = document.querySelectorAll('.input-filter-btn[data-input="all"]');
+    allFilterButtons.forEach(btn => {
+        btn.classList.add('active');
+        // Ensure the filter state is set to 'all' for each mode
+        const mode = btn.getAttribute('data-mode');
+        if (mode && currentFilter.hasOwnProperty(mode)) {
+            currentFilter[mode] = 'all';
+        }
+    });
+    
+    // Automatically fetch and display scores on page load
     try {
-        const snapshot = await getDocs(highScoresRef);
-        const masterSnapshot = await getDocs(masterModeRef);
-        const raceSnapshot = await getDocs(raceModeRef);
-        const easySnapshot = await getDocs(easyModeRef);
-        const finalSnapshot = await getDocs(finalModeRef);
+        console.log("Fetching scores from Firebase...");
+        
+        // Fetch all score collections in parallel for better performance
+        const [snapshot, masterSnapshot, raceSnapshot, easySnapshot, finalSnapshot] = await Promise.all([
+            getDocs(highScoresRef),
+            getDocs(masterModeRef),
+            getDocs(raceModeRef),
+            getDocs(easyModeRef),
+            getDocs(finalModeRef)
+        ]);
         
         // Store raw scores
         allNormalScores = snapshot.empty ? [] : snapshot.docs.map((doc) => doc.data());
@@ -806,19 +851,31 @@ document.addEventListener("DOMContentLoaded", async () => {
         allRaceScores = raceSnapshot.empty ? [] : raceSnapshot.docs.map((doc) => doc.data());
         allHellScores = finalSnapshot.empty ? [] : finalSnapshot.docs.map((doc) => doc.data());
         
+        console.log(`Loaded scores: Easy=${allEasyScores.length}, Normal=${allNormalScores.length}, Master=${allMasterScores.length}, Race=${allRaceScores.length}, Hell=${allHellScores.length}`);
+        
         // Load secret scores (for level calculation, but not displayed in rankings)
         // Secret scores are stored per-user, so we need to fetch from all users' playerData
         allSecretScores = []; // Initialize as empty array
         // Note: Secret scores are not displayed in rankings, but are needed for accurate level calculation
         // We'll fetch them on-demand when loading a player profile
         
-        // Render all tables
+        // Render all tables automatically
         renderTable('easy');
         renderTable('normal');
         renderTable('master');
         renderTable('race');
         renderTable('hell');
+        
+        console.log("Scores displayed successfully");
     } catch (error) {
         console.error("Error fetching high scores:", error);
+        // Display error message to user
+        const container2 = document.querySelector('.container2');
+        if (container2) {
+            const errorMsg = document.createElement('div');
+            errorMsg.style.cssText = 'color: red; padding: 20px; text-align: center; background: rgba(0,0,0,0.8); border-radius: 10px; margin: 20px;';
+            errorMsg.textContent = 'Failed to load scores. Please refresh the page.';
+            container2.insertBefore(errorMsg, container2.firstChild);
+        }
     }
 });
