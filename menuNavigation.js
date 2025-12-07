@@ -30,6 +30,8 @@ export function initMenuNavigation() {
         document.querySelector(".hiscore"),
         document.querySelector(".stats"),
         document.querySelector(".wiki"),
+        document.querySelector(".tos"),
+        document.querySelector(".privacy"),
         document.querySelector(".settings")
     ].filter(btn => btn !== null);
 

@@ -218,8 +218,8 @@
 
         .success-message {
             font-size: 2.5em;
-            color: #00ff00;
-            text-shadow: 0 0 30px rgba(0, 255, 0, 1), 0 0 60px rgba(0, 255, 0, 0.6);
+            color: #ff0000;
+            text-shadow: 0 0 30px rgba(255, 0, 0, 1), 0 0 60px rgba(255, 0, 0, 0.6);
             margin: 40px 0;
             letter-spacing: 3px;
             animation: glow-success 2s infinite;
@@ -227,18 +227,18 @@
 
         @keyframes glow-success {
             0%, 100% {
-                text-shadow: 0 0 30px rgba(0, 255, 0, 1), 0 0 60px rgba(0, 255, 0, 0.6);
+                text-shadow: 0 0 30px rgba(255, 0, 0, 1), 0 0 60px rgba(255, 0, 0, 0.6);
             }
             50% {
-                text-shadow: 0 0 40px rgba(0, 255, 0, 1), 0 0 80px rgba(0, 255, 0, 0.8);
+                text-shadow: 0 0 40px rgba(255, 0, 0, 1), 0 0 80px rgba(255, 0, 0, 0.8);
             }
         }
 
         .success-submessage {
-            color: #00cc00;
+            color: #ff0000;
             font-size: 1.2em;
             margin-top: 20px;
-            text-shadow: 0 0 10px rgba(0, 255, 0, 0.5);
+            text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
             opacity: 0.9;
         }
 
@@ -468,9 +468,12 @@
                 // Delete the user account
                 await deleteUser(currentUser);
 
-                // Hide all elements and show success message
+                // Hide all elements and show only success message in red
                 deleteContainer.classList.add("hide-elements");
                 statusMessage.style.display = "none";
+                errorState.style.display = "none";
+                countdownDisplay.style.display = "none";
+                reauthPrompt.style.display = "none";
                 successMessage.style.display = "block";
                 
                 // Redirect to home page after 5 seconds

@@ -7,21 +7,46 @@
     <title>Welcome</title>
     <link rel="stylesheet" href="index.css">
     <style>
+        .menu-container {
+            max-height: 90vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .menu-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .menu-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        .menu-container::-webkit-scrollbar-thumb {
+            background: rgba(219, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .menu-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(219, 255, 255, 0.5);
+        }
+
         .intro-container {
-            max-width: 800px;
-            width: 90%;
-            padding: 40px;
+            max-width: 1000px;
+            width: 100%;
+            padding: 30px;
             background: rgba(0, 0, 0, 0.8);
             border-radius: 20px;
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
             border: 2px solid rgba(255, 255, 255, 0.2);
             text-align: center;
+            margin: 0 auto;
         }
 
         .intro-title {
-            font-size: 3em;
+            font-size: 2.5em;
             font-weight: bold;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             background: linear-gradient(135deg, #dbffff 0%, #b8f0e0 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -29,45 +54,48 @@
         }
 
         .intro-subtitle {
-            font-size: 1.3em;
+            font-size: 1.2em;
             color: #dbffff;
-            margin-bottom: 40px;
+            margin-bottom: 30px;
             opacity: 0.9;
         }
 
         .intro-content {
             text-align: left;
             color: #dbffff;
-            line-height: 1.8;
-            margin-bottom: 40px;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
         }
 
         .intro-section {
-            margin-bottom: 30px;
+            margin-bottom: 0;
         }
 
         .intro-section h3 {
             color: #b8f0e0;
-            font-size: 1.5em;
-            margin-bottom: 15px;
+            font-size: 1.3em;
+            margin-bottom: 12px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .intro-section p {
             color: #dbffff;
-            font-size: 1.1em;
-            margin-bottom: 10px;
-            padding-left: 30px;
+            font-size: 1em;
+            margin-bottom: 8px;
+            padding-left: 25px;
         }
 
         .intro-button {
             background: linear-gradient(135deg, #dbffff 0%, #b8f0e0 100%);
             color: #000;
             border: none;
-            padding: 15px 40px;
-            font-size: 1.2em;
+            padding: 12px 35px;
+            font-size: 1.1em;
             font-weight: bold;
             border-radius: 10px;
             cursor: pointer;
@@ -80,9 +108,16 @@
             box-shadow: 0 6px 20px rgba(219, 255, 255, 0.5);
         }
 
+        @media (max-width: 1024px) {
+            .intro-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
         @media (max-width: 768px) {
             .intro-container {
-                padding: 30px 20px;
+                padding: 25px 20px;
             }
 
             .intro-title {
@@ -91,6 +126,7 @@
 
             .intro-subtitle {
                 font-size: 1.1em;
+                margin-bottom: 25px;
             }
 
             .intro-section h3 {
@@ -98,8 +134,13 @@
             }
 
             .intro-section p {
-                font-size: 1em;
+                font-size: 0.95em;
                 padding-left: 20px;
+            }
+
+            .intro-button {
+                padding: 10px 30px;
+                font-size: 1em;
             }
         }
     </style>
@@ -108,12 +149,14 @@
     <div class="status">
         <a logout class="hide" href="index.html">Log out</a>
         <div class="player-info hide" id="playerInfo">
-            <span class="name"></span>
-            <span class="player-level" id="playerLevel"></span>
-        </div>
-        <div class="player-avatar hide" id="playerAvatar">
-            <img id="playerAvatarImg" src="" alt="Avatar">
-            <div class="player-avatar-placeholder">👤</div>
+            <div class="player-info-left">
+                <span class="name"></span>
+                <span class="player-level" id="playerLevel"></span>
+            </div>
+            <div class="player-avatar hide" id="playerAvatar">
+                <img id="playerAvatarImg" src="" alt="Avatar" />
+                <div class="player-avatar-placeholder">👤</div>
+            </div>
         </div>
     </div>
     <div class="container menu-container">

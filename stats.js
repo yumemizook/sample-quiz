@@ -176,7 +176,7 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
     if (hellCompleted) experience += 150;
     
     const raceCompleted = raceScores.some(s => s.grade === "GM"); // Completed all 130 questions (GM grade)
-    if (raceCompleted) experience += 100;
+    if (raceCompleted) experience += 80;
     
     // Extra XP bonus for high score in race mode (score >= 1264000)
     const raceHighScore = raceScores.some(s => s.score >= 1264000);
@@ -649,6 +649,15 @@ document.addEventListener("DOMContentLoaded", () => {
     
     const nameSpan = document.querySelector(".name");
     const statsContainer = document.querySelector(".container2");
+    
+    // Close notification button handler
+    const closeNotificationBtn = document.getElementById("closeNotification");
+    const notification = document.getElementById("loginNotification");
+    if (closeNotificationBtn && notification) {
+        closeNotificationBtn.addEventListener("click", () => {
+            notification.style.display = "none";
+        });
+    }
 
     onAuthStateChanged(auth, async (user) => {
     if (!user) {
@@ -664,6 +673,12 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelector("[login]")?.classList.remove("hide");
             document.querySelector("[signup]")?.classList.remove("hide");
             document.querySelector("[logout]")?.classList.add("hide");
+            
+            // Display notification for logged out users
+            const notification = document.getElementById("loginNotification");
+            if (notification) {
+                notification.style.display = "block";
+            }
         return;
     }
 
@@ -1006,6 +1021,15 @@ document.addEventListener("DOMContentLoaded", () => {
     
     const nameSpan = document.querySelector(".name");
     const statsContainer = document.querySelector(".container2");
+    
+    // Close notification button handler
+    const closeNotificationBtn = document.getElementById("closeNotification");
+    const notification = document.getElementById("loginNotification");
+    if (closeNotificationBtn && notification) {
+        closeNotificationBtn.addEventListener("click", () => {
+            notification.style.display = "none";
+        });
+    }
 
     onAuthStateChanged(auth, async (user) => {
         if (!user) {
@@ -1021,6 +1045,12 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelector("[login]")?.classList.remove("hide");
             document.querySelector("[signup]")?.classList.remove("hide");
             document.querySelector("[logout]")?.classList.add("hide");
+            
+            // Display notification for logged out users
+            const notification = document.getElementById("loginNotification");
+            if (notification) {
+                notification.style.display = "block";
+            }
             return;
         }
 
@@ -1031,6 +1061,11 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelector("[login]")?.classList.add("hide");
             document.querySelector("[signup]")?.classList.add("hide");
             document.querySelector("[logout]")?.classList.remove("hide");
+        }
+        // Hide notification when logged in
+        const notification = document.getElementById("loginNotification");
+        if (notification) {
+            notification.style.display = "none";
         }
         // Show the stats container when logged in
         if (statsContainer) {

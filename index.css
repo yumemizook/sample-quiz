@@ -2353,6 +2353,84 @@ td:first-child {
 }
 
 /* Stats page specific styling */
+/* Login notification banner */
+.login-notification {
+    background: linear-gradient(135deg, rgba(255, 193, 7, 0.95), rgba(255, 152, 0, 0.95));
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 0;
+    margin: 20px auto;
+    max-width: 800px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+    animation: slideDown 0.4s ease;
+    position: relative;
+}
+
+.login-notification-content {
+    padding: 16px 50px 16px 20px;
+    position: relative;
+    color: #000;
+    font-weight: 500;
+    line-height: 1.6;
+}
+
+.login-notification-content p {
+    margin: 0;
+    color: #000;
+}
+
+.login-notification-content a {
+    color: #1976d2;
+    text-decoration: underline;
+    font-weight: 600;
+}
+
+.login-notification-content a:hover {
+    color: #0d47a1;
+}
+
+.close-notification-btn {
+    position: absolute;
+    top: 50%;
+    right: 15px;
+    transform: translateY(-50%);
+    background: rgba(0, 0, 0, 0.2);
+    border: none;
+    color: #000;
+    font-size: 24px;
+    font-weight: bold;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.2s;
+    line-height: 1;
+    padding: 0;
+}
+
+.close-notification-btn:hover {
+    background: rgba(0, 0, 0, 0.4);
+    transform: translateY(-50%) scale(1.1);
+}
+
+.close-notification-btn:active {
+    transform: translateY(-50%) scale(0.95);
+}
+
+@keyframes slideDown {
+    from {
+        opacity: 0;
+        transform: translateY(-20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
 .stats-card {
     animation: fadeInUp 0.5s ease forwards;
     opacity: 0;
