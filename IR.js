@@ -351,6 +351,10 @@ function createProfilePopup() {
                     <span class="score-value">-</span>
                 </div>
                 <div class="profile-popup-score-item">
+                    <span class="score-mode">Race:</span>
+                    <span class="score-value">-</span>
+                </div>
+                <div class="profile-popup-score-item">
                     <span class="score-mode">Hell:</span>
                     <span class="score-value">-</span>
                 </div>
@@ -432,6 +436,7 @@ function findBestScores(playerName) {
         easy: null,
         normal: null,
         master: null,
+        race: null,
         hell: null
     };
     
@@ -475,6 +480,16 @@ function findBestScores(playerName) {
             return parseTime(a.time) - parseTime(b.time);
         });
         bestScores.master = masterPlayerScores[0];
+    }
+    
+    // Find best race score
+    const racePlayerScores = allRaceScores.filter(s => s.name === playerName);
+    if (racePlayerScores.length > 0) {
+        racePlayerScores.sort((a, b) => {
+            if (a.score !== b.score) return b.score - a.score;
+            return parseTime(a.time) - parseTime(b.time);
+        });
+        bestScores.race = racePlayerScores[0];
     }
     
     // Find best hell score
@@ -523,12 +538,13 @@ async function loadPlayerProfile(playerName) {
     const easyScores = allEasyScores.filter(s => s.name === playerName);
     const normalScores = allNormalScores.filter(s => s.name === playerName);
     const masterScores = allMasterScores.filter(s => s.name === playerName);
+    const raceScores = allRaceScores.filter(s => s.name === playerName);
     const hellScores = allHellScores.filter(s => s.name === playerName);
     
     // Secret scores are not fetched for player profile tooltip
     const secretScores = [];
     
-    const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores);
+    const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
     const badge = getBadgeForLevel(playerData.level);
     const badgeName = getBadgeName(playerData.level);
     
@@ -540,11 +556,19 @@ async function loadPlayerProfile(playerName) {
     
     // Update best scores
     const updateScore = (mode, scoreData) => {
-        const scoreItem = popup.querySelector(`.profile-popup-score-item:nth-child(${['easy', 'normal', 'master', 'hell'].indexOf(mode) + 2})`);
+        const scoreItem = popup.querySelector(`.profile-popup-score-item:nth-child(${['easy', 'normal', 'master', 'race', 'hell'].indexOf(mode) + 2})`);
         if (scoreItem) {
             const scoreValue = scoreItem.querySelector('.score-value');
             if (scoreData) {
-                if (mode === 'normal' || mode === 'master' || mode === 'hell') {
+                if (mode === 'race') {
+                    // Race mode: show best time if completed (GM grade), otherwise show best score
+                    const isCompleted = scoreData.grade === "GM";
+                    if (isCompleted && scoreData.time) {
+                        scoreValue.textContent = scoreData.time;
+                    } else {
+                        scoreValue.textContent = scoreData.score.toLocaleString();
+                    }
+                } else if (mode === 'normal' || mode === 'master' || mode === 'hell') {
                     const grade = scoreData.grade ? ` - ${scoreData.grade}` : '';
                     scoreValue.textContent = `${scoreData.score}${grade}`;
                 } else {
@@ -559,6 +583,7 @@ async function loadPlayerProfile(playerName) {
     updateScore('easy', bestScores.easy);
     updateScore('normal', bestScores.normal);
     updateScore('master', bestScores.master);
+    updateScore('race', bestScores.race);
     updateScore('hell', bestScores.hell);
     
     // Try to load avatar and banner from Firestore

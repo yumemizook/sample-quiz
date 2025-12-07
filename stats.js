@@ -133,7 +133,7 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
         if (score.grade === "GM" && score.line === "orange") {
             experience += 150;
         } else if (score.grade === "GM" && score.line === "green") {
-            experience += 50;
+        experience += 50;
         } 
         if (score.line === "orange") {experience += 50;}
         else if (score.line === "green") {experience += 25;}
@@ -175,8 +175,12 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
     const hellCompleted = hellScores.some(s => s.score === 200);
     if (hellCompleted) experience += 150;
     
-    const raceCompleted = raceScores.some(s => s.score >= 1264000); // Completed all 130 questions with good score
+    const raceCompleted = raceScores.some(s => s.grade === "GM"); // Completed all 130 questions (GM grade)
     if (raceCompleted) experience += 100;
+    
+    // Extra XP bonus for high score in race mode (score >= 1264000)
+    const raceHighScore = raceScores.some(s => s.score >= 1264000);
+    if (raceHighScore) experience += 50; // Additional bonus for exceptional performance
         // Calculate level using exponential scaling
     // Level formula: level = floor(1 + sqrt(experience / 30))
     // This gives: Lv 1 = 0 XP, Lv 2 = 90 XP, Lv 3 = 240 XP, Lv 4 = 450 XP, etc.
@@ -434,15 +438,15 @@ function updateLevelProgression(playerData, totalPlays = 0, mainInput = null, cr
     // Display timestamp and main input method in mainInputDisplay
     const mainInputDisplay = document.getElementById("mainInputDisplay");
     
-    // Build content: timestamp first (if available), then main input method (if available)
+    // Build content: timestamp first (always displayed), then main input method (if available)
     let contentParts = [];
     
-    if (createdAt) {
-        contentParts.push(`<div style="color: rgba(255, 255, 255, 0.8); font-size: 0.9em;">Joined ${formatRelativeTime(createdAt)}</div>`);
-    }
+    // Always display timestamp - show "Unknown" if not available
+    const timestampText = createdAt ? formatRelativeTime(createdAt) : "Unknown";
+    contentParts.push(`<div style="color: rgba(255, 255, 255, 0.8); font-size: 0.9em;">Joined ${timestampText}</div>`);
     
-    // Add <hr> separator if both timestamp and main input method are present
-    if (createdAt && mainInput && mainInput.total > 0) {
+    // Add <hr> separator if main input method is present
+    if (mainInput && mainInput.total > 0) {
         contentParts.push(`<hr style="margin: 10px 0; border: none; border-top: 1px solid rgba(255, 255, 255, 0.2);">`);
     }
     
@@ -690,7 +694,11 @@ document.addEventListener("DOMContentLoaded", () => {
             ]);
             
             const userProfile = userProfileSnap && userProfileSnap.exists() ? userProfileSnap.data() : null;
-            const createdAt = userProfile ? userProfile.createdAt : null;
+            // Try to get createdAt from userProfile, fallback to Firebase Auth metadata
+            let createdAt = userProfile ? userProfile.createdAt : null;
+            if (!createdAt && user.metadata && user.metadata.creationTime) {
+                createdAt = user.metadata.creationTime;
+            }
 
             const listFromSnap = (snap) => {
                 if (snap.empty) return [];
@@ -1043,7 +1051,11 @@ document.addEventListener("DOMContentLoaded", () => {
             ]);
             
             const userProfile = userProfileSnap && userProfileSnap.exists() ? userProfileSnap.data() : null;
-            const createdAt = userProfile ? userProfile.createdAt : null;
+            // Try to get createdAt from userProfile, fallback to Firebase Auth metadata
+            let createdAt = userProfile ? userProfile.createdAt : null;
+            if (!createdAt && user.metadata && user.metadata.creationTime) {
+                createdAt = user.metadata.creationTime;
+            }
 
             const listFromSnap = (snap) => {
                 if (snap.empty) return [];
