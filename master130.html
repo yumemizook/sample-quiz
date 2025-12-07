@@ -1308,6 +1308,12 @@
     // Update indicator visibility after loading question
     updateIndicatorVisibility();
 
+    // Reset all fading elements for each new question after question 100
+    // This must happen after question/options are loaded but before random fading starts
+    if (currQuestion >= 100) {
+      resetAllTextElementsOpacity();
+    }
+
     // Start or update random fading after question 100
     if (currQuestion >= 100) {
       // Check if we need to restart with new interval
@@ -1327,7 +1333,43 @@
 
   }
 
-  // Function to get all visible text elements
+  // Function to reset all text elements' opacity (for resetting fading after question 100)
+  function resetAllTextElementsOpacity() {
+    const questionEl = document.getElementById("ques");
+    if (questionEl) {
+      questionEl.style.opacity = "1";
+    }
+
+    const optionsEl = document.getElementById("opt");
+    if (optionsEl) {
+      const labels = optionsEl.querySelectorAll("label");
+      labels.forEach(label => {
+        label.style.opacity = "1";
+      });
+    }
+
+    const scoreEl = document.getElementById("score");
+    if (scoreEl) {
+      scoreEl.style.opacity = "1";
+    }
+
+    const timeElapsedEl = document.getElementById("timeelapsed");
+    if (timeElapsedEl) {
+      timeElapsedEl.style.opacity = "1";
+    }
+
+    const gradeTextEl = document.getElementById("gradeText");
+    if (gradeTextEl) {
+      gradeTextEl.style.opacity = "1";
+    }
+
+    const gradePointsEl = document.getElementById("currentgrade");
+    if (gradePointsEl) {
+      gradePointsEl.style.opacity = "1";
+    }
+  }
+
+  // Function to get all visible text elements (excludes score, timer, and grade points)
   function getVisibleTextElements() {
     const elements = [];
 
@@ -1346,25 +1388,12 @@
       });
     }
 
-    const scoreEl = document.getElementById("score");
-    if (scoreEl && scoreEl.style.opacity !== "0" && scoreEl.style.display !== "none") {
-      elements.push(scoreEl);
-    }
-
-    const timeElapsedEl = document.getElementById("timeelapsed");
-    if (timeElapsedEl && timeElapsedEl.style.opacity !== "0" && timeElapsedEl.style.display !== "none") {
-      elements.push(timeElapsedEl);
-    }
-
     const gradeTextEl = document.getElementById("gradeText");
     if (gradeTextEl && gradeTextEl.style.opacity !== "0" && gradeTextEl.style.display !== "none") {
       elements.push(gradeTextEl);
     }
 
-    const gradePointsEl = document.getElementById("currentgrade");
-    if (gradePointsEl && gradePointsEl.style.opacity !== "0" && gradePointsEl.style.display !== "none") {
-      elements.push(gradePointsEl);
-    }
+    // Note: score, timer (timeelapsed), and grade points (currentgrade) are excluded from fading
 
     return elements;
   }
