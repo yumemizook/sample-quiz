@@ -1236,6 +1236,102 @@ div[style*="display: flex"] > .container {
     #gradeText {
         padding: 8px !important;
     }
+
+    /* Mobile container height fix for all quiz modes */
+    /* Prevent body scrolling on quiz pages (only apply to pages with quiz containers) */
+    body:has(.container .question),
+    body:has(.absolutecontainer),
+    body:has(div[style*="display: flex"][style*="align-items: flex-start"] .container) {
+        height: 100vh;
+        overflow: hidden;
+        position: fixed;
+        width: 100%;
+    }
+
+    /* Fix for absolutecontainer (master, hell, race modes) */
+    .absolutecontainer {
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .absolutecontainer > .container {
+        height: calc(100vh - 100px);
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Fix for flex wrapper divs (secret mode) */
+    div[style*="display: flex"][style*="align-items: flex-start"] {
+        height: 100vh;
+        overflow: hidden;
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    div[style*="display: flex"][style*="align-items: flex-start"] > .container {
+        height: calc(100vh - 100px);
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 !important;
+        padding: 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Fix for standalone containers (easy, normal modes) */
+    body > .container:not(.menu-container):not(.tos-container):not(.privacy-container) {
+        height: calc(100vh - 100px);
+        max-height: calc(100vh - 100px);
+        overflow-y: auto;
+        overflow-x: hidden;
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        transform: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 50px auto 0 !important;
+        padding: 15px !important;
+        box-sizing: border-box !important;
+    }
+
+    /* Custom scrollbar for containers */
+    .container::-webkit-scrollbar,
+    .absolutecontainer > .container::-webkit-scrollbar,
+    div[style*="display: flex"] > .container::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .container::-webkit-scrollbar-track,
+    .absolutecontainer > .container::-webkit-scrollbar-track,
+    div[style*="display: flex"] > .container::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.3);
+    }
+
+    .container::-webkit-scrollbar-thumb,
+    .absolutecontainer > .container::-webkit-scrollbar-thumb,
+    div[style*="display: flex"] > .container::-webkit-scrollbar-thumb {
+        background: rgba(219, 255, 255, 0.3);
+        border-radius: 2px;
+    }
 }
 
 /* Menu Screen Styles */
@@ -1492,23 +1588,23 @@ body.mode-easy .mode-card[data-mode="easy"].active::before {
 }
 
 body.mode-normal .mode-card[data-mode="normal"].active {
-    border-color: #dbffff;
-    background: linear-gradient(135deg, rgba(219, 255, 255, 0.15) 0%, rgba(184, 240, 224, 0.1) 100%);
-    box-shadow: 0 0 20px rgba(219, 255, 255, 0.3);
-}
-
-body.mode-normal .mode-card[data-mode="normal"].active::before {
-    background: linear-gradient(90deg, #dbffff, #b8f0e0);
-}
-
-body.mode-master .mode-card[data-mode="master"].active {
     border-color: #4a90e2;
     background: linear-gradient(135deg, rgba(74, 144, 226, 0.15) 0%, rgba(53, 122, 189, 0.1) 100%);
     box-shadow: 0 0 20px rgba(74, 144, 226, 0.3);
 }
 
-body.mode-master .mode-card[data-mode="master"].active::before {
+body.mode-normal .mode-card[data-mode="normal"].active::before {
     background: linear-gradient(90deg, #4a90e2, #357abd);
+}
+
+body.mode-master .mode-card[data-mode="master"].active {
+    border-color: #dbffff;
+    background: linear-gradient(135deg, rgba(219, 255, 255, 0.15) 0%, rgba(184, 240, 224, 0.1) 100%);
+    box-shadow: 0 0 20px rgba(219, 255, 255, 0.3);
+}
+
+body.mode-master .mode-card[data-mode="master"].active::before {
+    background: linear-gradient(90deg, #dbffff, #b8f0e0);
 }
 
 body.mode-master130 .mode-card[data-mode="master130"].active {
@@ -1588,11 +1684,11 @@ body.mode-easy .mode-card[data-mode="easy"] .mode-name {
 }
 
 body.mode-normal .mode-card[data-mode="normal"] .mode-name {
-    color: #dbffff;
+    color: #4a90e2;
 }
 
 body.mode-master .mode-card[data-mode="master"] .mode-name {
-    color: #4a90e2;
+    color: #dbffff;
 }
 
 body.mode-hell .mode-card[data-mode="hell"] .mode-name {
@@ -1624,15 +1720,15 @@ body.mode-hell .mode-card[data-mode="hell"] .mode-name {
 }
 
 .normal-diff {
-    background: rgba(219, 255, 255, 0.2);
-    color: #dbffff;
-    border: 1px solid rgba(219, 255, 255, 0.3);
+    background: rgba(74, 144, 226, 0.2);
+    color: #4a90e2;
+    border: 1px solid rgba(74, 144, 226, 0.3);
 }
 
 .master-diff {
-    background: rgba(255, 215, 0, 0.2);
-    color: #ffd700;
-    border: 1px solid rgba(255, 215, 0, 0.3);
+    background: rgba(219, 255, 255, 0.2);
+    color: #dbffff;
+    border: 1px solid rgba(219, 255, 255, 0.3);
 }
 
 .hell-diff {
@@ -1677,24 +1773,35 @@ body.mode-easy .play-btn:hover {
 }
 
 body.mode-normal .play-btn {
-    background: linear-gradient(135deg, #dbffff 0%, #b8f0e0 100%);
-    box-shadow: 0 4px 15px rgba(219, 255, 255, 0.3);
-}
-
-body.mode-normal .play-btn:hover {
-    background: linear-gradient(135deg, #e8ffff 0%, #c8f8e8 100%);
-    box-shadow: 0 6px 20px rgba(219, 255, 255, 0.4);
-}
-
-body.mode-master .play-btn {
     background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
     color: #ffffff;
     box-shadow: 0 4px 15px rgba(74, 144, 226, 0.3);
 }
 
-body.mode-master .play-btn:hover {
+body.mode-normal .play-btn:hover {
     background: linear-gradient(135deg, #5aa0f2 0%, #458acd 100%);
     box-shadow: 0 6px 20px rgba(74, 144, 226, 0.4);
+}
+
+body.mode-master .play-btn {
+    background: linear-gradient(135deg, #dbffff 0%, #b8f0e0 100%);
+    box-shadow: 0 4px 15px rgba(219, 255, 255, 0.3);
+}
+
+body.mode-master .play-btn:hover {
+    background: linear-gradient(135deg, #e8ffff 0%, #c8f8e8 100%);
+    box-shadow: 0 6px 20px rgba(219, 255, 255, 0.4);
+}
+
+body.mode-master130 .play-btn {
+    background: linear-gradient(135deg, #ff8c42 0%, #ff6b00 100%);
+    color: #ffffff;
+    box-shadow: 0 4px 15px rgba(255, 140, 66, 0.3);
+}
+
+body.mode-master130 .play-btn:hover {
+    background: linear-gradient(135deg, #ff9c52 0%, #ff7b10 100%);
+    box-shadow: 0 6px 20px rgba(255, 140, 66, 0.4);
 }
 
 body.mode-hell .play-btn {

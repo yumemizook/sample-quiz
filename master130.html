@@ -11,6 +11,7 @@
     body {
       background: url("race.jpg") no-repeat center center fixed;
       background-size: cover;
+      overflow: hidden; /* Prevent body scrolling on mobile */
     }
 
     .container button {
@@ -35,6 +36,7 @@
       color: #ffffff;
       font-size: x-large;
     }
+
   </style>
 </head>
 
@@ -720,6 +722,8 @@
       }
     }
   }
+
+  // Start quiz directly
   startQuiz();
 
   // Add window resize listener to realign grade display
@@ -1422,6 +1426,7 @@
         // Time's up - end the quiz immediately
         timeDisplay.style.color = "red";
         timeDisplay.style.textShadow = "0 0 10px red, 0 0 20px red";
+        timeDisplay.innerHTML = "00:00:00";
         if (timer) {
           clearInterval(timer);
         }
@@ -1430,28 +1435,32 @@
         return;
       }
 
-      const miliseconds = Math.floor((elapsedTime % 1000) / 10);
-      const seconds = Math.floor((elapsedTime / 1000) % 60);
-      quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
-      timeDisplay.innerHTML = `${quizMinutes
+      // Calculate countdown time
+      const remainingMs = Math.floor(timeRemaining);
+      const minutes = Math.floor(remainingMs / (1000 * 60));
+      const seconds = Math.floor((remainingMs % (1000 * 60)) / 1000);
+      const centiseconds = Math.floor((remainingMs % 1000) / 10);
+      
+      // Update quizMinutes for grade calculation (elapsed time)
+      quizMinutes = Math.floor(elapsedTime / (1000 * 60));
+      
+      // Display countdown timer
+      timeDisplay.innerHTML = `${minutes
         .toString()
         .padStart(2, "0")}:${seconds
           .toString()
-          .padStart(2, "0")}:${miliseconds.toString().padStart(2, "0")}`;
+          .padStart(2, "0")}:${centiseconds.toString().padStart(2, "0")}`;
 
-      // Update grade display when minute changes
+      // Update grade display when minute changes (based on elapsed time)
       if (quizMinutes !== lastMinute) {
         lastMinute = quizMinutes;
         updateGradeDisplay();
       }
 
-      // Calculate remaining seconds
-      const remainingSeconds = Math.floor(timeRemaining / 1000);
-
       // Flash red at 10 seconds remaining
-      if (remainingSeconds <= 10 && remainingSeconds > 0) {
+      if (timeRemaining <= 10000 && timeRemaining > 0) {
         const flashRate = 5; // Flash 5 times per second
-        const shouldFlash = Math.floor((totalTimeLimit - elapsedTime) / 100) % 2 === 0;
+        const shouldFlash = Math.floor(timeRemaining / 100) % 2 === 0;
         timeDisplay.style.color = shouldFlash ? "red" : "#ffffff";
         timeDisplay.style.textShadow = shouldFlash ? "0 0 10px red, 0 0 20px red" : "none";
       } else {
