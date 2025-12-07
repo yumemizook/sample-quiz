@@ -1818,7 +1818,7 @@
         const db = getFirestore();
         const payload = {
           name: user.displayName || user.email,
-          score: totalGradePoints, // Use total grade points instead of correct answer count
+          score: score, // Use total grade points instead of correct answer count
           grade: grade,
           time: document.getElementById("timeelapsed").textContent,
           date: new Date().toLocaleString(),
