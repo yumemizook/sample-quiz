@@ -775,6 +775,17 @@ function positionPopup(popup, targetElement) {
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
+    // Ensure leaderboard container is always visible (even when logged out)
+    const container2 = document.querySelector('.container2');
+    if (container2) {
+        // Remove any hide class and ensure display is not none
+        container2.classList.remove('hide');
+        if (container2.style.display === 'none') {
+            container2.style.display = '';
+        }
+        container2.style.display = 'flex';
+    }
+    
     // Initialize tabs
     initTabs();
     
