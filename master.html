@@ -321,7 +321,20 @@
         }</h5>`;
       }
     }
-    let currQuestion = 0;
+    // Read URL parameters for mode settings
+    const urlParams = new URLSearchParams(window.location.search);
+    const allPerfectMode = urlParams.get("allPerfect") === "1";
+    const fadingMode = urlParams.get("fading");
+    const startQuestionParam = parseInt(urlParams.get("start") || "0");
+    
+    let currQuestion = startQuestionParam; // Start at specified question
+    
+    // Fading mode variables
+    let fadeInterval = null;
+    let fadeDelay = null;
+    if (fadingMode) {
+        fadeDelay = parseFloat(fadingMode) * 1000; // Convert to milliseconds
+    }
     let score = 0;
     let thresholdChecked = { q51: false }; // Track which thresholds have been checked
     let elapsedQuestions = 0;
@@ -1401,6 +1414,38 @@
       // Update indicator visibility after loading question
       updateIndicatorVisibility();
       
+      // Fading mode: fade all question elements after specified delay
+      if (fadeDelay) {
+          // Clear any existing fade interval
+          if (fadeInterval) {
+              clearTimeout(fadeInterval);
+          }
+          
+          // Reset opacity of all elements first
+          const questionEl = document.getElementById("ques");
+          const optionsEl = document.getElementById("opt");
+          if (questionEl) questionEl.style.opacity = "1";
+          if (optionsEl) {
+              const labels = optionsEl.querySelectorAll("label");
+              labels.forEach(label => label.style.opacity = "1");
+          }
+          
+          // Fade all elements after delay
+          fadeInterval = setTimeout(() => {
+              if (questionEl) {
+                  questionEl.style.opacity = "0";
+                  questionEl.style.transition = "opacity 0.5s ease";
+              }
+              if (optionsEl) {
+                  const labels = optionsEl.querySelectorAll("label");
+                  labels.forEach(label => {
+                      label.style.opacity = "0";
+                      label.style.transition = "opacity 0.5s ease";
+                  });
+              }
+          }, fadeDelay);
+      }
+      
       // Check threshold time only when reaching question 51 (currQuestion === 50)
       // Question 51: Check if time >= 7 minutes
       if (currQuestion === 50 && !thresholdChecked.q51) {
@@ -1982,6 +2027,12 @@
         } else {
           // Don't expose the correct answer
           showNotification(
+            // All perfect mode: end quiz on wrong answer
+            if (allPerfectMode) {
+                showNotification("Wrong! All Perfect Mode - Quiz ended.");
+                evalScreen();
+                return;
+            }
             "Wrong! You cannot progress with an incorrect answer."
           );
           return;

@@ -107,6 +107,40 @@
         </div>
       </div>
 
+      <div class="mode-settings" id="modeSettings" style="display: none;">
+        <h2 class="mode-settings-title">Mode Settings</h2>
+        <div class="settings-container">
+          <div class="setting-item">
+            <label class="setting-label">
+              <input type="checkbox" id="allPerfectMode" class="setting-checkbox">
+              <span class="setting-text">All Perfect Mode</span>
+              <span class="setting-description">No wrong questions allowed - quiz ends on first incorrect answer</span>
+            </label>
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">
+              <span class="setting-text">Fading Mode:</span>
+              <select id="fadingMode" class="setting-select">
+                <option value="off">Off</option>
+                <option value="2">2 seconds</option>
+                <option value="1">1 second</option>
+                <option value="0.5">0.5 seconds</option>
+              </select>
+            </label>
+            <span class="setting-description">All question elements fade after the selected time</span>
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">
+              <span class="setting-text">Start at Question:</span>
+              <select id="startQuestion" class="setting-select">
+                <option value="0">Question 1 (Start from beginning)</option>
+              </select>
+            </label>
+            <span class="setting-description">Start the quiz at a specific question (multiples of 10)</span>
+          </div>
+        </div>
+      </div>
+
       <div class="menu-actions">
         <button class="menu-btn play-btn">
           <span class="btn-icon">▶</span>
@@ -160,6 +194,60 @@
   <script type="module" src="firebase.js"></script>
   <script type="module" src="menuNavigation.js"></script>
   <script type="module" src="hm.js"></script>
+  <script>
+    // Mode settings handler
+    (function() {
+      const modeSettings = document.getElementById("modeSettings");
+      const allPerfectMode = document.getElementById("allPerfectMode");
+      const fadingMode = document.getElementById("fadingMode");
+      const startQuestion = document.getElementById("startQuestion");
+      
+      // Mode question counts
+      const modeQuestionCounts = {
+        easy: 30,
+        normal: 100,
+        master: 100,
+        master130: 130,
+        hell: 200,
+        secret: 200
+      };
+      
+      // Update start question options based on selected mode
+      function updateStartQuestionOptions(mode) {
+        const questionCount = modeQuestionCounts[mode] || 100;
+        startQuestion.innerHTML = '<option value="0">Question 1 (Start from beginning)</option>';
+        
+        // Add options for multiples of 10
+        for (let i = 10; i < questionCount; i += 10) {
+          const option = document.createElement("option");
+          option.value = i;
+          option.textContent = `Question ${i + 1}`;
+          startQuestion.appendChild(option);
+        }
+      }
+      
+      // Show/hide settings when mode is selected
+      function handleModeSelection(mode) {
+        if (mode) {
+          modeSettings.style.display = "block";
+          updateStartQuestionOptions(mode);
+        } else {
+          modeSettings.style.display = "none";
+        }
+      }
+      
+      // Listen for mode card clicks
+      document.querySelectorAll(".mode-card").forEach(card => {
+        card.addEventListener("click", () => {
+          const mode = card.getAttribute("data-mode");
+          handleModeSelection(mode);
+        });
+      });
+      
+      // Initialize with default mode (normal)
+      handleModeSelection("normal");
+    })();
+  </script>
   <script type="module">
     const tips = [
       "You aer",

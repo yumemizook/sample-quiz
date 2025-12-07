@@ -320,10 +320,15 @@
         throw new Error("Failed to fetch any questions. Please try again.");
       }
 
-      // Ensure we have exactly 130 questions (trim if we got more)
+      // Ensure we have exactly 130 questions (trim if we got more, fail if we got fewer)
       if (allQuestions.length > totalQuestions) {
         allQuestions = allQuestions.slice(0, totalQuestions);
         console.log(`Trimmed questions to exactly ${totalQuestions} questions.`);
+      }
+
+      // Validate we have exactly 130 questions
+      if (allQuestions.length !== totalQuestions) {
+        throw new Error(`Failed to fetch exactly ${totalQuestions} questions. Got ${allQuestions.length} questions instead.`);
       }
 
       console.log(`Successfully loaded ${allQuestions.length} out of ${totalQuestions} requested questions.`);
@@ -1523,8 +1528,8 @@
     // Keep grade display container hidden
     gradeDisplayLeft.style.display = "none";
 
-    // Check if all questions are completed
-    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1;
+    // Check if all questions are completed (must have exactly 130 questions and be on/completed the last one)
+    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1 && allQuestions.length === 130;
 
     // Get text color (white normally, gold after question 50)
     let textColor = "#ffffff"; // White
@@ -1737,8 +1742,10 @@
     document.getElementById("btn").remove();
     document.getElementById("score").remove();
 
-    // Check if all questions were completed (in master mode, you can only progress if correct, so completion means all correct)
-    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1;
+    // Check if all questions were completed (in race mode, you can only progress if correct, so completion means all correct)
+    // We've completed all questions if: we're on the last question index (129 for 130 questions) AND we've answered it
+    // When evalScreen is called from nextQuestion(), currQuestion is still at the last index, so we check if we've reached the end
+    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1 && allQuestions.length === 130;
 
     if (!quizAbandoned && allQuestionsCompleted && localStorage.getItem("musicEnabled") !== "false") {
       let completeSound = new Audio("bgm/complete.wav");
@@ -1752,9 +1759,14 @@
     const evalDiv = document.querySelector(".evalscreen");
     let grade = "";
     let line = "white";
-    // Only assign GM grade if all questions were completed
-    if (allQuestionsCompleted) {
-      grade = "GM";
+    // Only assign GM grade if all 130 questions were completed
+    // In race mode, you can only progress if you answer correctly, so if we've reached the end with exactly 130 questions,
+    // all questions have been answered correctly (score should equal 130)
+    if (allQuestionsCompleted && allQuestions.length === 130) {
+      // Double-check: score should equal 130 if all questions were answered correctly
+      if (score === 130) {
+        grade = "GM";
+      }
       // If all questions completed but not GM, grade remains empty (no grade system)
     }
 

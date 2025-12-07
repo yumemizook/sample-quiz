@@ -644,18 +644,32 @@ document.addEventListener("DOMContentLoaded", () => {
     const playBtn = document.querySelector(".play-btn");
     if (playBtn) {
         playBtn.addEventListener("click", () => {
+            // Get mode settings
+            const allPerfectMode = document.getElementById("allPerfectMode")?.checked || false;
+            const fadingMode = document.getElementById("fadingMode")?.value || "off";
+            const startQuestion = parseInt(document.getElementById("startQuestion")?.value || "0");
+            
+            // Build URL parameters
+            const params = new URLSearchParams();
+            if (allPerfectMode) params.set("allPerfect", "1");
+            if (fadingMode !== "off") params.set("fading", fadingMode);
+            if (startQuestion > 0) params.set("start", startQuestion);
+            
+            const queryString = params.toString();
+            const urlSuffix = queryString ? `?${queryString}` : "";
+            
             if (selectedMode === "normal") {
-                window.location.href = "normal.html";
+                window.location.href = "normal.html" + urlSuffix;
             } else if (selectedMode === "master") {
-                window.location.href = "master.html";
+                window.location.href = "master.html" + urlSuffix;
             } else if (selectedMode === "hell") {
-                window.location.href = "hell.html";
+                window.location.href = "hell.html" + urlSuffix;
             } else if (selectedMode === "easy") {
-                window.location.href = "easy.html";
+                window.location.href = "easy.html" + urlSuffix;
             } else if (selectedMode === "secret") {
-                window.location.href = "secret.html";
+                window.location.href = "secret.html" + urlSuffix;
             } else if (selectedMode === "master130") {
-                window.location.href = "master130.html";
+                window.location.href = "master130.html" + urlSuffix;
             }
         });
     }

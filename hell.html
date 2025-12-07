@@ -625,7 +625,20 @@
         }</h5>`;
       }
     }
-    let currQuestion = 0;
+    // Read URL parameters for mode settings
+    const urlParams = new URLSearchParams(window.location.search);
+    const allPerfectMode = urlParams.get("allPerfect") === "1";
+    const fadingMode = urlParams.get("fading");
+    const startQuestionParam = parseInt(urlParams.get("start") || "0");
+    
+    let currQuestion = startQuestionParam; // Start at specified question
+    
+    // Fading mode variables
+    let fadeInterval = null;
+    let fadeDelay = null;
+    if (fadingMode) {
+        fadeDelay = parseFloat(fadingMode) * 1000; // Convert to milliseconds
+    }
     let score = 0;
     let elapsedQuestions = 0; // Track number of questions answered
     let totalGradePoints = 0; // Track accumulated grade points

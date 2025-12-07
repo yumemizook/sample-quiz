@@ -126,13 +126,26 @@
             ques.innerHTML = `<h5 style='color: red'>${error}</h5>`;
         }
     }
-    let currQuestion = 0;
+    // Read URL parameters for mode settings
+    const urlParams = new URLSearchParams(window.location.search);
+    const allPerfectMode = urlParams.get("allPerfect") === "1";
+    const fadingMode = urlParams.get("fading");
+    const startQuestionParam = parseInt(urlParams.get("start") || "0");
+    
+    let currQuestion = startQuestionParam; // Start at specified question
     let score = 0;
     let elapsedQuestions = 0;
     let quizAbandoned = false; // Track if quiz was abandoned (gave up)
     let totalGradePoints = 0; // Track accumulated grade points
     let questionStartTime = null; // Track when each question starts (for time bonus calculation)
     let quizStartTime = null; // Track when quiz starts for 5-minute completion bonus
+    
+    // Fading mode variables
+    let fadeInterval = null;
+    let fadeDelay = null;
+    if (fadingMode) {
+        fadeDelay = parseFloat(fadingMode) * 1000; // Convert to milliseconds
+    }
     
     // Gamepad support
     let gamepadConnected = false;
@@ -879,6 +892,38 @@
         
         // Play BGM
         playBGM();
+        
+        // Fading mode: fade all question elements after specified delay
+        if (fadeDelay) {
+            // Clear any existing fade interval
+            if (fadeInterval) {
+                clearTimeout(fadeInterval);
+            }
+            
+            // Reset opacity of all elements first
+            const questionEl = document.getElementById("ques");
+            const optionsEl = document.getElementById("opt");
+            if (questionEl) questionEl.style.opacity = "1";
+            if (optionsEl) {
+                const labels = optionsEl.querySelectorAll("label");
+                labels.forEach(label => label.style.opacity = "1");
+            }
+            
+            // Fade all elements after delay
+            fadeInterval = setTimeout(() => {
+                if (questionEl) {
+                    questionEl.style.opacity = "0";
+                    questionEl.style.transition = "opacity 0.5s ease";
+                }
+                if (optionsEl) {
+                    const labels = optionsEl.querySelectorAll("label");
+                    labels.forEach(label => {
+                        label.style.opacity = "0";
+                        label.style.transition = "opacity 0.5s ease";
+                    });
+                }
+            }, fadeDelay);
+        }
     }
     
     // Calculate grade points for a question (Easy mode: 6x multiplier, 30s time bonus)
@@ -1255,6 +1300,12 @@
                 showNotification("Correct!", true);
             }
             else if (decodedAnswerValue !== decodedCorrectAnswer && answerValue !== correctAnswer) {
+                // All perfect mode: end quiz on wrong answer
+                if (allPerfectMode) {
+                    showNotification("Wrong! All Perfect Mode - Quiz ended.");
+                    evalScreen();
+                    return;
+                }
                 // Don't expose the correct answer to prevent cheating
                 showNotification("Wrong! Try again next time.");
             }

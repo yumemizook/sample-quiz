@@ -363,15 +363,15 @@ let allMasterList = [];
 let allHellList = [];
 let allRaceList = [];
 
-// Get badge for level (matches hm.js badge system, extended to level 1000)
+// Get badge for level (uses thresholds from getBadgeNameStats)
 function getBadgeForLevelStats(level) {
-    if (level >= 1000) return "🌠"; // Meteor (Lv 1000+)
-    if (level >= 900) return "🌙"; // Moon (Lv 900-999)
-    if (level >= 800) return "☀️"; // Sun (Lv 800-899)
-    if (level >= 700) return "🌍"; // Earth (Lv 700-799)
-    if (level >= 600) return "🪐"; // Planet (Lv 600-699)
-    if (level >= 500) return "⭐"; // Star (Lv 500-599)
-    if (level >= 400) return "🌟"; // Glowing Star (Lv 400-499)
+    if (level >= 2000) return "🌠"; // Meteor (Lv 2000+)
+    if (level >= 1500) return "🌙"; // Moon (Lv 1500-1999)
+    if (level >= 1250) return "☀️"; // Sun (Lv 1250-1499)
+    if (level >= 1000) return "🌍"; // Earth (Lv 1000-1249)
+    if (level >= 800) return "🪐"; // Planet (Lv 800-999)
+    if (level >= 600) return "⭐"; // Star (Lv 600-799)
+    if (level >= 400) return "🌟"; // Glowing Star (Lv 400-599)
     if (level >= 300) return "💫"; // Dizzy Star (Lv 300-399)
     if (level >= 250) return "🌌"; // Galaxy (Lv 250-299)
     if (level >= 200) return "🌠"; // Shooting Star (Lv 200-249)
@@ -506,7 +506,7 @@ function updateLevelProgression(playerData, totalPlays = 0, mainInput = null, cr
     
     // Get color class based on level
     function getLevelColorClassStats(level) {
-        if (level >= 1000) return "level-meteor";
+        if (level >= 2000) return "level-meteor";
         if (level >= 900) return "level-moon";
         if (level >= 800) return "level-sun";
         if (level >= 700) return "level-earth";
