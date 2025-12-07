@@ -645,13 +645,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (playBtn) {
         playBtn.addEventListener("click", () => {
             // Get mode settings
-            const allPerfectMode = document.getElementById("allPerfectMode")?.checked || false;
+            const livesValue = document.getElementById("lives")?.value || "unlimited";
+            const timeMultiplier = parseFloat(document.getElementById("timeMultiplier")?.value || "1");
             const fadingMode = document.getElementById("fadingMode")?.value || "off";
             const startQuestion = parseInt(document.getElementById("startQuestion")?.value || "0");
             
             // Build URL parameters
             const params = new URLSearchParams();
-            if (allPerfectMode) params.set("allPerfect", "1");
+            params.set("lives", livesValue);
+            params.set("timeMultiplier", timeMultiplier.toString());
             if (fadingMode !== "off") params.set("fading", fadingMode);
             if (startQuestion > 0) params.set("start", startQuestion);
             

@@ -75,7 +75,11 @@
         <div id="currentgrade" style="font-size: x-large; color: cyan; font-weight: bold;"></div>
         <div id="timeelapsed"></div>
       </div>
+      <div id="livesDisplay" style="display: none; text-align: center; margin: 10px 0; font-size: x-large; font-weight: bold;">
+        Lives: <span id="livesCount"></span>
+      </div>
       <div class="timerifinvalid"></div>
+      <audio id="failSound" src="/bgm/playstop.wav" preload="auto"></audio>
       <div class="evalscreen" style="display: none"></div>
       <div id="notification" class="notification hide"></div>
     </div>
@@ -342,7 +346,29 @@
         }</h5>`;
     }
   }
-  let currQuestion = 0;
+  // Read URL parameters for modifiers
+  const urlParams = new URLSearchParams(window.location.search);
+  const livesParam = urlParams.get("lives");
+  const lives = livesParam === "unlimited" ? -1 : parseInt(livesParam || "-1");
+  const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1.0");
+  const fadingMode = urlParams.get("fading");
+  
+  // Lives system variables
+  let currentLives = lives; // Track current lives (-1 means unlimited)
+  const livesEnabled = lives !== -1; // Check if lives system is enabled
+  let currentQuestionAnswered = false; // Track if current question has been answered to prevent multiple deductions
+  
+  // Fading mode variables
+  let fadeInterval = null;
+  let fadeDelay = null;
+  if (fadingMode) {
+    fadeDelay = parseFloat(fadingMode) * 1000; // Convert to milliseconds
+  }
+  
+  // Start question parameter
+  const startQuestionParam = parseInt(urlParams.get("start") || "0");
+  
+  let currQuestion = startQuestionParam; // Start at specified question
   let score = 0;
   let thresholdChecked = { q51: false }; // Track which thresholds have been checked
   let elapsedQuestions = 0;
@@ -350,6 +376,18 @@
   let totalGradePoints = 0; // Track accumulated grade points
   let previousGrade = ""; // Track previous grade for promotion detection
   let randomFadeInterval = null; // Interval for random text fading
+  
+  // Lives system variables
+  let currentLives = lives; // Track current lives (-1 means unlimited)
+  const livesEnabled = lives !== -1; // Check if lives system is enabled
+  let currentQuestionAnswered = false; // Track if current question has been answered to prevent multiple deductions
+  
+  // Fading mode variables
+  let fadeInterval = null;
+  let fadeDelay = null;
+  if (fadingMode) {
+    fadeDelay = parseFloat(fadingMode) * 1000; // Convert to milliseconds
+  }
 
   // Gamepad support
   let gamepadConnected = false;
@@ -564,7 +602,7 @@
         window.answerTimerId = setInterval(() => {
           if (isPaused) return; // Don't count down if paused
           if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
+            timeToAnswer -= 0.01 * timeMultiplier;
             timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
           } else {
             clearInterval(window.answerTimerId);
@@ -577,6 +615,7 @@
 
     // Resume BGM
     if (currentBGM && localStorage.getItem("musicEnabled") !== "false") {
+      currentBGM.volume = getAudioVolume();
       currentBGM.play().catch(err => console.log("BGM resume failed:", err));
     }
 
@@ -964,12 +1003,15 @@
 
     // Initialize BGM if not already done
     if (!bgm4) {
+      const volume = getAudioVolume();
       bgm4 = new Audio("bgm/stage4.mp3");
       bgm5 = new Audio("bgm/stage5.mp3");
 
-      // Set BGM to loop
+      // Set BGM to loop and apply volume
       bgm4.loop = true;
+      bgm4.volume = volume;
       bgm5.loop = true;
+      bgm5.volume = volume;
     }
 
     // Check if we're on the final question (stop BGM)
@@ -1008,6 +1050,8 @@
       // Play the new stage's BGM
       currentBGM = targetBGM;
       currentStage = targetStage;
+      // Apply volume before playing
+      currentBGM.volume = getAudioVolume();
       currentBGM.play().catch(err => console.log("BGM play failed:", err));
     }
     // If we're still in the same stage, do nothing - let the BGM continue playing
@@ -1027,9 +1071,12 @@
 
   let timeToAnswer;
   let initialTimeToAnswer; // Track initial time allocated for current question
-  function loadQues() {
-    const opt = document.getElementById("opt");
-    let currentQuestion = allQuestions[currQuestion].question;
+    function loadQues() {
+      // Reset answered flag when loading a new question
+      currentQuestionAnswered = false;
+      
+      const opt = document.getElementById("opt");
+      let currentQuestion = allQuestions[currQuestion].question;
 
     // Change background to raceinvis.jpg after question 100
     if (currQuestion >= 100) {
@@ -1060,6 +1107,8 @@
     }
 
     opt.innerHTML = "";
+    // Reset answered flag when loading a new question
+    currentQuestionAnswered = false;
     loadScore();
     const correctAnswer = allQuestions[currQuestion].correct_answer;
     const incorrectAnswers = allQuestions[currQuestion].incorrect_answers;
@@ -1174,7 +1223,7 @@
       window.answerTimerId = setInterval(() => {
         if (isPaused) return; // Don't count down if paused
         if (timeToAnswer > 0) {
-          timeToAnswer -= 0.01;
+          timeToAnswer -= 0.01 * timeMultiplier;
           timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
         } else {
           clearInterval(window.answerTimerId);
@@ -1191,7 +1240,7 @@
       window.answerTimerId = setInterval(() => {
         if (isPaused) return; // Don't count down if paused
         if (timeToAnswer > 0) {
-          timeToAnswer -= 0.01;
+          timeToAnswer -= 0.01 * timeMultiplier;
           timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
         } else {
           clearInterval(window.answerTimerId);
@@ -1208,7 +1257,7 @@
       window.answerTimerId = setInterval(() => {
         if (isPaused) return; // Don't count down if paused
         if (timeToAnswer > 0) {
-          timeToAnswer -= 0.01;
+          timeToAnswer -= 0.01 * timeMultiplier;
           timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
         } else {
           clearInterval(window.answerTimerId);
@@ -1225,7 +1274,7 @@
       window.answerTimerId = setInterval(() => {
         if (isPaused) return; // Don't count down if paused
         if (timeToAnswer > 0) {
-          timeToAnswer -= 0.01;
+          timeToAnswer -= 0.01 * timeMultiplier;
           timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
         } else {
           clearInterval(window.answerTimerId);
@@ -1242,7 +1291,7 @@
       window.answerTimerId = setInterval(() => {
         if (isPaused) return; // Don't count down if paused
         if (timeToAnswer > 0) {
-          timeToAnswer -= 0.01;
+          timeToAnswer -= 0.01 * timeMultiplier;
           timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
         } else {
           clearInterval(window.answerTimerId);
@@ -1259,7 +1308,7 @@
       window.answerTimerId = setInterval(() => {
         if (isPaused) return; // Don't count down if paused
         if (timeToAnswer > 0) {
-          timeToAnswer -= 0.01;
+          timeToAnswer -= 0.01 * timeMultiplier;
           timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
         } else {
           clearInterval(window.answerTimerId);
@@ -1276,7 +1325,7 @@
       window.answerTimerId = setInterval(() => {
         if (isPaused) return; // Don't count down if paused
         if (timeToAnswer > 0) {
-          timeToAnswer -= 0.01;
+          timeToAnswer -= 0.01 * timeMultiplier;
           timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
         } else {
           clearInterval(window.answerTimerId);
@@ -1293,7 +1342,7 @@
       window.answerTimerId = setInterval(() => {
         if (isPaused) return; // Don't count down if paused
         if (timeToAnswer > 0) {
-          timeToAnswer -= 0.01;
+          timeToAnswer -= 0.01 * timeMultiplier;
           timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
         } else {
           clearInterval(window.answerTimerId);
@@ -1612,6 +1661,32 @@
     // Display grade points in the old position
     gradePointsDisplay.innerHTML = totalGradePoints.toLocaleString() || "0";
     gradePointsDisplay.style.color = currQuestion >= 50 ? textColor : "cyan";
+    
+    // Update lives display (hide if disabled)
+    const livesDisplay = document.getElementById("livesDisplay");
+    const livesCount = document.getElementById("livesCount");
+    if (livesDisplay) {
+      if (livesEnabled) {
+        livesDisplay.style.display = "block";
+        if (livesCount) {
+          livesCount.textContent = currentLives;
+        }
+        
+        // Apply color based on lives remaining
+        livesDisplay.classList.remove("lives-green", "lives-yellow", "lives-orange", "lives-red");
+        if (currentLives > 50) {
+          livesDisplay.classList.add("lives-green");
+        } else if (currentLives > 20) {
+          livesDisplay.classList.add("lives-yellow");
+        } else if (currentLives > 10) {
+          livesDisplay.classList.add("lives-orange");
+        } else {
+          livesDisplay.classList.add("lives-red");
+        }
+      } else {
+        livesDisplay.style.display = "none";
+      }
+    }
 
     // Align grade display with container top after all updates
     alignGradeDisplay();
@@ -1852,6 +1927,21 @@
         alert("Abandoned runs cannot be submitted to the leaderboards.");
         return;
       }
+      
+      // Only allow submission if starting question is 1 and time multiplier is 1x or higher
+      const urlParams = new URLSearchParams(window.location.search);
+      const startQuestionParam = parseInt(urlParams.get("start") || "0");
+      const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1");
+      
+      if (startQuestionParam !== 0) {
+        alert("Scores can only be submitted when starting from question 1.");
+        return;
+      }
+      
+      if (timeMultiplier < 1.0) {
+        alert("Scores can only be submitted when time multiplier is 1x or higher.");
+        return;
+      }
 
       // Race mode ends at 7 minutes, so this check is not needed
       // The quiz will end automatically when time runs out
@@ -1938,11 +2028,15 @@
     }
   }
   function nextQuestion() {
+    // Reset answered flag for new question
+    currentQuestionAnswered = false;
+    
     if (currQuestion < allQuestions.length - 1) {
       currQuestion++;
       // Play section change sound every 10 questions
       if (currQuestion % 10 === 0 && localStorage.getItem("musicEnabled") !== "false") {
         const sectionChangeSound = new Audio("bgm/sectionchange.wav");
+        sectionChangeSound.volume = getAudioVolume();
         sectionChangeSound.play().catch(err => console.log("Section change sound play failed:", err));
       }
       loadQues();
@@ -1966,6 +2060,41 @@
       notification.classList.add("hide");
     }, 3000);
   }
+  
+  function showFailedScreen() {
+    // Pause BGM if it exists
+    if (currentBGM) {
+      currentBGM.pause();
+      currentBGM.currentTime = 0;
+    }
+    
+    // Play fail sound effect
+    const failSound = document.getElementById("failSound");
+    if (failSound) {
+      failSound.volume = getAudioVolume() * 0.7; // 70% of user volume
+      failSound.play().catch(err => console.log("Fail sound play failed:", err));
+    } else {
+      // Fallback if audio element doesn't exist
+      const failSoundFallback = new Audio("/bgm/playstop.wav");
+      failSoundFallback.volume = getAudioVolume() * 0.7; // 70% of user volume
+      failSoundFallback.play().catch(err => console.log("Fail sound play failed:", err));
+    }
+    
+    // Create overlay
+    const overlay = document.createElement("div");
+    overlay.className = "failed-overlay";
+    overlay.innerHTML = '<div class="failed-content">FAILED</div>';
+    document.body.appendChild(overlay);
+    
+    // Remove overlay after 5 seconds
+    setTimeout(() => {
+      overlay.classList.add("hide");
+      setTimeout(() => {
+        overlay.remove();
+        evalScreen();
+      }, 300);
+    }, 5000);
+  }
 
   function checkAns() {
     // Validate quiz state
@@ -1983,6 +2112,11 @@
     const evalDiv = document.querySelector(".evalscreen");
     if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
       return; // Quiz has ended, don't process answers
+    }
+    
+    // Prevent multiple submissions for the same question
+    if (currentQuestionAnswered) {
+      return; // Question already answered, ignore duplicate submissions
     }
 
     const selectedAns = document.querySelector(
@@ -2006,6 +2140,9 @@
 
       // Compare both decoded and original values to handle encoding differences
       if (decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer) {
+        // Mark question as answered
+        currentQuestionAnswered = true;
+        
         score++;
         // Calculate and accumulate grade points for this question
         const questionPoints = internalGrade();
@@ -2019,10 +2156,50 @@
         showNotification("Correct!", true);
         nextQuestion();
       } else {
-        // Don't expose the correct answer
-        showNotification(
-          "Wrong! You cannot progress with an incorrect answer."
-        );
+        // Wrong answer handling
+        if (livesEnabled && !currentQuestionAnswered) {
+          // Mark question as answered and deduct life (only once per question)
+          currentQuestionAnswered = true;
+          currentLives -= 1;
+          
+          // Update lives display
+          const livesDisplay = document.getElementById("livesDisplay");
+          const livesCount = document.getElementById("livesCount");
+          if (livesCount) {
+            livesCount.textContent = currentLives;
+          }
+          
+          // Apply color based on lives remaining
+          if (livesDisplay) {
+            livesDisplay.classList.remove("lives-green", "lives-yellow", "lives-orange", "lives-red");
+            if (currentLives > 50) {
+              livesDisplay.classList.add("lives-green");
+            } else if (currentLives > 20) {
+              livesDisplay.classList.add("lives-yellow");
+            } else if (currentLives > 10) {
+              livesDisplay.classList.add("lives-orange");
+            } else {
+              livesDisplay.classList.add("lives-red");
+            }
+          }
+          
+          if (currentLives <= 0) {
+            // Out of lives - show FAILED screen
+            if (window.answerTimerId) {
+              clearInterval(window.answerTimerId);
+            }
+            showFailedScreen();
+            return;
+          }
+          
+          // Show notification with remaining lives
+          showNotification(`Wrong! ${currentLives} ${currentLives === 1 ? 'life' : 'lives'} remaining.`);
+        } else {
+          // Lives disabled - just show wrong notification
+          showNotification("Wrong! You cannot progress with an incorrect answer.");
+        }
+        // Mark question as answered to prevent multiple submissions
+        currentQuestionAnswered = true;
         return;
       }
     } else {

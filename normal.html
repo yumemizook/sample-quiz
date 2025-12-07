@@ -34,6 +34,7 @@
         <div class="jum" style="display: flex; justify-content: space-between;">
             <div id="score"></div>
             <div id="currentgrade" style="font-size: x-large; color: #adffcd; font-weight: bold;"></div>
+            <div id="livesDisplay" style="font-size: x-large; color: #ff6b6b; font-weight: bold;">❤️ <span id="livesCount"></span></div>
             <div id="timeelapsed"></div>
         </div>
         <div class="timerifinvalid"></div>
@@ -62,6 +63,13 @@
 
     import { getAuth, getFirestore, collection, addDoc } from "./firebase.js";
     const auth = getAuth();
+    
+    // Helper function to get audio volume from settings (0-1 range)
+    function getAudioVolume() {
+        const savedVolume = localStorage.getItem("audioVolume");
+        const volume = savedVolume !== null ? parseInt(savedVolume) : 100;
+        return volume / 100; // Convert 0-100 to 0-1 range
+    }
     
     // Detect mobile device
     function isMobileDevice() {
@@ -235,11 +243,16 @@
     }
     // Read URL parameters for mode settings
     const urlParams = new URLSearchParams(window.location.search);
-    const allPerfectMode = urlParams.get("allPerfect") === "1";
+    const livesParam = urlParams.get("lives") || "unlimited";
+    const lives = livesParam === "unlimited" ? -1 : parseInt(livesParam);
+    const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1");
     const fadingMode = urlParams.get("fading");
     const startQuestionParam = parseInt(urlParams.get("start") || "0");
     
     let currQuestion = startQuestionParam; // Start at specified question
+    let currentLives = lives; // Track current lives (-1 means unlimited)
+    const livesEnabled = lives !== -1; // Check if lives system is enabled
+    let currentQuestionAnswered = false; // Track if current question has been answered to prevent multiple deductions
     
     // Fading mode variables
     let fadeInterval = null;
@@ -449,7 +462,7 @@
                 window.answerTimerId = setInterval(() => {
                     if (isPaused) return;
                     if (timeToAnswer > 0) {
-                        timeToAnswer -= 0.01;
+                        timeToAnswer -= 0.01 * timeMultiplier;
                         timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
                     } else {
                         clearInterval(window.answerTimerId);
@@ -856,10 +869,13 @@
         }
 
         if (!normalBGM1) {
+            const volume = getAudioVolume();
             normalBGM1 = new Audio("bgm/stage1.mp3");
             normalBGM2 = new Audio("bgm/stage2.mp3");
             normalBGM1.loop = true;
+            normalBGM1.volume = volume;
             normalBGM2.loop = true;
+            normalBGM2.volume = volume;
         }
         
         // Stop BGM on question 49 (final question of stage 1)
@@ -889,6 +905,8 @@
             }
             currentBGM = targetBGM;
             currentStage = targetStage;
+            // Apply volume before playing
+            currentBGM.volume = getAudioVolume();
             currentBGM.play().catch(err => console.log("BGM play failed:", err));
         }
     }
@@ -903,6 +921,9 @@
     }
 
     function loadQues() {
+        // Reset answered flag when loading a new question
+        currentQuestionAnswered = false;
+        
         const opt = document.getElementById("opt");
         let currentQuestion = Questions[currQuestion].question;
         // Decode HTML entities in the question and answers
@@ -1015,7 +1036,7 @@
             
             window.questionTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
+                    timeToAnswer -= 0.01 * timeMultiplier;
                     timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
                 } else {
                     clearInterval(window.questionTimerId);
@@ -1033,7 +1054,7 @@
             
             window.questionTimerId = setInterval(() => {
                 if (timeToAnswer > 0) {
-                    timeToAnswer -= 0.01;
+                    timeToAnswer -= 0.01 * timeMultiplier;
                     timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
                 } else {
                     clearInterval(window.questionTimerId);
@@ -1202,6 +1223,32 @@
         totalScore.style.fontSize = "xx-large";
         totalScore.style.color = "pink";
         
+        // Update lives display (hide if disabled)
+        const livesDisplay = document.getElementById("livesDisplay");
+        const livesCount = document.getElementById("livesCount");
+        if (livesDisplay) {
+            if (livesEnabled) {
+                livesDisplay.style.display = "block";
+                if (livesCount) {
+                    livesCount.textContent = currentLives;
+                }
+                
+                // Apply color based on lives remaining
+                livesDisplay.classList.remove("lives-green", "lives-yellow", "lives-orange", "lives-red");
+                if (currentLives > 50) {
+                    livesDisplay.classList.add("lives-green");
+                } else if (currentLives > 20) {
+                    livesDisplay.classList.add("lives-yellow");
+                } else if (currentLives > 10) {
+                    livesDisplay.classList.add("lives-orange");
+                } else {
+                    livesDisplay.classList.add("lives-red");
+                }
+            } else {
+                livesDisplay.style.display = "none";
+            }
+        }
+        
         // Update grade points display in timer bar
         updateGradePointsDisplay();
     }
@@ -1242,8 +1289,8 @@
         
         // Play credits BGM (always play, even if abandoned, unless sounds are disabled)
         if (localStorage.getItem("musicEnabled") !== "false") {
-            let creditsBGM = new Audio("bgm/credits.mp3");
-            creditsBGM.play().catch(err => console.log("Credits BGM play failed:", err));
+        let creditsBGM = new Audio("bgm/credits.mp3");
+        creditsBGM.play().catch(err => console.log("Credits BGM play failed:", err));
         }
         
         const evalDiv = document.querySelector(".evalscreen");
@@ -1413,6 +1460,34 @@
             notification.classList.add("hide");
         }, 3000);
     }
+    
+    function showFailedScreen() {
+        // Pause BGM if it exists
+        if (currentBGM) {
+            currentBGM.pause();
+            currentBGM.currentTime = 0;
+        }
+        
+        // Play fail sound effect
+        const failSound = new Audio("/bgm/playstop.wav");
+        failSound.volume = getAudioVolume() * 0.7; // 70% of user volume
+        failSound.play().catch(err => console.log("Fail sound play failed:", err));
+        
+        // Create overlay
+        const overlay = document.createElement("div");
+        overlay.className = "failed-overlay";
+        overlay.innerHTML = '<div class="failed-content">FAILED</div>';
+        document.body.appendChild(overlay);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            overlay.classList.add("hide");
+            setTimeout(() => {
+                overlay.remove();
+                evalScreen();
+            }, 300);
+        }, 5000);
+    }
 
     function checkAns() {
         // Validate quiz state
@@ -1430,6 +1505,11 @@
         const evalDiv = document.querySelector(".evalscreen");
         if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
             return; // Quiz has ended, don't process answers
+        }
+        
+        // Prevent multiple submissions for the same question
+        if (currentQuestionAnswered) {
+            return; // Question already answered, ignore duplicate submissions
         }
         
         const selectedAns = document.querySelector('input[name="answer"]:checked');
@@ -1455,6 +1535,9 @@
             
             // Compare both decoded and original values to handle encoding differences
             if (decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer) {
+                // Mark question as answered
+                currentQuestionAnswered = true;
+                
                 score++;
                 // Calculate and accumulate grade points for this question
                 const questionPoints = internalGrade();
@@ -1467,14 +1550,48 @@
                 showNotification("Correct!", true);
             }
             else {
-                // Don't expose the correct answer to prevent cheating
-                // All perfect mode: end quiz on wrong answer
-                if (allPerfectMode) {
-                    showNotification("Wrong! All Perfect Mode - Quiz ended.");
-                    evalScreen();
-                    return;
-                }
+                // Wrong answer handling
+                if (livesEnabled && !currentQuestionAnswered) {
+                    // Mark question as answered and deduct life (only once per question)
+                    currentQuestionAnswered = true;
+                    currentLives -= 1;
+                    
+                    // Update lives display
+                    const livesDisplay = document.getElementById("livesDisplay");
+                    const livesCount = document.getElementById("livesCount");
+                    if (livesCount) {
+                        livesCount.textContent = currentLives;
+                    }
+                    
+                    // Apply color based on lives remaining
+                    if (livesDisplay) {
+                        livesDisplay.classList.remove("lives-green", "lives-yellow", "lives-orange", "lives-red");
+                        if (currentLives > 50) {
+                            livesDisplay.classList.add("lives-green");
+                        } else if (currentLives > 20) {
+                            livesDisplay.classList.add("lives-yellow");
+                        } else if (currentLives > 10) {
+                            livesDisplay.classList.add("lives-orange");
+                        } else {
+                            livesDisplay.classList.add("lives-red");
+                        }
+                    }
+                    
+                    if (currentLives <= 0) {
+                        // Out of lives - show FAILED screen
+                        if (window.answerTimerId) {
+                            clearInterval(window.answerTimerId);
+                        }
+                        showFailedScreen();
+                        return;
+                    }
+                    
+                    // Show notification with remaining lives
+                    showNotification(`Wrong! ${currentLives} ${currentLives === 1 ? 'life' : 'lives'} remaining.`);
+                } else {
+                    // Lives disabled - just show wrong notification
                 showNotification("Wrong! Try again next time.");
+                }
             }
             nextQuestion();
         } else if (!selectedAns && Questions.length > 0) {

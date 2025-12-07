@@ -94,6 +94,59 @@
             left: 32px;
         }
 
+        /* Volume Slider Styles */
+        #volumeSlider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            transition: background 0.3s;
+        }
+
+        #volumeSlider:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        #volumeSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #dbffff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #volumeSlider::-webkit-slider-thumb:hover {
+            background: #ffffff;
+            transform: scale(1.1);
+        }
+
+        #volumeSlider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #dbffff;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        #volumeSlider::-moz-range-thumb:hover {
+            background: #ffffff;
+            transform: scale(1.1);
+        }
+
+        #volumeSlider.keyboard-focus {
+            outline: 3px solid #4CAF50;
+            outline-offset: 3px;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+
         .danger-zone {
             border: 2px solid #ff4444;
             background-color: rgba(255, 68, 68, 0.1);
@@ -593,6 +646,20 @@
                 <div class="toggle-switch" id="musicToggle" tabindex="0" role="switch" aria-checked="true"></div>
             </div>
             <div class="status-message" id="musicStatus"></div>
+            
+            <div class="setting-item">
+                <div>
+                    <span class="setting-label">Volume</span>
+                    <p style="font-size: 0.9em; color: #ccc; margin-top: 5px;">
+                        Adjust the volume for all sounds (0-100%).
+                    </p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; min-width: 200px;">
+                    <input type="range" id="volumeSlider" min="0" max="100" value="100" step="1" style="flex: 1; cursor: pointer;">
+                    <span id="volumeValue" style="min-width: 45px; text-align: right; font-weight: bold; color: #dbffff;">100%</span>
+                </div>
+            </div>
+            <div class="status-message" id="volumeStatus"></div>
         </div>
 
         <!-- Score Submission Settings -->
@@ -1092,6 +1159,7 @@
             // Get all focusable elements in order
             focusableElements = [
                 document.getElementById("musicToggle"),
+                document.getElementById("volumeSlider"),
                 document.getElementById("autoSubmitToggle"),
                 document.getElementById("deleteScoresBtn"),
                 document.getElementById("deleteAccountBtn"),
@@ -1361,6 +1429,54 @@
                 toggleAutoSubmit();
             }
         });
+
+        // Volume Slider
+        const volumeSlider = document.getElementById("volumeSlider");
+        const volumeValue = document.getElementById("volumeValue");
+        const volumeStatus = document.getElementById("volumeStatus");
+
+        // Load volume preference from localStorage (default: 100)
+        const savedVolume = localStorage.getItem("audioVolume");
+        const currentVolume = savedVolume !== null ? parseInt(savedVolume) : 100;
+        if (volumeSlider) {
+            volumeSlider.value = currentVolume;
+        }
+        if (volumeValue) {
+            volumeValue.textContent = `${currentVolume}%`;
+        }
+
+        function updateVolume() {
+            const volume = parseInt(volumeSlider.value);
+            if (volumeValue) {
+                volumeValue.textContent = `${volume}%`;
+            }
+            localStorage.setItem("audioVolume", volume.toString());
+            if (volumeStatus) {
+                volumeStatus.textContent = `Volume set to ${volume}%`;
+                volumeStatus.className = "status-message success";
+                setTimeout(() => {
+                    volumeStatus.className = "status-message";
+                }, 2000);
+            }
+        }
+
+        if (volumeSlider) {
+            volumeSlider.addEventListener("input", updateVolume);
+            volumeSlider.addEventListener("change", updateVolume);
+            
+            // Keyboard navigation for volume slider
+            volumeSlider.addEventListener("keydown", (e) => {
+                if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    volumeSlider.value = Math.max(0, parseInt(volumeSlider.value) - 5);
+                    updateVolume();
+                } else if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    volumeSlider.value = Math.min(100, parseInt(volumeSlider.value) + 5);
+                    updateVolume();
+                }
+            });
+        }
 
         // Delete Scores Function
         const deleteScoresBtn = document.getElementById("deleteScoresBtn");

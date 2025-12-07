@@ -108,33 +108,70 @@
       </div>
 
       <div class="mode-settings" id="modeSettings" style="display: none;">
-        <h2 class="mode-settings-title">Mode Settings</h2>
-        <div class="settings-container">
+        <h2 class="mode-settings-title">
+          <span>Mode Settings</span>
+          <button class="mode-settings-toggle" id="modeSettingsToggle" aria-label="Toggle settings">
+            <span class="toggle-icon">▼</span>
+          </button>
+        </h2>
+        <div class="settings-container" id="settingsContainer">
           <div class="setting-item">
             <label class="setting-label">
-              <input type="checkbox" id="allPerfectMode" class="setting-checkbox">
-              <span class="setting-text">All Perfect Mode</span>
-              <span class="setting-description">No wrong questions allowed - quiz ends on first incorrect answer</span>
+              <span class="setting-text">Lives:</span>
+              <div class="arrow-selector" data-setting="lives">
+                <button class="arrow-btn arrow-left" aria-label="Previous option">◀</button>
+                <span class="selector-value" id="livesValue">30 Lives</span>
+                <button class="arrow-btn arrow-right" aria-label="Next option">▶</button>
+                <select id="lives" class="setting-select-hidden" style="display: none;">
+                  <option value="unlimited">Unlimited</option>
+                  <option value="100">100 Lives</option>
+                  <option value="30">30 Lives</option>
+                  <option value="10">10 Lives</option>
+                  <option value="5">5 Lives</option>
+                  <option value="1">1 Life</option>
+                </select>
+              </div>
             </label>
+            <span class="setting-description">Each wrong question deducts 1 life. Quiz ends when lives reach 0.</span>
+          </div>
+          <div class="setting-item">
+            <label class="setting-label">
+              <span class="setting-text">Time Multiplier:</span>
+              <div class="slider-container">
+                <input type="range" id="timeMultiplier" class="setting-slider" min="0.75" max="2" step="0.05" value="1" tabindex="0">
+                <span class="slider-value" id="timeMultiplierValue">1.00x</span>
+              </div>
+            </label>
+            <span class="setting-description">Adjusts timer countdown speed. Lower values = more time.</span>
           </div>
           <div class="setting-item">
             <label class="setting-label">
               <span class="setting-text">Fading Mode:</span>
-              <select id="fadingMode" class="setting-select">
-                <option value="off">Off</option>
-                <option value="2">2 seconds</option>
-                <option value="1">1 second</option>
-                <option value="0.5">0.5 seconds</option>
-              </select>
+              <div class="arrow-selector" data-setting="fadingMode">
+                <button class="arrow-btn arrow-left" aria-label="Previous option">◀</button>
+                <span class="selector-value" id="fadingModeValue">Off</span>
+                <button class="arrow-btn arrow-right" aria-label="Next option">▶</button>
+                <select id="fadingMode" class="setting-select-hidden" style="display: none;">
+                  <option value="off">Off</option>
+                  <option value="2">2 seconds</option>
+                  <option value="1">1 second</option>
+                  <option value="0.5">0.5 seconds</option>
+                </select>
+              </div>
             </label>
             <span class="setting-description">All question elements fade after the selected time</span>
           </div>
           <div class="setting-item">
             <label class="setting-label">
               <span class="setting-text">Start at Question:</span>
-              <select id="startQuestion" class="setting-select">
-                <option value="0">Question 1 (Start from beginning)</option>
-              </select>
+              <div class="arrow-selector" data-setting="startQuestion">
+                <button class="arrow-btn arrow-left" aria-label="Previous option">◀</button>
+                <span class="selector-value" id="startQuestionValue">Question 1 (Start from beginning)</span>
+                <button class="arrow-btn arrow-right" aria-label="Next option">▶</button>
+                <select id="startQuestion" class="setting-select-hidden" style="display: none;">
+                  <option value="0">Question 1 (Start from beginning)</option>
+                </select>
+              </div>
             </label>
             <span class="setting-description">Start the quiz at a specific question (multiples of 10)</span>
           </div>
@@ -198,9 +235,21 @@
     // Mode settings handler
     (function() {
       const modeSettings = document.getElementById("modeSettings");
-      const allPerfectMode = document.getElementById("allPerfectMode");
       const fadingMode = document.getElementById("fadingMode");
       const startQuestion = document.getElementById("startQuestion");
+      const timeMultiplier = document.getElementById("timeMultiplier");
+      const timeMultiplierValue = document.getElementById("timeMultiplierValue");
+      
+      // Update time multiplier display
+      if (timeMultiplier && timeMultiplierValue) {
+        timeMultiplier.addEventListener("input", () => {
+          const value = parseFloat(timeMultiplier.value);
+          timeMultiplierValue.textContent = value.toFixed(2) + "x";
+        });
+        // Initialize display
+        const initialValue = parseFloat(timeMultiplier.value);
+        timeMultiplierValue.textContent = initialValue.toFixed(2) + "x";
+      }
       
       // Mode question counts
       const modeQuestionCounts = {
@@ -215,22 +264,169 @@
       // Update start question options based on selected mode
       function updateStartQuestionOptions(mode) {
         const questionCount = modeQuestionCounts[mode] || 100;
-        startQuestion.innerHTML = '<option value="0">Question 1 (Start from beginning)</option>';
+        const startQuestionSelect = document.getElementById("startQuestion");
+        const startQuestionValue = document.getElementById("startQuestionValue");
         
-        // Add options for multiples of 10
-        for (let i = 10; i < questionCount; i += 10) {
-          const option = document.createElement("option");
-          option.value = i;
-          option.textContent = `Question ${i + 1}`;
-          startQuestion.appendChild(option);
+        if (startQuestionSelect) {
+          startQuestionSelect.innerHTML = '<option value="0">Question 1 (Start from beginning)</option>';
+          
+          // Add options for multiples of 10
+          for (let i = 10; i < questionCount; i += 10) {
+            const option = document.createElement("option");
+            option.value = i;
+            option.textContent = `Question ${i + 1}`;
+            startQuestionSelect.appendChild(option);
+          }
+          
+          // For race mode (master130), add specific questions 101, 111, 121
+          if (mode === "master130") {
+            const specialQuestions = [100, 110, 120]; // Indices for questions 101, 111, 121
+            specialQuestions.forEach(index => {
+              if (index < questionCount) {
+                const option = document.createElement("option");
+                option.value = index;
+                option.textContent = `Question ${index + 1}`;
+                startQuestionSelect.appendChild(option);
+              }
+            });
+          }
+          
+          // Update display value
+          if (startQuestionValue) {
+            const selectedOption = startQuestionSelect.options[startQuestionSelect.selectedIndex];
+            startQuestionValue.textContent = selectedOption.textContent;
+          }
+          
+          // Update modifier icons when start question changes
+          if (typeof updateModifierIcons === 'function') {
+            updateModifierIcons();
+          }
+        }
+      }
+      
+      // Initialize arrow selector values
+      function initializeArrowSelectors() {
+        const livesSelect = document.getElementById("lives");
+        const livesValue = document.getElementById("livesValue");
+        const fadingModeSelect = document.getElementById("fadingMode");
+        const fadingModeValue = document.getElementById("fadingModeValue");
+        const startQuestionSelect = document.getElementById("startQuestion");
+        const startQuestionValue = document.getElementById("startQuestionValue");
+        
+        if (livesSelect && livesValue) {
+          // Set default to "Unlimited" if not already set
+          if (livesSelect.selectedIndex === -1 || livesSelect.value === "") {
+            livesSelect.selectedIndex = 0; // Select "Unlimited"
+          }
+          const selectedOption = livesSelect.options[livesSelect.selectedIndex];
+          livesValue.textContent = selectedOption.textContent;
+        }
+        
+        if (fadingModeSelect && fadingModeValue) {
+          const selectedOption = fadingModeSelect.options[fadingModeSelect.selectedIndex];
+          fadingModeValue.textContent = selectedOption.textContent;
+        }
+        
+        if (startQuestionSelect && startQuestionValue) {
+          const selectedOption = startQuestionSelect.options[startQuestionSelect.selectedIndex];
+          startQuestionValue.textContent = selectedOption.textContent;
+        }
+      }
+      
+      // Cycle through select options
+      function cycleSelectOption(select, direction, valueElement) {
+        const options = Array.from(select.options);
+        const currentIndex = select.selectedIndex;
+        let newIndex;
+        
+        if (direction === 'right') {
+          newIndex = (currentIndex + 1) % options.length;
+        } else {
+          newIndex = (currentIndex - 1 + options.length) % options.length;
+        }
+        
+        select.selectedIndex = newIndex;
+        const selectedOption = select.options[newIndex];
+        
+        if (valueElement) {
+          valueElement.textContent = selectedOption.textContent;
+        }
+        
+        select.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+      
+      // Setup arrow button handlers
+      function setupArrowSelectors() {
+        // Lives selector
+        const livesSelector = document.querySelector('[data-setting="lives"]');
+        if (livesSelector) {
+          const leftBtn = livesSelector.querySelector('.arrow-left');
+          const rightBtn = livesSelector.querySelector('.arrow-right');
+          const livesSelect = document.getElementById("lives");
+          const livesValue = document.getElementById("livesValue");
+          
+          if (leftBtn) {
+            leftBtn.addEventListener("click", () => {
+              cycleSelectOption(livesSelect, 'left', livesValue);
+            });
+          }
+          if (rightBtn) {
+            rightBtn.addEventListener("click", () => {
+              cycleSelectOption(livesSelect, 'right', livesValue);
+            });
+          }
+        }
+        
+        // Fading Mode selector
+        const fadingModeSelector = document.querySelector('[data-setting="fadingMode"]');
+        if (fadingModeSelector) {
+          const leftBtn = fadingModeSelector.querySelector('.arrow-left');
+          const rightBtn = fadingModeSelector.querySelector('.arrow-right');
+          const fadingModeSelect = document.getElementById("fadingMode");
+          const fadingModeValue = document.getElementById("fadingModeValue");
+          
+          if (leftBtn) {
+            leftBtn.addEventListener("click", () => {
+              cycleSelectOption(fadingModeSelect, 'left', fadingModeValue);
+            });
+          }
+          if (rightBtn) {
+            rightBtn.addEventListener("click", () => {
+              cycleSelectOption(fadingModeSelect, 'right', fadingModeValue);
+            });
+          }
+        }
+        
+        // Start Question selector
+        const startQuestionSelector = document.querySelector('[data-setting="startQuestion"]');
+        if (startQuestionSelector) {
+          const leftBtn = startQuestionSelector.querySelector('.arrow-left');
+          const rightBtn = startQuestionSelector.querySelector('.arrow-right');
+          const startQuestionSelect = document.getElementById("startQuestion");
+          const startQuestionValue = document.getElementById("startQuestionValue");
+          
+          if (leftBtn) {
+            leftBtn.addEventListener("click", () => {
+              cycleSelectOption(startQuestionSelect, 'left', startQuestionValue);
+            });
+          }
+          if (rightBtn) {
+            rightBtn.addEventListener("click", () => {
+              cycleSelectOption(startQuestionSelect, 'right', startQuestionValue);
+            });
+          }
         }
       }
       
       // Show/hide settings when mode is selected
       function handleModeSelection(mode) {
-        if (mode) {
+        if (mode && mode !== "secret") {
           modeSettings.style.display = "block";
           updateStartQuestionOptions(mode);
+          // Re-initialize arrow selectors after mode change
+          setTimeout(() => {
+            initializeArrowSelectors();
+          }, 0);
         } else {
           modeSettings.style.display = "none";
         }
@@ -244,8 +440,204 @@
         });
       });
       
+      // Function to update modifier icons on all mode cards
+      function updateModifierIcons() {
+        const livesValue = document.getElementById("lives")?.value || "unlimited";
+        const timeMultiplier = parseFloat(document.getElementById("timeMultiplier")?.value || "1");
+        const fadingMode = document.getElementById("fadingMode")?.value || "off";
+        const startQuestion = parseInt(document.getElementById("startQuestion")?.value || "0");
+        
+        // Get all mode modifier containers
+        const modifierContainers = document.querySelectorAll(".mode-modifiers");
+        
+        modifierContainers.forEach(container => {
+          const mode = container.getAttribute("data-mode");
+          // Only show modifiers for modes that support them
+          if (["easy", "normal", "master", "master130", "hell"].includes(mode)) {
+            container.innerHTML = "";
+            
+            // Lives icon (only show if not unlimited)
+            if (livesValue !== "unlimited") {
+              const livesIcon = document.createElement("div");
+              livesIcon.className = "modifier-icon";
+              livesIcon.title = `${livesValue} Lives`;
+              livesIcon.textContent = livesValue === "100" ? "100" : livesValue;
+              container.appendChild(livesIcon);
+            }
+            
+            // Start question icon (only if not starting from beginning)
+            if (startQuestion > 0) {
+              const startIcon = document.createElement("div");
+              startIcon.className = "modifier-icon";
+              startIcon.title = `Start at Question ${startQuestion + 1}`;
+              startIcon.textContent = `Q${startQuestion + 1}`;
+              container.appendChild(startIcon);
+            }
+            
+            // Time multiplier icon (only if not 1x)
+            if (timeMultiplier !== 1) {
+              const timeIcon = document.createElement("div");
+              timeIcon.className = "modifier-icon";
+              timeIcon.title = `Time Multiplier: ${timeMultiplier.toFixed(2)}x`;
+              timeIcon.textContent = `${timeMultiplier.toFixed(2)}x`;
+              container.appendChild(timeIcon);
+            }
+            
+            // Fading mode icon (only if enabled)
+            if (fadingMode !== "off") {
+              const fadeIcon = document.createElement("div");
+              fadeIcon.className = "modifier-icon";
+              fadeIcon.title = `Fading Mode: ${fadingMode}s`;
+              fadeIcon.textContent = `F${fadingMode}s`;
+              container.appendChild(fadeIcon);
+            }
+          }
+        });
+      }
+      
       // Initialize with default mode (normal)
       handleModeSelection("normal");
+      
+      // Initialize arrow selectors
+      initializeArrowSelectors();
+      setupArrowSelectors();
+      
+      // Update modifier icons initially
+      updateModifierIcons();
+      
+      // Update modifier icons whenever modifiers change
+      const livesSelect = document.getElementById("lives");
+      const timeMultiplierSlider = document.getElementById("timeMultiplier");
+      const fadingModeSelect = document.getElementById("fadingMode");
+      const startQuestionSelect = document.getElementById("startQuestion");
+      
+      if (livesSelect) {
+        livesSelect.addEventListener("change", updateModifierIcons);
+      }
+      if (timeMultiplierSlider) {
+        timeMultiplierSlider.addEventListener("input", updateModifierIcons);
+      }
+      if (fadingModeSelect) {
+        fadingModeSelect.addEventListener("change", updateModifierIcons);
+      }
+      if (startQuestionSelect) {
+        startQuestionSelect.addEventListener("change", updateModifierIcons);
+      }
+      
+      // Also update when arrow selectors change (they update the hidden selects)
+      document.querySelectorAll(".arrow-selector").forEach(selector => {
+        const leftBtn = selector.querySelector(".arrow-left");
+        const rightBtn = selector.querySelector(".arrow-right");
+        if (leftBtn) {
+          leftBtn.addEventListener("click", () => {
+            setTimeout(updateModifierIcons, 0);
+          });
+        }
+        if (rightBtn) {
+          rightBtn.addEventListener("click", () => {
+            setTimeout(updateModifierIcons, 0);
+          });
+        }
+      });
+      
+      // Collapse/expand functionality
+      const modeSettingsToggle = document.getElementById("modeSettingsToggle");
+      const modeSettingsTitle = document.querySelector(".mode-settings-title");
+      const settingsContainer = document.getElementById("settingsContainer");
+      
+      function toggleModeSettings() {
+        modeSettings.classList.toggle("collapsed");
+      }
+      
+      if (modeSettingsToggle) {
+        modeSettingsToggle.addEventListener("click", (e) => {
+          e.stopPropagation();
+          toggleModeSettings();
+        });
+      }
+      
+      if (modeSettingsTitle) {
+        modeSettingsTitle.addEventListener("click", (e) => {
+          // Only toggle if clicking on the title itself, not the button
+          if (e.target === modeSettingsTitle || e.target === modeSettingsTitle.querySelector("span")) {
+            toggleModeSettings();
+          }
+        });
+      }
+      
+      // Arrow key navigation for modifiers (keyboard support for arrow selectors)
+      const livesSelector = document.querySelector('[data-setting="lives"]');
+      const fadingModeSelector = document.querySelector('[data-setting="fadingMode"]');
+      const startQuestionSelector = document.querySelector('[data-setting="startQuestion"]');
+      
+      // Make arrow selectors focusable and keyboard navigable
+      if (livesSelector) {
+        livesSelector.setAttribute("tabindex", "0");
+        const livesSelect = document.getElementById("lives");
+        const livesValue = document.getElementById("livesValue");
+        livesSelector.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            cycleSelectOption(livesSelect, 'left', livesValue);
+          } else if (e.key === "ArrowRight") {
+            e.preventDefault();
+            cycleSelectOption(livesSelect, 'right', livesValue);
+          }
+        });
+      }
+      
+      if (fadingModeSelector) {
+        fadingModeSelector.setAttribute("tabindex", "0");
+        const fadingModeSelect = document.getElementById("fadingMode");
+        const fadingModeValue = document.getElementById("fadingModeValue");
+        fadingModeSelector.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            cycleSelectOption(fadingModeSelect, 'left', fadingModeValue);
+          } else if (e.key === "ArrowRight") {
+            e.preventDefault();
+            cycleSelectOption(fadingModeSelect, 'right', fadingModeValue);
+          }
+        });
+      }
+      
+      if (startQuestionSelector) {
+        startQuestionSelector.setAttribute("tabindex", "0");
+        const startQuestionSelect = document.getElementById("startQuestion");
+        const startQuestionValue = document.getElementById("startQuestionValue");
+        startQuestionSelector.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            cycleSelectOption(startQuestionSelect, 'left', startQuestionValue);
+          } else if (e.key === "ArrowRight") {
+            e.preventDefault();
+            cycleSelectOption(startQuestionSelect, 'right', startQuestionValue);
+          }
+        });
+      }
+      
+      // Time Multiplier slider navigation
+      if (timeMultiplierSlider) {
+        timeMultiplierSlider.addEventListener("keydown", (e) => {
+          if (e.key === "ArrowLeft") {
+            e.preventDefault();
+            const currentValue = parseFloat(timeMultiplierSlider.value);
+            const step = parseFloat(timeMultiplierSlider.step);
+            const min = parseFloat(timeMultiplierSlider.min);
+            const newValue = Math.max(min, currentValue - step);
+            timeMultiplierSlider.value = newValue;
+            timeMultiplierSlider.dispatchEvent(new Event('input', { bubbles: true }));
+          } else if (e.key === "ArrowRight") {
+            e.preventDefault();
+            const currentValue = parseFloat(timeMultiplierSlider.value);
+            const step = parseFloat(timeMultiplierSlider.step);
+            const max = parseFloat(timeMultiplierSlider.max);
+            const newValue = Math.min(max, currentValue + step);
+            timeMultiplierSlider.value = newValue;
+            timeMultiplierSlider.dispatchEvent(new Event('input', { bubbles: true }));
+          }
+        });
+      }
     })();
   </script>
   <script type="module">

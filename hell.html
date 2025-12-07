@@ -1,112 +1,112 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <title>SUFFERING IS ETERNAL</title>
     <link rel="stylesheet" href="index.css" />
     <style>
-      /* Embed ModernDOS font */
-      @font-face {
+        /* Embed ModernDOS font */
+        @font-face {
         font-family: "ModernDOS";
         src: url("ModernDOS8x16.ttf") format("truetype");
-        font-weight: normal;
-        font-style: normal;
-      }
-
-      /* Use ModernDOS font */
-      .modern-dos-font {
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        /* Use ModernDOS font */
+        .modern-dos-font {
         font-family: "ModernDOS", "Courier New", Courier, monospace !important;
-      }
-
-      /* Apply ModernDOS to questions 100+ */
-      .question-modern-dos {
+        }
+        
+        /* Apply ModernDOS to questions 100+ */
+        .question-modern-dos {
         font-family: "ModernDOS", "Courier New", Courier, monospace !important;
-      }
+        }
+        
+        /* Green text for questions 110+ */
+        .question-green {
+            color: #00ff00 !important;
+        }
+        
+        /* Remove background for questions 120+ */
+        .no-background {
+            background: none !important;
+            background-color: #000000 !important;
+        }
+        
+        /* Simplistic theme for questions 130+ */
+        .simplistic-theme {
+            background: #000000 !important;
+            color: #00ff00 !important;
+        }
+        
+        .simplistic-theme .container {
+            background: transparent !important;
+            border: 1px solid #00ff00 !important;
+        }
+        
+        .simplistic-theme .container button {
+            background: #000000 !important;
+            color: #00ff00 !important;
+            border: 1px solid #00ff00 !important;
+        }
+        
+        .simplistic-theme a {
+            color: #00ff00 !important;
+        }
+        
+        body {
+            background: url("hell1.jpg") no-repeat center center fixed;
+            background-size: cover;
+        }
 
-      /* Green text for questions 110+ */
-      .question-green {
-        color: #00ff00 !important;
-      }
+        .container button {
+            width: 100%;
+            padding: 10px;
+            margin-top: 10px;
+            background-color: #ffb9b9;
+            color: rgb(104, 104, 104);
+            border: none;
+            border-radius: 5px;
+            font-size: 1.2em;
+            cursor: pointer;
+        }
 
-      /* Remove background for questions 120+ */
-      .no-background {
-        background: none !important;
-        background-color: #000000 !important;
-      }
-
-      /* Simplistic theme for questions 130+ */
-      .simplistic-theme {
-        background: #000000 !important;
-        color: #00ff00 !important;
-      }
-
-      .simplistic-theme .container {
-        background: transparent !important;
-        border: 1px solid #00ff00 !important;
-      }
-
-      .simplistic-theme .container button {
-        background: #000000 !important;
-        color: #00ff00 !important;
-        border: 1px solid #00ff00 !important;
-      }
-
-      .simplistic-theme a {
-        color: #00ff00 !important;
-      }
-
-      body {
-        background: url("hell1.jpg") no-repeat center center fixed;
-        background-size: cover;
-      }
-
-      .container button {
-        width: 100%;
-        padding: 10px;
-        margin-top: 10px;
-        background-color: #ffb9b9;
-        color: rgb(104, 104, 104);
-        border: none;
-        border-radius: 5px;
-        font-size: 1.2em;
-        cursor: pointer;
-      }
-
-      body::before {
-        content: "";
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0);
-        z-index: -1;
-      }
-      a {
-        text-decoration: none;
-        color: #ffbaba;
-        font-size: x-large;
-      }
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0);
+            z-index: -1;
+        }
+        a {
+            text-decoration: none;
+            color: #ffbaba;
+            font-size: x-large;
+        }
     </style>
-  </head>
+</head>
 
-  <body>
+<body>
     <div class="status">
-      <a login href="signin.html">Login</a>
-      <a signup href="signup.html">Signup</a>
-      <a logout class="hide" href="index.html">Log out</a>
+        <a login href="signin.html">Login</a>
+        <a signup href="signup.html">Signup</a>
+        <a logout class="hide" href="index.html">Log out</a>
       <a giveup href="index.html" style="display: none;">Give up</a>
       <div class="player-info hide" id="playerInfo">
         <div class="player-info-left">
           <span class="name"></span>
           <span class="player-level" id="playerLevel"></span>
-        </div>
+    </div>
         <div class="player-avatar hide" id="playerAvatar">
           <img id="playerAvatarImg" src="" alt="Avatar" />
           <div class="player-avatar-placeholder">👤</div>
-        </div>
+      </div>
       </div>
     </div>
     <div style="display: flex; align-items: flex-start; gap: 20px">
@@ -143,12 +143,16 @@
         <button onclick="checkAns()" id="btn">SUBMIT</button>
         <div class="correctanswer"></div>
         <div class="jum" style="display: flex; justify-content: space-between">
-          <div id="score"></div>
+            <div id="score"></div>
           <div
             id="currentgrade"
             style="font-size: x-large; color: #00ff00; font-weight: bold"
           ></div>
-          <div id="timeelapsed"></div>
+          <div id="livesDisplay" style="font-size: x-large; color: #ff6b6b; font-weight: bold;">❤️ <span id="livesCount"></span></div>
+          <div
+            id="timeelapsed"
+          ></div>
+            <div id="timeelapsed"></div>
         </div>
         <div class="timerifinvalid"></div>
         <div
@@ -197,12 +201,19 @@
     <script type="module" src="./IR.js"></script>
     <script type="module" src="./firebase.js"></script>
     <script type="module" src="./hm.js"></script>
-  </body>
-  <script type="module">
-    import { getAuth, getFirestore, collection, addDoc } from "./firebase.js";
-    const auth = getAuth();
-
-    // Detect mobile device
+</body>
+<script type="module">
+  import { getAuth, getFirestore, collection, addDoc } from "./firebase.js";
+  const auth = getAuth();
+  
+  // Helper function to get audio volume from settings (0-1 range)
+  function getAudioVolume() {
+    const savedVolume = localStorage.getItem("audioVolume");
+    const volume = savedVolume !== null ? parseInt(savedVolume) : 100;
+    return volume / 100; // Convert 0-100 to 0-1 range
+  }
+  
+  // Detect mobile device
     function isMobileDevice() {
       return (
         /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
@@ -211,10 +222,10 @@
         (window.matchMedia && window.matchMedia("(max-width: 768px)").matches)
       );
     }
-
+    
     // Track input type used during the quiz
     let inputType = null; // 'controller', 'keyboard', or 'mobile'
-
+    
     // Detect initial input type
     const isMobile = isMobileDevice();
     if (isMobile) {
@@ -222,7 +233,7 @@
     }
 
     let allQuestions = [];
-
+    
     // Gamepad support
     let gamepadConnected = false;
     
@@ -414,7 +425,7 @@
                 window.answerTimerId = setInterval(() => {
                     if (isPaused) return;
                     if (timeToAnswer > 0) {
-                        timeToAnswer -= 0.01;
+                        timeToAnswer -= 0.01 * timeMultiplier;
                         timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
                     } else {
                         clearInterval(window.answerTimerId);
@@ -446,18 +457,18 @@
     let gamepadPollInterval = null;
     let lastDpadState = { up: false, down: false, left: false, right: false };
     let answerOptions = []; // Store current question's answer options for controller support
-
+    
     // Add controller and keyboard indicators to submit button (hide on mobile)
     const submitBtn = document.querySelector("#btn");
     let controllerIndicator = null;
     let keyboardSubmitIndicator = null;
     if (submitBtn && !isMobile) {
-      controllerIndicator = document.createElement("img");
-      controllerIndicator.className = "controller-submit-indicator";
-      controllerIndicator.src = "btns/cross.png";
-      controllerIndicator.alt = "A/X Button";
-      controllerIndicator.title = "Press A or X button to submit";
-      controllerIndicator.style.cssText = `
+        controllerIndicator = document.createElement("img");
+        controllerIndicator.className = "controller-submit-indicator";
+        controllerIndicator.src = "btns/cross.png";
+        controllerIndicator.alt = "A/X Button";
+        controllerIndicator.title = "Press A or X button to submit";
+        controllerIndicator.style.cssText = `
             display: inline-block;
             margin-left: 8px;
             width: 28px;
@@ -465,13 +476,13 @@
             vertical-align: middle;
             object-fit: contain;
         `;
-      submitBtn.appendChild(controllerIndicator);
-
-      keyboardSubmitIndicator = document.createElement("span");
-      keyboardSubmitIndicator.className = "keyboard-submit-indicator";
-      keyboardSubmitIndicator.textContent = "Space/Enter";
-      keyboardSubmitIndicator.title = "Press Space or Enter to submit";
-      keyboardSubmitIndicator.style.cssText = `
+        submitBtn.appendChild(controllerIndicator);
+        
+        keyboardSubmitIndicator = document.createElement("span");
+        keyboardSubmitIndicator.className = "keyboard-submit-indicator";
+        keyboardSubmitIndicator.textContent = "Space/Enter";
+        keyboardSubmitIndicator.title = "Press Space or Enter to submit";
+        keyboardSubmitIndicator.style.cssText = `
             display: inline-block;
             margin-left: 8px;
             padding: 4px 8px;
@@ -483,20 +494,20 @@
             color: white;
             vertical-align: middle;
         `;
-      submitBtn.appendChild(keyboardSubmitIndicator);
+        submitBtn.appendChild(keyboardSubmitIndicator);
     }
-
+    
     // Keyboard support
     function initKeyboard() {
-      document.addEventListener("keydown", (e) => {
-        // Track keyboard input type
+        document.addEventListener("keydown", (e) => {
+            // Track keyboard input type
         if (!inputType || inputType === "mobile") {
           inputType = "keyboard";
-        }
-        
+            }
+            
         // Pause with Escape key
         if (e.key === "Escape") {
-          const evalDiv = document.querySelector(".evalscreen");
+            const evalDiv = document.querySelector(".evalscreen");
           if (!evalDiv || evalDiv.style.display === "none" || evalDiv.style.display === "") {
             togglePause();
             e.preventDefault();
@@ -523,63 +534,63 @@
           evalDiv.style.display !== "none" &&
           evalDiv.style.display !== ""
         ) {
-          return;
-        }
-        if (!allQuestions || allQuestions.length === 0) {
-          return;
-        }
+                return;
+            }
+            if (!allQuestions || allQuestions.length === 0) {
+                return;
+            }
         
         // Don't process other input if paused
         if (isPaused) {
           return;
         }
         
-        if (e.key >= "1" && e.key <= "4") {
-          const index = parseInt(e.key) - 1;
-          if (answerOptions && answerOptions[index]) {
-            answerOptions[index].checked = true;
-            e.preventDefault();
-          }
-        }
-        if (e.key === " " || e.key === "Enter") {
-          if (submitBtn && submitBtn.style.display !== "none") {
-            checkAns();
-            e.preventDefault();
-          }
-        }
-      });
+            if (e.key >= "1" && e.key <= "4") {
+                const index = parseInt(e.key) - 1;
+                if (answerOptions && answerOptions[index]) {
+                    answerOptions[index].checked = true;
+                    e.preventDefault();
+                }
+            }
+            if (e.key === " " || e.key === "Enter") {
+                if (submitBtn && submitBtn.style.display !== "none") {
+                    checkAns();
+                    e.preventDefault();
+                }
+            }
+        });
     }
     initKeyboard();
-
+    
     document.querySelector("#btn").addEventListener("click", checkAns);
     const ques = document.getElementById("ques");
 
     async function fetchQuestions() {
-      try {
-        // OpenTDB has a 50 question limit per request, so make multiple requests
-        const totalQuestions = 200;
-        const questionsPerRequest = 50;
-        const numRequests = Math.ceil(totalQuestions / questionsPerRequest);
-
-        allQuestions.length = 0; // Clear any previous questions
-        let failedRequests = 0;
-
-        for (let i = 0; i < numRequests; i++) {
+        try {
+            // OpenTDB has a 50 question limit per request, so make multiple requests
+            const totalQuestions = 200;
+            const questionsPerRequest = 50;
+            const numRequests = Math.ceil(totalQuestions / questionsPerRequest);
+            
+            allQuestions.length = 0; // Clear any previous questions
+            let failedRequests = 0;
+            
+            for (let i = 0; i < numRequests; i++) {
           // Update progress
           const progress = Math.floor(((i + 1) / numRequests) * 100);
           ques.innerHTML = `<h5>Please Wait!! Loading Questions... (${progress}%)<br>DO NOT PANIC IF IT LOOKS STUCK</h5>`;
           
-          // Add delay between API calls to prevent rate limiting (except before first request)
-          if (i > 0) {
+                // Add delay between API calls to prevent rate limiting (except before first request)
+                if (i > 0) {
             await new Promise((resolve) => setTimeout(resolve, 5000)); // 4 second delay
-          }
-
+                }
+                
           const amount =
             i === numRequests - 1
               ? totalQuestions - i * questionsPerRequest
-              : questionsPerRequest;
-
-          try {
+                    : questionsPerRequest;
+                
+                try {
             const response = await fetch(
               `https://opentdb.com/api.php?amount=${amount}&difficulty=hard&type=multiple`
             );
@@ -587,49 +598,55 @@
               console.warn(
                 `Request ${i + 1} failed with status ${response.status}`
               );
-              failedRequests++;
-              continue;
+                        failedRequests++;
+                        continue;
             }
             const data = await response.json();
-            if (data.results && data.results.length > 0) {
-              allQuestions.push(...data.results);
-            } else {
-              console.warn(`Request ${i + 1} returned no questions`);
-              failedRequests++;
+                    if (data.results && data.results.length > 0) {
+                        allQuestions.push(...data.results);
+                    } else {
+                        console.warn(`Request ${i + 1} returned no questions`);
+                        failedRequests++;
+                    }
+                } catch (requestError) {
+                    console.error(`Error in request ${i + 1}:`, requestError);
+                    failedRequests++;
+                }
             }
-          } catch (requestError) {
-            console.error(`Error in request ${i + 1}:`, requestError);
-            failedRequests++;
-          }
-        }
-
-        // Validate we got questions
-        if (allQuestions.length === 0) {
-          throw new Error("Failed to fetch any questions. Please try again.");
-        }
-
-        // Warn if we got fewer questions than expected
-        if (allQuestions.length < totalQuestions) {
+            
+            // Validate we got questions
+            if (allQuestions.length === 0) {
+                throw new Error("Failed to fetch any questions. Please try again.");
+            }
+            
+            // Warn if we got fewer questions than expected
+            if (allQuestions.length < totalQuestions) {
           console.warn(
             `Warning: Expected ${totalQuestions} questions but got ${allQuestions.length}. Continuing with available questions.`
           );
-        }
-      } catch (error) {
-        console.error("Error fetching questions:", error);
+            }
+        } catch (error) {
+            console.error("Error fetching questions:", error);
         document.querySelector("#btn").innerHTML = "Refresh";
         document.querySelector("#btn").onclick = () => {
-          location.reload();
-        };
+                location.reload();
+            };
         ques.innerHTML = `<h5 style='color: red'>${
           error.message || error
         }</h5>`;
-      }
+        }
     }
     // Read URL parameters for mode settings
     const urlParams = new URLSearchParams(window.location.search);
-    const allPerfectMode = urlParams.get("allPerfect") === "1";
+    const livesParam = urlParams.get("lives") || "unlimited";
+    const lives = livesParam === "unlimited" ? -1 : parseInt(livesParam);
+    const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1");
     const fadingMode = urlParams.get("fading");
     const startQuestionParam = parseInt(urlParams.get("start") || "0");
+    
+    let currentLives = lives; // Track current lives (-1 means unlimited)
+    const livesEnabled = lives !== -1; // Check if lives system is enabled
+    let currentQuestionAnswered = false; // Track if current question has been answered to prevent multiple deductions
     
     let currQuestion = startQuestionParam; // Start at specified question
     
@@ -650,21 +667,21 @@
 
     ques.innerHTML = `<h5>Please Wait!! Loading Questions... DO NOT PANIC IF IT LOOKS STUCK</h5>`;
     document.querySelector("#btn").style.display = "none";
-
+    
     // Handle give up button
     const giveUpBtn = document.querySelector("[giveup]");
     if (giveUpBtn) {
-      giveUpBtn.addEventListener("click", (e) => {
-        e.preventDefault();
+        giveUpBtn.addEventListener("click", (e) => {
+            e.preventDefault();
         if (
           confirm(
             "Are you sure you want to give up? Your current progress will be saved."
           )
         ) {
-          quizAbandoned = true; // Mark quiz as abandoned
-          evalScreen();
-        }
-      });
+                quizAbandoned = true; // Mark quiz as abandoned
+                evalScreen();
+            }
+        });
     }
 
     async function startQuiz() {
@@ -675,184 +692,184 @@
         pausedAnswerTimer = false;
         pausedAnswerTime = 0;
         selectedPauseButton = 0;
-      await fetchQuestions();
-      if (allQuestions.length === 0) {
-        ques.innerHTML = `<h5 style='color: red'>Unable to fetch data, Please try again!!</h5>`;
+        await fetchQuestions();
+        if (allQuestions.length === 0) {
+            ques.innerHTML = `<h5 style='color: red'>Unable to fetch data, Please try again!!</h5>`;
         document.querySelector("#btn").style.display = "block";
         document.querySelector("#btn").innerHTML = "Refresh";
         document.querySelector("#btn").onclick = () => {
-          location.reload();
-        };
-      } else {
-        loadQues();
-        stopWatch();
+                location.reload();
+            };
+        } else {
+            loadQues();
+            stopWatch();
         
         // Show give up button after questions are loaded
         const giveUpBtn = document.querySelector("[giveup]");
         if (giveUpBtn) {
           giveUpBtn.style.display = "block";
         }
-      }
+        }
     }
     startQuiz();
-
+    
     // Add window resize listener to realign grade display
     let resizeTimeout;
     window.addEventListener("resize", () => {
-      clearTimeout(resizeTimeout);
-      resizeTimeout = setTimeout(() => {
-        alignGradeDisplay();
-      }, 100);
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+            alignGradeDisplay();
+        }, 100);
     });
-
+    
     // Update indicator visibility based on controller connection (hide on mobile)
     function updateIndicatorVisibility() {
-      if (isMobile) return; // Don't show indicators on mobile
-
+        if (isMobile) return; // Don't show indicators on mobile
+        
       const controllerIndicators = document.querySelectorAll(
         ".controller-indicator, .controller-submit-indicator"
       );
       const keyboardIndicators = document.querySelectorAll(
         ".keyboard-indicator, .keyboard-submit-indicator"
       );
-
-      if (gamepadConnected) {
+        
+        if (gamepadConnected) {
         controllerIndicators.forEach((indicator) => {
-          indicator.style.display = "inline-block";
-        });
+                indicator.style.display = "inline-block";
+            });
         keyboardIndicators.forEach((indicator) => {
-          indicator.style.display = "none";
-        });
-      } else {
+                indicator.style.display = "none";
+            });
+        } else {
         controllerIndicators.forEach((indicator) => {
-          indicator.style.display = "none";
-        });
+                indicator.style.display = "none";
+            });
         keyboardIndicators.forEach((indicator) => {
-          indicator.style.display = "inline-block";
-        });
-      }
+                indicator.style.display = "inline-block";
+            });
+        }
     }
 
     // Gamepad support functions
     function initGamepad() {
-      window.addEventListener("gamepadconnected", (e) => {
-        gamepadConnected = true;
+        window.addEventListener("gamepadconnected", (e) => {
+            gamepadConnected = true;
         if (!inputType || inputType === "keyboard") {
           inputType = "controller";
-        }
-        startGamepadPolling();
-        updateIndicatorVisibility();
-      });
-
-      window.addEventListener("gamepaddisconnected", (e) => {
-        gamepadConnected = false;
-        stopGamepadPolling();
-        updateIndicatorVisibility();
-      });
-
-      const gamepads = navigator.getGamepads();
-      for (let i = 0; i < gamepads.length; i++) {
-        if (gamepads[i]) {
-          gamepadConnected = true;
-          if (!inputType || inputType === "keyboard") {
-            inputType = "controller";
-          }
-          startGamepadPolling();
-          break;
-        }
-      }
-      updateIndicatorVisibility();
-    }
-
-    function startGamepadPolling() {
-      if (gamepadPollInterval) return;
-      gamepadPollInterval = setInterval(() => {
+            }
+            startGamepadPolling();
+            updateIndicatorVisibility();
+        });
+        
+        window.addEventListener("gamepaddisconnected", (e) => {
+            gamepadConnected = false;
+            stopGamepadPolling();
+            updateIndicatorVisibility();
+        });
+        
         const gamepads = navigator.getGamepads();
         for (let i = 0; i < gamepads.length; i++) {
-          const gamepad = gamepads[i];
-          if (gamepad) {
-            handleGamepadInput(gamepad);
-            break;
-          }
+            if (gamepads[i]) {
+                gamepadConnected = true;
+          if (!inputType || inputType === "keyboard") {
+            inputType = "controller";
+                }
+                startGamepadPolling();
+                break;
+            }
         }
-      }, 50);
+        updateIndicatorVisibility();
     }
-
+    
+    function startGamepadPolling() {
+        if (gamepadPollInterval) return;
+        gamepadPollInterval = setInterval(() => {
+            const gamepads = navigator.getGamepads();
+            for (let i = 0; i < gamepads.length; i++) {
+                const gamepad = gamepads[i];
+                if (gamepad) {
+                    handleGamepadInput(gamepad);
+                    break;
+                }
+            }
+        }, 50);
+    }
+    
     function stopGamepadPolling() {
-      if (gamepadPollInterval) {
-        clearInterval(gamepadPollInterval);
-        gamepadPollInterval = null;
-      }
+        if (gamepadPollInterval) {
+            clearInterval(gamepadPollInterval);
+            gamepadPollInterval = null;
+        }
     }
-
+    
     function handleGamepadInput(gamepad) {
       let dpadUp = false,
         dpadDown = false,
         dpadLeft = false,
         dpadRight = false;
-
-      if (gamepad.buttons[12]) dpadUp = gamepad.buttons[12].pressed;
-      if (gamepad.buttons[13]) dpadDown = gamepad.buttons[13].pressed;
-      if (gamepad.buttons[14]) dpadLeft = gamepad.buttons[14].pressed;
-      if (gamepad.buttons[15]) dpadRight = gamepad.buttons[15].pressed;
-
-      if (gamepad.axes.length >= 10) {
-        const hatX = gamepad.axes[9];
-        const hatY = gamepad.axes[10];
-        if (hatY < -0.5) dpadUp = true;
-        if (hatY > 0.5) dpadDown = true;
-        if (hatX < -0.5) dpadLeft = true;
-        if (hatX > 0.5) dpadRight = true;
-      }
-
-      if (dpadUp && !lastDpadState.up && answerOptions.length >= 1) {
-        answerOptions[0].checked = true;
-        lastDpadState.up = true;
-      } else if (!dpadUp) {
-        lastDpadState.up = false;
-      }
-
-      if (dpadRight && !lastDpadState.right && answerOptions.length >= 2) {
-        answerOptions[1].checked = true;
-        lastDpadState.right = true;
-      } else if (!dpadRight) {
-        lastDpadState.right = false;
-      }
-
-      if (dpadDown && !lastDpadState.down && answerOptions.length >= 3) {
-        answerOptions[2].checked = true;
-        lastDpadState.down = true;
-      } else if (!dpadDown) {
-        lastDpadState.down = false;
-      }
-
-      if (dpadLeft && !lastDpadState.left && answerOptions.length >= 4) {
-        answerOptions[3].checked = true;
-        lastDpadState.left = true;
-      } else if (!dpadLeft) {
-        lastDpadState.left = false;
-      }
-
+        
+        if (gamepad.buttons[12]) dpadUp = gamepad.buttons[12].pressed;
+        if (gamepad.buttons[13]) dpadDown = gamepad.buttons[13].pressed;
+        if (gamepad.buttons[14]) dpadLeft = gamepad.buttons[14].pressed;
+        if (gamepad.buttons[15]) dpadRight = gamepad.buttons[15].pressed;
+        
+        if (gamepad.axes.length >= 10) {
+            const hatX = gamepad.axes[9];
+            const hatY = gamepad.axes[10];
+            if (hatY < -0.5) dpadUp = true;
+            if (hatY > 0.5) dpadDown = true;
+            if (hatX < -0.5) dpadLeft = true;
+            if (hatX > 0.5) dpadRight = true;
+        }
+        
+        if (dpadUp && !lastDpadState.up && answerOptions.length >= 1) {
+            answerOptions[0].checked = true;
+            lastDpadState.up = true;
+        } else if (!dpadUp) {
+            lastDpadState.up = false;
+        }
+        
+        if (dpadRight && !lastDpadState.right && answerOptions.length >= 2) {
+            answerOptions[1].checked = true;
+            lastDpadState.right = true;
+        } else if (!dpadRight) {
+            lastDpadState.right = false;
+        }
+        
+        if (dpadDown && !lastDpadState.down && answerOptions.length >= 3) {
+            answerOptions[2].checked = true;
+            lastDpadState.down = true;
+        } else if (!dpadDown) {
+            lastDpadState.down = false;
+        }
+        
+        if (dpadLeft && !lastDpadState.left && answerOptions.length >= 4) {
+            answerOptions[3].checked = true;
+            lastDpadState.left = true;
+        } else if (!dpadLeft) {
+            lastDpadState.left = false;
+        }
+        
       if (
         (gamepad.buttons[0] && gamepad.buttons[0].pressed) ||
         (gamepad.buttons[2] && gamepad.buttons[2].pressed)
       ) {
-        if (!window.gamepadSubmitPressed) {
-          window.gamepadSubmitPressed = true;
-          checkAns();
+            if (!window.gamepadSubmitPressed) {
+                window.gamepadSubmitPressed = true;
+                checkAns();
+            }
+        } else {
+            window.gamepadSubmitPressed = false;
         }
-      } else {
-        window.gamepadSubmitPressed = false;
-      }
     }
-
+    
     initGamepad();
-
+    
     // BGM for hell mode (multiple stages like master)
     let bgm3, bgm4, bgm5, bgm6;
     let currentBGM = null;
     let currentStage = -1;
-
+    
     function playBGM() {
       // Check if music is disabled
       if (localStorage.getItem("musicEnabled") === "false") {
@@ -865,145 +882,152 @@
         return;
       }
 
-      if (!bgm3) {
-        bgm3 = new Audio("bgm/stage4.mp3");
-        bgm4 = new Audio("bgm/stage5.mp3");
-        bgm5 = new Audio("bgm/stage3.mp3");
-        bgm6 = new Audio("bgm/stage6.mp3");
-        bgm4.loop = true;
-        bgm5.loop = true;
-        bgm3.loop = true;
-        bgm6.loop = true;
-      }
-
-      // Stop BGM on final question of each stage (for 200 questions: 49, 99, 149, 199)
+        if (!bgm3) {
+            const volume = getAudioVolume();
+            bgm3 = new Audio("bgm/stage4.mp3");
+            bgm4 = new Audio("bgm/stage5.mp3");
+            bgm5 = new Audio("bgm/stage3.mp3");
+            bgm6 = new Audio("bgm/stage6.mp3");
+            bgm3.loop = true;
+            bgm3.volume = volume;
+            bgm4.loop = true;
+            bgm4.volume = volume;
+            bgm5.loop = true;
+            bgm5.volume = volume;
+            bgm6.loop = true;
+            bgm6.volume = volume;
+        }
+        
+        // Stop BGM on final question of each stage (for 200 questions: 49, 99, 149, 199)
       if (
         currQuestion === 49 ||
         currQuestion === 99 ||
         currQuestion === 149 ||
         currQuestion === 199
       ) {
-        if (currentBGM) {
-          currentBGM.pause();
-          currentBGM.currentTime = 0;
-          currentBGM = null;
-          currentStage = -1;
+            if (currentBGM) {
+                currentBGM.pause();
+                currentBGM.currentTime = 0;
+                currentBGM = null;
+                currentStage = -1;
+            }
+            return;
         }
-        return;
-      }
-
-      let targetStage, targetBGM;
-      if (currQuestion < 50) {
-        targetStage = 1;
-        targetBGM = bgm3;
-      } else if (currQuestion < 100) {
-        targetStage = 2;
-        targetBGM = bgm4;
-      } else if (currQuestion < 130) {
-        targetStage = 3;
-        targetBGM = bgm5;
-      } else {
-        targetStage = 4;
-        targetBGM = bgm6;
-      }
-
-      if (currentStage !== targetStage) {
-        if (currentBGM) {
-          currentBGM.pause();
-          currentBGM.currentTime = 0;
+        
+        let targetStage, targetBGM;
+        if (currQuestion < 50) {
+            targetStage = 1;
+            targetBGM = bgm3;
+        } else if (currQuestion < 100) {
+            targetStage = 2;
+            targetBGM = bgm4;
+        } else if (currQuestion < 130) {
+            targetStage = 3;
+            targetBGM = bgm5;
+        } else {
+            targetStage = 4;
+            targetBGM = bgm6;
         }
-        currentBGM = targetBGM;
-        currentStage = targetStage;
-        currentBGM.play().catch((err) => console.log("BGM play failed:", err));
-      }
+        
+        if (currentStage !== targetStage) {
+            if (currentBGM) {
+                currentBGM.pause();
+                currentBGM.currentTime = 0;
+            }
+            currentBGM = targetBGM;
+            currentStage = targetStage;
+            // Apply volume before playing
+            currentBGM.volume = getAudioVolume();
+            currentBGM.play().catch((err) => console.log("BGM play failed:", err));
+        }
     }
-
+    
     function stopBGM() {
-      if (currentBGM) {
-        currentBGM.pause();
-        currentBGM.currentTime = 0;
-        currentBGM = null;
-        currentStage = -1;
-      }
+        if (currentBGM) {
+            currentBGM.pause();
+            currentBGM.currentTime = 0;
+            currentBGM = null;
+            currentStage = -1;
+        }
     }
 
     function loadQues() {
-      const opt = document.getElementById("opt");
-      let currentQuestion = allQuestions[currQuestion].question;
-      // Decode HTML entities in the question and answers
-      function decodeHTMLEntities(text) {
-        if (!text) return "";
+        const opt = document.getElementById("opt");
+        let currentQuestion = allQuestions[currQuestion].question;
+        // Decode HTML entities in the question and answers
+        function decodeHTMLEntities(text) {
+            if (!text) return "";
         const txt = document.createElement("textarea");
-        txt.innerHTML = text;
-        return txt.value;
-      }
-      currentQuestion = decodeHTMLEntities(currentQuestion);
-      ques.innerHTML = currentQuestion;
-
-      // Apply styling based on question number
-      const questionElement = document.getElementById("ques");
-      const containerElement = document.querySelector(".container");
-      const bodyElement = document.body;
-
-      // Reset all classes first
-      questionElement.classList.remove("question-modern-dos", "question-green");
-      bodyElement.classList.remove("no-background", "simplistic-theme");
-
-      // Question 100+: ModernDOS font
-      if (currQuestion >= 100) {
-        questionElement.classList.add("question-modern-dos", "modern-dos-font");
-      } else {
-        questionElement.classList.remove("modern-dos-font");
-      }
-
-      // Question 110+: Green text
-      if (currQuestion >= 110) {
-        questionElement.classList.add("question-green");
-      }
-
-      // Question 120+: Remove background
-      if (currQuestion >= 120) {
-        bodyElement.classList.add("no-background");
-        bodyElement.style.backgroundImage = "none";
-        bodyElement.style.backgroundColor = "#000000";
-      } else {
-        // Call changeBackground to set the appropriate background for questions < 120
-        changeBackground();
-      }
-
-      // Question 130+: Simplistic theme
-      if (currQuestion >= 130) {
-        bodyElement.classList.add("simplistic-theme");
-        if (containerElement) {
-          containerElement.style.background = "transparent";
-          containerElement.style.border = "1px solid #00ff00";
-          containerElement.style.color = "#00ff00";
+            txt.innerHTML = text;
+            return txt.value;
         }
-      } else {
-        if (containerElement) {
-          containerElement.style.background = "";
-          containerElement.style.border = "";
-          containerElement.style.color = "";
+        currentQuestion = decodeHTMLEntities(currentQuestion);
+        ques.innerHTML = currentQuestion;
+        
+        // Apply styling based on question number
+        const questionElement = document.getElementById("ques");
+        const containerElement = document.querySelector(".container");
+        const bodyElement = document.body;
+        
+        // Reset all classes first
+        questionElement.classList.remove("question-modern-dos", "question-green");
+        bodyElement.classList.remove("no-background", "simplistic-theme");
+        
+        // Question 100+: ModernDOS font
+        if (currQuestion >= 100) {
+            questionElement.classList.add("question-modern-dos", "modern-dos-font");
+        } else {
+            questionElement.classList.remove("modern-dos-font");
         }
-      }
-
-      opt.innerHTML = "";
-
-      // Set background based on question number (if not in simplistic theme)
-      if (currQuestion < 120) {
-        changeBackground();
-      }
-
-      loadScore();
-      const correctAnswer = allQuestions[currQuestion].correct_answer;
-      const incorrectAnswers = allQuestions[currQuestion].incorrect_answers;
-      const options = [correctAnswer, ...incorrectAnswers];
-      options.sort(() => Math.random() - 0.5);
-
-      // Store options for controller support
-      answerOptions = [];
-
-      // Controller button mapping: Up, Right, Down, Left
+        
+        // Question 110+: Green text
+        if (currQuestion >= 110) {
+            questionElement.classList.add("question-green");
+        }
+        
+        // Question 120+: Remove background
+        if (currQuestion >= 120) {
+            bodyElement.classList.add("no-background");
+            bodyElement.style.backgroundImage = "none";
+            bodyElement.style.backgroundColor = "#000000";
+        } else {
+            // Call changeBackground to set the appropriate background for questions < 120
+            changeBackground();
+        }
+        
+        // Question 130+: Simplistic theme
+        if (currQuestion >= 130) {
+            bodyElement.classList.add("simplistic-theme");
+            if (containerElement) {
+                containerElement.style.background = "transparent";
+                containerElement.style.border = "1px solid #00ff00";
+                containerElement.style.color = "#00ff00";
+            }
+        } else {
+            if (containerElement) {
+                containerElement.style.background = "";
+                containerElement.style.border = "";
+                containerElement.style.color = "";
+            }
+        }
+        
+        opt.innerHTML = "";
+        
+        // Set background based on question number (if not in simplistic theme)
+        if (currQuestion < 120) {
+            changeBackground();
+        }
+        
+        loadScore();
+        const correctAnswer = allQuestions[currQuestion].correct_answer;
+        const incorrectAnswers = allQuestions[currQuestion].incorrect_answers;
+        const options = [correctAnswer, ...incorrectAnswers];
+        options.sort(() => Math.random() - 0.5);
+        
+        // Store options for controller support
+        answerOptions = [];
+        
+        // Controller button mapping: Up, Right, Down, Left
       const controllerButtonImages = [
         "btns/up.png",
         "btns/right.png",
@@ -1016,35 +1040,35 @@
         "D-Pad Down",
         "D-Pad Left",
       ];
-
-      options.forEach((option, index) => {
-        const decodedOption = decodeHTMLEntities(option);
-        const choicesdiv = document.createElement("div");
-        const choice = document.createElement("input");
-        const choiceLabel = document.createElement("label");
-        choice.type = "radio";
-        choice.name = "answer";
-        choice.value = decodedOption;
-        choiceLabel.textContent = decodedOption;
-
-        // Apply ModernDOS font to options for questions 100+
-        if (currQuestion >= 100) {
+        
+        options.forEach((option, index) => {
+            const decodedOption = decodeHTMLEntities(option);
+            const choicesdiv = document.createElement("div");
+            const choice = document.createElement("input");
+            const choiceLabel = document.createElement("label");
+            choice.type = "radio";
+            choice.name = "answer";
+            choice.value = decodedOption;
+            choiceLabel.textContent = decodedOption;
+            
+            // Apply ModernDOS font to options for questions 100+
+            if (currQuestion >= 100) {
           choiceLabel.style.fontFamily =
             "'ModernDOS', 'Courier New', Courier, monospace";
-        }
-
-        // Apply green color to options for questions 110+
-        if (currQuestion >= 110) {
-          choiceLabel.style.color = "#00ff00";
-        }
-
-        // Add controller button indicator (hide on mobile)
-        const controllerIndicator = document.createElement("img");
-        controllerIndicator.className = "controller-indicator";
-        controllerIndicator.src = controllerButtonImages[index] || "";
-        controllerIndicator.alt = controllerLabels[index] || "";
-        controllerIndicator.title = controllerLabels[index] || "";
-        controllerIndicator.style.cssText = `
+            }
+            
+            // Apply green color to options for questions 110+
+            if (currQuestion >= 110) {
+                choiceLabel.style.color = "#00ff00";
+            }
+            
+            // Add controller button indicator (hide on mobile)
+            const controllerIndicator = document.createElement("img");
+            controllerIndicator.className = "controller-indicator";
+            controllerIndicator.src = controllerButtonImages[index] || "";
+            controllerIndicator.alt = controllerLabels[index] || "";
+            controllerIndicator.title = controllerLabels[index] || "";
+            controllerIndicator.style.cssText = `
                 display: ${isMobile ? "none" : "inline-block"};
                 margin-right: 8px;
                 width: 32px;
@@ -1052,13 +1076,13 @@
                 vertical-align: middle;
                 object-fit: contain;
             `;
-
-        // Add keyboard indicator (hide on mobile)
-        const keyboardIndicator = document.createElement("span");
-        keyboardIndicator.className = "keyboard-indicator";
-        keyboardIndicator.textContent = (index + 1).toString();
-        keyboardIndicator.title = `Press ${index + 1} to select this answer`;
-        keyboardIndicator.style.cssText = `
+            
+            // Add keyboard indicator (hide on mobile)
+            const keyboardIndicator = document.createElement("span");
+            keyboardIndicator.className = "keyboard-indicator";
+            keyboardIndicator.textContent = (index + 1).toString();
+            keyboardIndicator.title = `Press ${index + 1} to select this answer`;
+            keyboardIndicator.style.cssText = `
                 display: ${isMobile ? "none" : "inline-block"};
                 margin-right: 8px;
                 padding: 4px 8px;
@@ -1072,621 +1096,621 @@
                 min-width: 24px;
                 text-align: center;
             `;
-
-        choicesdiv.appendChild(choice);
-        if (!isMobile) {
-          choicesdiv.appendChild(controllerIndicator);
-          choicesdiv.appendChild(keyboardIndicator);
-        }
-        choicesdiv.appendChild(choiceLabel);
-        opt.appendChild(choicesdiv);
-
-        // Set initial visibility (only if not mobile)
-        if (!isMobile) {
-          if (gamepadConnected) {
-            controllerIndicator.style.display = "inline-block";
-            keyboardIndicator.style.display = "none";
-          } else {
-            controllerIndicator.style.display = "none";
-            keyboardIndicator.style.display = "inline-block";
-          }
-        }
-
-        // Make the div clickable to select the option
-        choicesdiv.addEventListener("click", () => {
-          choice.checked = true;
+            
+            choicesdiv.appendChild(choice);
+            if (!isMobile) {
+                choicesdiv.appendChild(controllerIndicator);
+                choicesdiv.appendChild(keyboardIndicator);
+            }
+            choicesdiv.appendChild(choiceLabel);
+            opt.appendChild(choicesdiv);
+            
+            // Set initial visibility (only if not mobile)
+            if (!isMobile) {
+                if (gamepadConnected) {
+                    controllerIndicator.style.display = "inline-block";
+                    keyboardIndicator.style.display = "none";
+                } else {
+                    controllerIndicator.style.display = "none";
+                    keyboardIndicator.style.display = "inline-block";
+                }
+            }
+            
+            // Make the div clickable to select the option
+            choicesdiv.addEventListener("click", () => {
+                choice.checked = true;
+            });
+            
+            // Store reference for controller support
+            answerOptions.push(choice);
         });
-
-        // Store reference for controller support
-        answerOptions.push(choice);
-      });
-
+        
       document.querySelector("#btn").style.display = "block";
+        
+        // Align grade display after question loads (container content may have changed)
+        setTimeout(() => alignGradeDisplay(), 0);
 
-      // Align grade display after question loads (container content may have changed)
-      setTimeout(() => alignGradeDisplay(), 0);
-
-      let answerTimerId; // Store interval ID for answer timer
-      // Clear any previous interval to prevent multiple timers
-      if (window.answerTimerId) {
-        clearInterval(window.answerTimerId);
-      }
-      const timerDiv = document.querySelector(".timerifinvalid");
-      if (quizMinutes >= 15) {
-        // Add 1s countdown timer for each question when stopwatch hits 15 minutes (hell mode)
-        timeToAnswer = 1; // 1 second for hell mode
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
+        let answerTimerId; // Store interval ID for answer timer
+        // Clear any previous interval to prevent multiple timers
+        if (window.answerTimerId) {
             clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "red";
+        }
+        const timerDiv = document.querySelector(".timerifinvalid");
+        if (quizMinutes >= 15) {
+            // Add 1s countdown timer for each question when stopwatch hits 15 minutes (hell mode)
+            timeToAnswer = 1; // 1 second for hell mode
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "red";
       } else if (currQuestion < 10) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 12;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 12;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 20) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 11.5;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 11.5;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 30) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 11;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 11;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 40) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 10;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 10;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 50) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 9;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 9;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 60) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 8.5;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 8.5;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 110) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 7.5;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 7.5;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 120) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 6;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 6;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 130) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 4;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 4;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 140) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 3.5;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 3.5;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 150) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 3;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 3;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 160) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 2.5;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 2.5;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 180) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 2;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 2;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion < 190) {
         // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-        timeToAnswer = 1.75;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
+            timeToAnswer = 1.75;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
       } else if (currQuestion <= allQuestions.length) {
-        timeToAnswer = 1.5;
-        initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-        window.answerTimerId = setInterval(() => {
-          if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01;
-            timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-          } else {
-            clearInterval(window.answerTimerId);
-            evalScreen();
-          }
-        }, 10);
-        timerDiv.style.display = "block";
-        timerDiv.style.textAlign = "center";
-        timerDiv.style.fontSize = "xx-large";
-        timerDiv.style.color = "white";
-      }
-      document.querySelector(".correctanswer").innerHTML = "";
-
-      // Track question start time for grade points calculation
-      questionStartTime = Date.now();
-      // Store initial time for this question (will be set in timer logic below)
-      // We'll capture it from the first timer setup
-
-      // Update indicator visibility after loading question
-      updateIndicatorVisibility();
-
-      // Check threshold times only when reaching specific questions (51, 101, 131)
-      // Question 51 (currQuestion === 50): Check if time >= 3 minutes
-      if (currQuestion === 50 && !thresholdChecked.q51) {
-        thresholdChecked.q51 = true;
-        if (quizMinutes >= 3) {
-          stopBGM();
-          if (timer) {
-            clearInterval(timer);
-          }
-          showThresholdScreen(); // TGM3 Lv.500 torikan
-          return;
+            timeToAnswer = 1.5;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            window.answerTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+            timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.answerTimerId);
+                    evalScreen();
+                }
+            }, 10);
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
         }
-      }
-      // Question 101 (currQuestion === 100): Check if time >= 5 minutes
-      if (currQuestion === 100 && !thresholdChecked.q101) {
-        thresholdChecked.q101 = true;
-        if (quizMinutes >= 5) {
-          stopBGM();
-          if (timer) {
-            clearInterval(timer);
-          }
-          showThresholdScreen(); // TGM3 Lv.1000 torikan
-          return;
+        document.querySelector(".correctanswer").innerHTML = "";
+        
+        // Track question start time for grade points calculation
+        questionStartTime = Date.now();
+        // Store initial time for this question (will be set in timer logic below)
+        // We'll capture it from the first timer setup
+        
+        // Update indicator visibility after loading question
+        updateIndicatorVisibility();
+        
+        // Check threshold times only when reaching specific questions (51, 101, 131)
+        // Question 51 (currQuestion === 50): Check if time >= 3 minutes
+        if (currQuestion === 50 && !thresholdChecked.q51) {
+            thresholdChecked.q51 = true;
+            if (quizMinutes >= 3) {
+                stopBGM();
+                if (timer) {
+                    clearInterval(timer);
+                }
+                showThresholdScreen(); // TGM3 Lv.500 torikan
+                return;
+            }
         }
-      }
-      // Question 131 (currQuestion === 130): Check if time >= 6 minutes
-      if (currQuestion === 130 && !thresholdChecked.q131) {
-        thresholdChecked.q131 = true;
-        if (quizMinutes >= 6) {
-          stopBGM();
-          if (timer) {
-            clearInterval(timer);
-          }
-          showThresholdScreen(); // TGM3 Lv.1300 torikan (not quite, it's TGM4's Normal 3.1)
-          return;
+        // Question 101 (currQuestion === 100): Check if time >= 5 minutes
+        if (currQuestion === 100 && !thresholdChecked.q101) {
+            thresholdChecked.q101 = true;
+            if (quizMinutes >= 5) {
+                stopBGM();
+                if (timer) {
+                    clearInterval(timer);
+                }
+                showThresholdScreen(); // TGM3 Lv.1000 torikan
+                return;
+            }
         }
-      }
-
-      // Update BGM based on current question
-      playBGM();
+        // Question 131 (currQuestion === 130): Check if time >= 6 minutes
+        if (currQuestion === 130 && !thresholdChecked.q131) {
+            thresholdChecked.q131 = true;
+            if (quizMinutes >= 6) {
+                stopBGM();
+                if (timer) {
+                    clearInterval(timer);
+                }
+                showThresholdScreen(); // TGM3 Lv.1300 torikan (not quite, it's TGM4's Normal 3.1)
+                return;
+            }
+        }
+        
+        // Update BGM based on current question
+        playBGM();
     }
     function changeBackground() {
-      // Use the global currQuestion variable (question index) to determine background
-      // Only change background if not in simplistic theme (questions 120+)
-      if (currQuestion < 120) {
-        if (currQuestion < 10) {
+        // Use the global currQuestion variable (question index) to determine background
+        // Only change background if not in simplistic theme (questions 120+)
+        if (currQuestion < 120) {
+            if (currQuestion < 10) {
           document.body.style.background =
             "url('hell1.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
-        } else if (currQuestion < 20) {
+                document.body.style.backgroundSize = "cover";
+            } else if (currQuestion < 20) {
           document.body.style.background =
             "url('hell2.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
-        } else if (currQuestion < 30) {
+                document.body.style.backgroundSize = "cover";
+            } else if (currQuestion < 30) {
           document.body.style.background =
             "url('hell3.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
-        } else if (currQuestion < 40) {
+                document.body.style.backgroundSize = "cover";
+            } else if (currQuestion < 40) {
           document.body.style.background =
             "url('hell4.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
-        } else if (currQuestion < 50) {
+                document.body.style.backgroundSize = "cover";
+            } else if (currQuestion < 50) {
           document.body.style.background =
             "url('hell5.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
-        } else if (currQuestion < 60) {
+                document.body.style.backgroundSize = "cover";
+            } else if (currQuestion < 60) {
           document.body.style.background =
             "url('hell6.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
-        } else if (currQuestion < 70) {
+                document.body.style.backgroundSize = "cover";
+            } else if (currQuestion < 70) {
           document.body.style.background =
             "url('hell7.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
-        } else if (currQuestion < 80) {
+                document.body.style.backgroundSize = "cover";
+            } else if (currQuestion < 80) {
           document.body.style.background =
             "url('hell8.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
-        } else if (currQuestion < 90) {
+                document.body.style.backgroundSize = "cover";
+            } else if (currQuestion < 90) {
           document.body.style.background =
             "url('hell9.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
-        } else if (currQuestion < 100) {
+                document.body.style.backgroundSize = "cover";
+            } else if (currQuestion < 100) {
           document.body.style.background =
             "url('hell10.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
-        } else if (currQuestion < 120) {
-          // Questions 100-119: keep last background or use a default
+                document.body.style.backgroundSize = "cover";
+            } else if (currQuestion < 120) {
+                // Questions 100-119: keep last background or use a default
           document.body.style.background =
             "url('hell10.jpg') no-repeat center center fixed";
-          document.body.style.backgroundSize = "cover";
+                document.body.style.backgroundSize = "cover";
+            }
         }
-      }
     }
     // Calculate grade points for a question
     function internalGrade() {
-      // Validate quiz state
-      if (!allQuestions || allQuestions.length === 0) {
-        console.warn("No questions loaded");
-        return 0;
-      }
-
-      if (currQuestion < 0 || currQuestion >= allQuestions.length) {
-        console.warn("Invalid question index");
-        return 0;
-      }
-
-      // Get selected answer from DOM
+        // Validate quiz state
+        if (!allQuestions || allQuestions.length === 0) {
+            console.warn("No questions loaded");
+            return 0;
+        }
+        
+        if (currQuestion < 0 || currQuestion >= allQuestions.length) {
+            console.warn("Invalid question index");
+            return 0;
+        }
+        
+        // Get selected answer from DOM
       const selectedAns = document.querySelector(
         'input[name="answer"]:checked'
       );
-      if (!selectedAns) {
-        return 0;
-      }
-
-      // Decode HTML entities for comparison
-      function decodeHTMLEntities(text) {
-        if (!text) return "";
-        const txt = document.createElement("textarea");
-        txt.innerHTML = text;
-        return txt.value;
-      }
-
-      const answerValue = selectedAns.value;
-      const correctAnswer = allQuestions[currQuestion].correct_answer;
-      const decodedAnswerValue = decodeHTMLEntities(answerValue);
-      const decodedCorrectAnswer = decodeHTMLEntities(correctAnswer);
-
-      // Check if answer is correct
+        if (!selectedAns) {
+            return 0;
+        }
+        
+        // Decode HTML entities for comparison
+        function decodeHTMLEntities(text) {
+            if (!text) return "";
+            const txt = document.createElement("textarea");
+            txt.innerHTML = text;
+            return txt.value;
+        }
+        
+        const answerValue = selectedAns.value;
+        const correctAnswer = allQuestions[currQuestion].correct_answer;
+        const decodedAnswerValue = decodeHTMLEntities(answerValue);
+        const decodedCorrectAnswer = decodeHTMLEntities(correctAnswer);
+        
+        // Check if answer is correct
       const isCorrect =
         decodedAnswerValue === decodedCorrectAnswer ||
         answerValue === correctAnswer;
-
-      if (!isCorrect) {
-        return 0;
-      }
-
-      // Calculate remaining time factor (hell mode has per-question timers)
-      let timeRatio;
-      if (!initialTimeToAnswer || initialTimeToAnswer <= 0) {
-        // Fallback: use 30 seconds if no timer was set
+        
+        if (!isCorrect) {
+            return 0;
+        }
+        
+        // Calculate remaining time factor (hell mode has per-question timers)
+        let timeRatio;
+        if (!initialTimeToAnswer || initialTimeToAnswer <= 0) {
+            // Fallback: use 30 seconds if no timer was set
         const timeTaken = questionStartTime
           ? (Date.now() - questionStartTime) / 1000
           : 0;
-        const timeBonus = 30;
-        const remainingTime = Math.max(0, timeBonus - timeTaken);
+            const timeBonus = 30;
+            const remainingTime = Math.max(0, timeBonus - timeTaken);
         timeRatio = (remainingTime * 10) / timeBonus;
-      } else {
-        // Get remaining time (clamp to 0 if negative)
-        const remainingTime = Math.max(0, timeToAnswer || 0);
-        // Calculate remaining time ratio (0.0 to 1.0)
+        } else {
+            // Get remaining time (clamp to 0 if negative)
+            const remainingTime = Math.max(0, timeToAnswer || 0);
+            // Calculate remaining time ratio (0.0 to 1.0)
         timeRatio = (remainingTime * 10) / initialTimeToAnswer;
-      }
-
-      // Base score for each question
-      const quesScore = 500;
-
-      // Difficulty multiplier based on question number (similar to master mode)
-      let multiplier;
+        }
+        
+        // Base score for each question
+        const quesScore = 500;
+        
+        // Difficulty multiplier based on question number (similar to master mode)
+        let multiplier;
       if (currQuestion < 25) {
-        multiplier = 1;
+            multiplier = 1;
       } else if (currQuestion < 50) {
         multiplier = 3;
       } else if (currQuestion < 75) {
         multiplier = 6;
-      } else if (currQuestion < 100) {
+        } else if (currQuestion < 100) {
         multiplier = 10;
       } else if (currQuestion < 130) {
         multiplier = 15;
       } else multiplier = 21;
-
-      // Calculate grade points with remaining time as a factor
-      const questionPoints = quesScore * multiplier * timeRatio;
-
-      return Math.round(questionPoints);
+        
+        // Calculate grade points with remaining time as a factor
+        const questionPoints = quesScore * multiplier * timeRatio;
+        
+        return Math.round(questionPoints);
     }
 
     let quizMinutes = 0; // Global variable to track minutes
     let timer; // Global variable to store the timer interval
     let grade;
     function stopWatch() {
-      const startTime = Date.now();
+        const startTime = Date.now();
       timerStartTime = startTime;
-      const timeDisplay = document.getElementById("timeelapsed");
-      timer = setInterval(() => {
+        const timeDisplay = document.getElementById("timeelapsed");
+        timer = setInterval(() => {
         if (isPaused) return; // Don't update timer when paused
         const elapsedTime = Date.now() - startTime - totalPausedTime;
-        const miliseconds = Math.floor((elapsedTime % 1000) / 10);
-        const seconds = Math.floor((elapsedTime / 1000) % 60);
-        quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+            const miliseconds = Math.floor((elapsedTime % 1000) / 10);
+            const seconds = Math.floor((elapsedTime / 1000) % 60);
+            quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
         timeDisplay.innerHTML = `${quizMinutes
           .toString()
           .padStart(2, "0")}:${seconds
           .toString()
           .padStart(2, "0")}:${miliseconds.toString().padStart(2, "0")}`;
-
-        // Apply ModernDOS font after question 100
-        if (currQuestion >= 100) {
+            
+            // Apply ModernDOS font after question 100
+            if (currQuestion >= 100) {
           timeDisplay.style.fontFamily =
             "'ModernDOS', 'Courier New', Courier, monospace";
-        }
-
-        updateGradeDisplay(); // Update grade display in real-time
-
-        if (quizMinutes >= 10) {
-          timeDisplay.style.color = "yellow";
-        }
-        if (quizMinutes >= 12) {
-          timeDisplay.style.color = "orange";
-        }
-        if (quizMinutes >= 15) {
-          alert("You took too long! This run has been invalidated.");
-          timeDisplay.style.color = "red";
-        }
-      }, 10);
-      timeDisplay.style.fontSize = "xx-large";
-      timeDisplay.style.textAlign = "center";
+            }
+            
+            updateGradeDisplay(); // Update grade display in real-time
+            
+            if (quizMinutes >= 10) {
+                timeDisplay.style.color = "yellow";
+            }
+            if (quizMinutes >= 12) {
+                timeDisplay.style.color = "orange";
+            }
+            if (quizMinutes >= 15) {
+                alert("You took too long! This run has been invalidated.");
+                timeDisplay.style.color = "red";
+            }
+        }, 10);
+        timeDisplay.style.fontSize = "xx-large";
+        timeDisplay.style.textAlign = "center";
     }
 
     // Show threshold exceeded screen, then evalScreen after 5 seconds
     function showThresholdScreen() {
-      // Ensure timer is stopped
-      if (timer) {
-        clearInterval(timer);
-        timer = null;
-      }
-
-      // Stop any question timers
-      if (window.questionTimerId) {
-        clearInterval(window.questionTimerId);
-        window.questionTimerId = null;
-      }
-
-      const thresholdScreen = document.getElementById("thresholdScreen");
-      if (thresholdScreen) {
-        // Show the threshold screen
-        thresholdScreen.style.display = "flex";
-
-        // Prevent interaction with game elements while screen is showing
-        const container = document.querySelector(".container");
-        if (container) {
-          container.style.pointerEvents = "none";
+        // Ensure timer is stopped
+        if (timer) {
+            clearInterval(timer);
+            timer = null;
         }
-
-        // After 5 seconds, hide threshold screen and show evalScreen
-        setTimeout(() => {
-          thresholdScreen.style.display = "none";
-          if (container) {
-            container.style.pointerEvents = "auto";
-          }
-          evalScreen();
-        }, 5000);
-      } else {
-        // Fallback: if screen element doesn't exist, just show evalScreen
-        evalScreen();
-      }
+        
+        // Stop any question timers
+        if (window.questionTimerId) {
+            clearInterval(window.questionTimerId);
+            window.questionTimerId = null;
+        }
+        
+        const thresholdScreen = document.getElementById("thresholdScreen");
+        if (thresholdScreen) {
+            // Show the threshold screen
+            thresholdScreen.style.display = "flex";
+            
+            // Prevent interaction with game elements while screen is showing
+            const container = document.querySelector(".container");
+            if (container) {
+                container.style.pointerEvents = "none";
+            }
+            
+            // After 5 seconds, hide threshold screen and show evalScreen
+            setTimeout(() => {
+                thresholdScreen.style.display = "none";
+                if (container) {
+                    container.style.pointerEvents = "auto";
+                }
+                evalScreen();
+            }, 5000);
+        } else {
+            // Fallback: if screen element doesn't exist, just show evalScreen
+            evalScreen();
+        }
     }
 
     // Calculate real-time grade based on current progress
     function calculateRealTimeGrade() {
-      if (!allQuestions || allQuestions.length === 0) {
-        return "";
-      }
-      let evalPercent = (score / allQuestions.length) * 200;
-
-      if (quizMinutes >= 15) {
-        return "Invalid";
+        if (!allQuestions || allQuestions.length === 0) {
+            return "";
+        }
+        let evalPercent = (score / allQuestions.length) * 200;
+        
+        if (quizMinutes >= 15) {
+            return "Invalid";
       } else if (evalPercent == 200 && quizMinutes < 7) {
-        return "Grand Master - Infinity";
+            return "Grand Master - Infinity";
       } else if (allQuestions.length > 0) {
-        let ngrade = Math.floor(evalPercent / 10);
-        return ngrade > 0 ? "S" + ngrade : "";
-      } else {
-        return "";
-      }
+            let ngrade = Math.floor(evalPercent / 10);
+            return ngrade > 0 ? "S" + ngrade : "";
+        } else {
+            return "";
+        }
     }
-
+    
     let previousGrade = ""; // Track previous grade for promotion detection
-
+    
     function updateGradeDisplay() {
-      // Update left side grade display and timer bar grade points display
-      const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
-      const gradePointsDisplay = document.getElementById("currentgrade");
-
-      const grade = calculateRealTimeGrade();
-
-      // Check if grade was promoted (increased)
+        // Update left side grade display and timer bar grade points display
+        const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+        const gradePointsDisplay = document.getElementById("currentgrade");
+        
+        const grade = calculateRealTimeGrade();
+        
+        // Check if grade was promoted (increased)
       if (
         previousGrade &&
         previousGrade !== "" &&
         grade !== "" &&
         grade !== previousGrade
       ) {
-        // Simple comparison: if grade string is different and not empty, check if it's higher
+            // Simple comparison: if grade string is different and not empty, check if it's higher
         const gradeNum1 =
           parseInt(
             grade.replace("S", "").replace("Grand Master - Infinity", "999")
@@ -1698,103 +1722,129 @@
               .replace("Grand Master - Infinity", "999")
           ) || 0;
    
-      }
-
-      // Update previous grade
-      if (grade) {
-        previousGrade = grade;
-      }
-
-      // Get text color (white normally, gold after question 50)
-      let textColor = "#ffffff"; // White
-      if (currQuestion >= 50) {
-        textColor = "#ffd700"; // Gold after question 50
-      }
-
-      // Get background and border colors
-      const bgColor = getGradeBackgroundColorHell(grade);
-      const borderColor = getGradeBorderColorHell(grade);
-
-      // Apply ModernDOS font to all text elements after question 100
-      const modernDosFont = "'ModernDOS', 'Courier New', Courier, monospace";
-      if (currQuestion >= 100) {
-        const scoreEl = document.getElementById("score");
-        if (scoreEl) {
-          scoreEl.style.fontFamily = modernDosFont;
         }
-
-        const timeElapsedEl = document.getElementById("timeelapsed");
-        if (timeElapsedEl) {
-          timeElapsedEl.style.fontFamily = modernDosFont;
+        
+        // Update previous grade
+        if (grade) {
+            previousGrade = grade;
         }
-      }
-
-      // Apply styling to grade display
-      const gradeText = document.getElementById("gradeText");
-      if (gradeText) {
-        gradeText.textContent = grade || "";
-        gradeText.style.color = textColor;
-        gradeText.style.backgroundColor = bgColor;
-        gradeText.style.borderColor = borderColor;
-
-        // Apply ModernDOS font after question 100
+        
+        // Get text color (white normally, gold after question 50)
+        let textColor = "#ffffff"; // White
+        if (currQuestion >= 50) {
+            textColor = "#ffd700"; // Gold after question 50
+        }
+        
+        // Get background and border colors
+        const bgColor = getGradeBackgroundColorHell(grade);
+        const borderColor = getGradeBorderColorHell(grade);
+        
+        // Apply ModernDOS font to all text elements after question 100
+        const modernDosFont = "'ModernDOS', 'Courier New', Courier, monospace";
         if (currQuestion >= 100) {
-          gradeText.style.fontFamily = modernDosFont;
+            const scoreEl = document.getElementById("score");
+            if (scoreEl) {
+                scoreEl.style.fontFamily = modernDosFont;
+            }
+            
+            const timeElapsedEl = document.getElementById("timeelapsed");
+            if (timeElapsedEl) {
+                timeElapsedEl.style.fontFamily = modernDosFont;
+            }
+        }
+        
+        // Apply styling to grade display
+        const gradeText = document.getElementById("gradeText");
+        if (gradeText) {
+            gradeText.textContent = grade || "";
+            gradeText.style.color = textColor;
+            gradeText.style.backgroundColor = bgColor;
+            gradeText.style.borderColor = borderColor;
+            
+            // Apply ModernDOS font after question 100
+            if (currQuestion >= 100) {
+                gradeText.style.fontFamily = modernDosFont;
+            }
+            
+            // Make grade display box square (width = height)
+            // Force a reflow to get accurate height
+            void gradeText.offsetHeight;
+            const height = gradeText.offsetHeight;
+            gradeText.style.width = height + "px";
+            gradeText.style.minWidth = height + "px";
+            gradeText.style.maxWidth = height + "px";
         }
 
-        // Make grade display box square (width = height)
-        // Force a reflow to get accurate height
-        void gradeText.offsetHeight;
-        const height = gradeText.offsetHeight;
-        gradeText.style.width = height + "px";
-        gradeText.style.minWidth = height + "px";
-        gradeText.style.maxWidth = height + "px";
-      }
-
-      // Display grade points in the old position (timer bar)
-      if (gradePointsDisplay) {
-        gradePointsDisplay.innerHTML = totalGradePoints.toLocaleString() || "0";
-        gradePointsDisplay.style.color = "#00ff00";
-
-        // Apply ModernDOS font after question 100
-        if (currQuestion >= 100) {
-          gradePointsDisplay.style.fontFamily = modernDosFont;
+        // Display grade points in the old position (timer bar)
+        if (gradePointsDisplay) {
+            gradePointsDisplay.innerHTML = totalGradePoints.toLocaleString() || "0";
+            gradePointsDisplay.style.color = "#00ff00";
+            
+            // Apply ModernDOS font after question 100
+            if (currQuestion >= 100) {
+                gradePointsDisplay.style.fontFamily = modernDosFont;
+            }
         }
-      }
-
-      // Align grade display with container top after all updates
-      alignGradeDisplay();
+        
+        // Align grade display with container top after all updates
+        alignGradeDisplay();
     }
-
+    
     // Separate function to align grade display with container top
     function alignGradeDisplay() {
-      requestAnimationFrame(() => {
-        const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
-        const container = document.querySelector(".container");
-        if (gradeDisplayLeft && container) {
-          const containerRect = container.getBoundingClientRect();
+        requestAnimationFrame(() => {
+            const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+            const container = document.querySelector(".container");
+            if (gradeDisplayLeft && container) {
+                const containerRect = container.getBoundingClientRect();
           const wrapperRect = container.parentElement
             ? container.parentElement.getBoundingClientRect()
             : { top: 0 };
           gradeDisplayLeft.style.top =
             containerRect.top - wrapperRect.top - 20 + "px";
-        }
-      });
+            }
+        });
     }
 
     function loadScore() {
-      const totalScore = document.getElementById("score");
-      totalScore.innerHTML = `${score}`;
-      totalScore.style.fontSize = "xx-large";
-      totalScore.style.color = "pink";
-
-      // Apply ModernDOS font after question 100
-      if (currQuestion >= 100) {
+        const totalScore = document.getElementById("score");
+        totalScore.innerHTML = `${score}`;
+        totalScore.style.fontSize = "xx-large";
+        totalScore.style.color = "pink";
+        
+        // Apply ModernDOS font after question 100
+        if (currQuestion >= 100) {
         totalScore.style.fontFamily =
           "'ModernDOS', 'Courier New', Courier, monospace";
       }
-
-      updateGradeDisplay();
+      
+      // Update lives display (hide if disabled)
+      const livesDisplay = document.getElementById("livesDisplay");
+      const livesCount = document.getElementById("livesCount");
+      if (livesDisplay) {
+        if (livesEnabled) {
+          livesDisplay.style.display = "block";
+          if (livesCount) {
+            livesCount.textContent = currentLives;
+          }
+          
+          // Apply color based on lives remaining
+          livesDisplay.classList.remove("lives-green", "lives-yellow", "lives-orange", "lives-red");
+          if (currentLives > 50) {
+            livesDisplay.classList.add("lives-green");
+          } else if (currentLives > 20) {
+            livesDisplay.classList.add("lives-yellow");
+          } else if (currentLives > 10) {
+            livesDisplay.classList.add("lives-orange");
+          } else {
+            livesDisplay.classList.add("lives-red");
+          }
+        } else {
+          livesDisplay.style.display = "none";
+        }
+        }
+        
+        updateGradeDisplay();
     }
     function evalScreen() {
       // Resume game if paused
@@ -1807,57 +1857,57 @@
         pauseBtn.style.display = "none";
       }
       
-      // Stop BGM when quiz ends
-      stopBGM();
-
-      // Hide the give up button when evaluation screen is displayed
-      const giveUpBtn = document.querySelector("[giveup]");
-      if (giveUpBtn) {
-        giveUpBtn.style.display = "none";
-      }
-
-      // Hide container to show evalScreen
-      const container = document.querySelector(".container");
-      if (container) {
-        container.style.display = "none";
-      }
-
-      // Remove elements safely (check if they exist first)
-      const optEl = document.getElementById("opt");
-      if (optEl) optEl.remove();
-      const quesEl = document.getElementById("ques");
-      if (quesEl) quesEl.remove();
-      const btnEl = document.getElementById("btn");
-      if (btnEl) btnEl.remove();
-      const scoreEl = document.getElementById("score");
-      if (scoreEl) scoreEl.remove();
-      const evalDiv = document.querySelector(".evalscreen");
-
-      if (!evalDiv) {
-        console.error("evalScreen div not found!");
-        return;
-      }
+        // Stop BGM when quiz ends
+        stopBGM();
+        
+        // Hide the give up button when evaluation screen is displayed
+        const giveUpBtn = document.querySelector("[giveup]");
+        if (giveUpBtn) {
+            giveUpBtn.style.display = "none";
+        }
+        
+        // Hide container to show evalScreen
+        const container = document.querySelector(".container");
+        if (container) {
+            container.style.display = "none";
+        }
+        
+        // Remove elements safely (check if they exist first)
+        const optEl = document.getElementById("opt");
+        if (optEl) optEl.remove();
+        const quesEl = document.getElementById("ques");
+        if (quesEl) quesEl.remove();
+        const btnEl = document.getElementById("btn");
+        if (btnEl) btnEl.remove();
+        const scoreEl = document.getElementById("score");
+        if (scoreEl) scoreEl.remove();
+        const evalDiv = document.querySelector(".evalscreen");
+        
+        if (!evalDiv) {
+            console.error("evalScreen div not found!");
+            return;
+        }
 
       // Ensure eval screen is visible immediately
       evalDiv.style.display = "block";
       evalDiv.style.visibility = "visible";
-
-      // Check if player completed hell mode (all 200 questions answered, not abandoned)
-      // We've completed if we answered all 200 questions correctly
+        
+        // Check if player completed hell mode (all 200 questions answered, not abandoned)
+        // We've completed if we answered all 200 questions correctly
       const isCompleted =
         !quizAbandoned &&
         elapsedQuestions === 200 &&
         score === 200 &&
         quizMinutes < 15;
-
-      // Play completion sound only if quiz was not abandoned AND all questions were completed
+        
+        // Play completion sound only if quiz was not abandoned AND all questions were completed
       if (!quizAbandoned && isCompleted && localStorage.getItem("musicEnabled") !== "false") {
-        let completeSound = new Audio("bgm/complete.wav");
+            let completeSound = new Audio("bgm/complete.wav");
         completeSound
           .play()
           .catch((err) => console.log("Complete sound play failed:", err));
-      }
-
+        }
+        
       // Play credits BGM (always play, even if abandoned, unless sounds are disabled)
       if (localStorage.getItem("musicEnabled") !== "false") {
         let creditsBGM = new Audio("bgm/credits.mp3");
@@ -1865,94 +1915,94 @@
           .play()
           .catch((err) => console.log("Credits BGM play failed:", err));
       }
+        
+        // Clear all timers
+        clearInterval(timer);
+        if (window.answerTimerId) {
+            clearInterval(window.answerTimerId);
+        }
+        
+        // Hide grade displays when quiz is finished or abandoned
+        const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
+        const gradePointsDisplay = document.getElementById("currentgrade");
+        if (gradeDisplayLeft) {
+            gradeDisplayLeft.style.display = "none";
+        }
+        if (gradePointsDisplay) {
+            gradePointsDisplay.style.display = "none";
+        }
+        
+        const timeElapsedDiv = document.getElementById("timeelapsed");
+        const timerDiv = document.querySelector(".timerifinvalid");
+        if (timerDiv) {
+            timerDiv.style.display = "none";
+        }
 
-      // Clear all timers
-      clearInterval(timer);
-      if (window.answerTimerId) {
-        clearInterval(window.answerTimerId);
-      }
-
-      // Hide grade displays when quiz is finished or abandoned
-      const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
-      const gradePointsDisplay = document.getElementById("currentgrade");
-      if (gradeDisplayLeft) {
-        gradeDisplayLeft.style.display = "none";
-      }
-      if (gradePointsDisplay) {
-        gradePointsDisplay.style.display = "none";
-      }
-
-      const timeElapsedDiv = document.getElementById("timeelapsed");
-      const timerDiv = document.querySelector(".timerifinvalid");
-      if (timerDiv) {
-        timerDiv.style.display = "none";
-      }
-
-      // Calculate grade for submission (needed for both screens)
-      let grade = "";
+        // Calculate grade for submission (needed for both screens)
+        let grade = "";
       let evalPercent =
         allQuestions.length > 0 ? (score / allQuestions.length) * 200 : 0;
-      let line = "white";
-      if (quizMinutes >= 15) {
-        grade = "Invalid";
+        let line = "white";
+        if (quizMinutes >= 15) {
+            grade = "Invalid";
       } else if (evalPercent == 200 && quizMinutes < 5) {
-        grade = "Grand Master - Infinity";
-        line = "orange";
+            grade = "Grand Master - Infinity";
+            line = "orange";
       } else if (allQuestions.length > 0) {
-        // Floor division by 10 to get grade number (0-20)
-        let ngrade = Math.floor(evalPercent / 10);
-        // Grade format: S1, S2, S3, ..., S20 (or empty string if 0)
-        grade = ngrade > 0 ? "S" + ngrade : "";
-        line = ngrade === 20 ? "green" : "white";
-      } else {
-        grade = "";
-      }
-
+            // Floor division by 10 to get grade number (0-20)
+            let ngrade = Math.floor(evalPercent / 10);
+            // Grade format: S1, S2, S3, ..., S20 (or empty string if 0)
+            grade = ngrade > 0 ? "S" + ngrade : "";
+            line = ngrade === 20 ? "green" : "white";
+        } else {
+            grade = "";
+        }
+        
       // Automatically submit score for all completed runs (if enabled)
-      if (isCompleted) {
-        const user = auth.currentUser;
+        if (isCompleted) {
+            const user = auth.currentUser;
         if (user && localStorage.getItem("autoSubmitEnabled") !== "false") {
-          // Submit score automatically without user interaction
-          (async function autoSubmitScore() {
-            try {
-              const db = getFirestore();
-              const payload = {
-                name: user.displayName || user.email,
-                score: score,
-                grade: grade,
+                // Submit score automatically without user interaction
+                (async function autoSubmitScore() {
+                    try {
+                        const db = getFirestore();
+                        const payload = {
+                            name: user.displayName || user.email,
+                            score: score,
+                            grade: grade,
                 time: timeElapsedDiv ? timeElapsedDiv.textContent : "N/A",
-                date: new Date().toLocaleString(),
-                line: line,
+                            date: new Date().toLocaleString(),
+                            line: line,
                 inputType: inputType || "unknown",
                 pauseCount: pauseCount,
                 totalPausedTime: formatPausedTime(totalPausedTime)
-              };
+                        };
 
-              // Global leaderboard entry
+                        // Global leaderboard entry
               await addDoc(collection(db, "scoresfinal"), payload);
-              // Per‑player data entry
+                        // Per‑player data entry
               await addDoc(
                 collection(db, "playerData", user.uid, "hell"),
                 payload
               );
-              console.log("Score submitted automatically");
-            } catch (error) {
-              console.error("Error auto-submitting score:", error);
+                        console.log("Score submitted automatically");
+                    } catch (error) {
+                        console.error("Error auto-submitting score:", error);
+                    }
+                })();
             }
-          })();
         }
-      }
-
+        
       // Check if player answered 100+ questions to apply ModernDOS font
       const answered100Plus = elapsedQuestions >= 100 || currQuestion >= 100;
       const modernDosFont = answered100Plus
         ? "'ModernDOS', 'Courier New', Courier, monospace"
         : "inherit";
 
-      // Show credits screen only if completed AND grade is Grand Master - Infinity, otherwise show evaluation screen
-      if (isCompleted && grade === "Grand Master - Infinity") {
-        // Credits screen (responsive for mobile devices)
-        evalDiv.innerHTML = `
+        // Show credits screen only if completed AND grade is Grand Master - Infinity, otherwise show evaluation screen
+        if (isCompleted && grade === "Grand Master - Infinity") {
+            // Credits screen (responsive for mobile devices)
+            evalDiv.innerHTML = `
                 <div style="color: #00ff00; font-family: ${modernDosFont}; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
                     <h1 style="font-family: ${modernDosFont}; font-size: clamp(1.5em, 5vw, 3em); margin-bottom: 20px; text-align: center; word-wrap: break-word;">CREDITS</h1>
                     <div style="font-family: ${modernDosFont}; font-size: clamp(0.9em, 2.5vw, 1.5em); line-height: 1.8; text-align: center; max-width: 90%; width: 100%; box-sizing: border-box;">
@@ -1974,10 +2024,10 @@
                     </div>
                 </div>
             `;
-
-        // After 10 seconds, show grade screen (responsive for mobile devices)
-        setTimeout(() => {
-          evalDiv.innerHTML = `
+            
+            // After 10 seconds, show grade screen (responsive for mobile devices)
+            setTimeout(() => {
+                evalDiv.innerHTML = `
                     <div style="color: #00ff00; font-family: ${modernDosFont}; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
                         <h1 style="font-family: ${modernDosFont}; font-size: clamp(2em, 6vw, 4em); margin-bottom: 30px; text-align: center; word-wrap: break-word;">YOU ARE</h1>
                         <div style="font-family: ${modernDosFont}; font-size: clamp(3em, 10vw, 6em); margin: 30px 0; text-align: center; font-weight: bold; word-wrap: break-word;">
@@ -1986,13 +2036,13 @@
                         <p style="font-family: ${modernDosFont}; margin: 20px 0; font-size: clamp(0.8em, 2vw, 0.9em);">Thank you for playing.</p>
                     </div>
                 `;
-
-          // After 10 more seconds (20 total), redirect to home
-          setTimeout(() => {
+                
+                // After 10 more seconds (20 total), redirect to home
+                setTimeout(() => {
             location.href = "index.html";
-          }, 10000); // 10 seconds
-        }, 10000); // 10 seconds
-      } else {
+                }, 10000); // 10 seconds
+            }, 10000); // 10 seconds
+        } else {
         // Regular evaluation screen - reformatted with better layout
         const timeText = timeElapsedDiv ? timeElapsedDiv.textContent : "N/A";
         evalDiv.innerHTML = `
@@ -2005,11 +2055,11 @@
                             <div style="font-family: ${modernDosFont}; text-align: center;">
                                 <div style="font-family: ${modernDosFont}; font-size: clamp(2.5em, 6vw, 4em); font-weight: bold; color: #ffb9b9;">
                                     ${score}
-                                </div>
+                    </div>
                                 <div style="font-family: ${modernDosFont}; font-size: clamp(1em, 2.5vw, 1.5em); color: #cccccc;">
                                     / ${allQuestions.length}
-                                </div>
-                            </div>
+                    </div>
+                    </div>
                             <div style="font-family: ${modernDosFont}; text-align: center;">
                                 <div style="font-family: ${modernDosFont}; font-size: clamp(2.5em, 6vw, 4.5em); font-weight: bold; color: ${line};">
                                     ${grade || ""}
@@ -2037,8 +2087,8 @@
                     </div>
                 </div>
             `;
-      }
-
+        }
+        
       // Ensure eval screen is visible and not hidden, and centered on screen
       evalDiv.style.display = "flex";
       evalDiv.style.visibility = "visible";
@@ -2047,7 +2097,7 @@
       evalDiv.style.alignItems = "center";
       evalDiv.style.minHeight = "100vh";
       evalDiv.style.width = "100%";
-      evalDiv.style.textAlign = "center";
+        evalDiv.style.textAlign = "center";
       evalDiv.style.position = "fixed";
       evalDiv.style.top = "0";
       evalDiv.style.left = "0";
@@ -2055,221 +2105,293 @@
 
       // Force display in case of any CSS overrides or hidden attributes
       evalDiv.removeAttribute("hidden");
-
-      // Only show submit button and handle submission for non-completed runs
-      if (!isCompleted) {
+        
+        // Only show submit button and handle submission for non-completed runs
+        if (!isCompleted) {
         // Attach event listener after button is created
         const user = auth.currentUser;
         const submitBtn = document.querySelector(".submitsuffering");
 
-        if (!submitBtn) {
-          return;
-        }
+            if (!submitBtn) {
+                return;
+            }
 
         if (!user) {
-          submitBtn.textContent = "Login to submit score";
-          submitBtn.onclick = () => {
-            location.href = "signin.html";
-          };
-          return;
+            submitBtn.textContent = "Login to submit score";
+            submitBtn.onclick = () => {
+                location.href = "signin.html";
+            };
+                return;
         }
 
-        let isSubmitting = false;
+            let isSubmitting = false;
 
-        async function submitHellScore() {
-          if (isSubmitting || submitBtn.disabled) return;
-
-          // Prevent abandoned scores from being submitted
-          if (quizAbandoned) {
-            alert("Abandoned runs cannot be submitted to the leaderboards.");
-            submitBtn.disabled = true;
-            submitBtn.textContent = "Abandoned runs cannot be submitted";
-            submitBtn.style.cursor = "not-allowed";
-            return;
-          }
-
-          // Prevent invalid scores from being submitted
-          if (quizMinutes >= 15) {
+            async function submitHellScore() {
+                if (isSubmitting || submitBtn.disabled) return;
+                
+                // Prevent abandoned scores from being submitted
+                if (quizAbandoned) {
+                    alert("Abandoned runs cannot be submitted to the leaderboards.");
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = "Abandoned runs cannot be submitted";
+                    submitBtn.style.cursor = "not-allowed";
+                    return;
+                }
+                
+                // Prevent invalid scores from being submitted
+                if (quizMinutes >= 15) {
             alert(
               "Invalid run! Scores cannot be submitted for runs that took 15 minutes or longer."
             );
-            return;
-          }
-
-          isSubmitting = true;
-          submitBtn.disabled = true;
-          submitBtn.textContent = "Submitting...";
-
-          try {
-            const db = getFirestore();
-            const payload = {
-              name: user.displayName || user.email,
-              score: score,
-              grade: grade,
-              time: document.getElementById("timeelapsed").textContent,
-              date: new Date().toLocaleString(),
+                    return;
+                }
+                
+                isSubmitting = true;
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Submitting...";
+                
+                try {
+                    const db = getFirestore();
+                    const payload = {
+                        name: user.displayName || user.email,
+                        score: score,
+                        grade: grade,
+                        time: document.getElementById("timeelapsed").textContent,
+                        date: new Date().toLocaleString(),
               inputType: inputType || "unknown",
               pauseCount: pauseCount,
               totalPausedTime: formatPausedTime(totalPausedTime)
-            };
+                    };
 
-            // Global leaderboard entry
+                    // Global leaderboard entry
             await addDoc(collection(db, "scoresfinal"), payload);
-            // Per‑player data entry
+                    // Per‑player data entry
             await addDoc(
               collection(db, "playerData", user.uid, "hell"),
               payload
             );
 
-            alert("Score submitted successfully!");
-            submitBtn.textContent = "Score submitted!";
-            submitBtn.style.backgroundColor = "cyan";
-            submitBtn.style.color = "white";
-            submitBtn.style.cursor = "not-allowed";
-          } catch (error) {
-            console.error("Error submitting score:", error);
-            alert("Failed to submit score. Please try again.");
-            submitBtn.disabled = false;
-            isSubmitting = false;
-            submitBtn.textContent = "Submit your suffe- I mean score";
-          }
+                    alert("Score submitted successfully!");
+                    submitBtn.textContent = "Score submitted!";
+                    submitBtn.style.backgroundColor = "cyan";
+                    submitBtn.style.color = "white";
+                    submitBtn.style.cursor = "not-allowed";
+                } catch (error) {
+                    console.error("Error submitting score:", error);
+                    alert("Failed to submit score. Please try again.");
+                    submitBtn.disabled = false;
+                    isSubmitting = false;
+                    submitBtn.textContent = "Submit your suffe- I mean score";
+                }
+            }
+
+            // Manual click (kept for UX)
+            submitBtn.addEventListener("click", submitHellScore);
+
+            // Automatic upload for logged‑in users
+            submitHellScore();
         }
-
-        // Manual click (kept for UX)
-        submitBtn.addEventListener("click", submitHellScore);
-
-        // Automatic upload for logged‑in users
-        submitHellScore();
-      }
     }
     function nextQuestion() {
-      if (currQuestion < allQuestions.length - 1) {
-        currQuestion++;
+        if (currQuestion < allQuestions.length - 1) {
+            currQuestion++;
         // Play section change sound every 10 questions
         if (currQuestion % 10 === 0 && localStorage.getItem("musicEnabled") !== "false") {
           const sectionChangeSound = new Audio("bgm/sectionchange.wav");
+          sectionChangeSound.volume = getAudioVolume();
           sectionChangeSound.play().catch(err => console.log("Section change sound play failed:", err));
         }
-        loadQues();
-        document.querySelector(".correctanswer").innerHTML = "";
-      } else {
-        evalScreen();
-      }
+            loadQues();
+            document.querySelector(".correctanswer").innerHTML = "";
+        } else {
+            evalScreen();
+        }
     }
 
     function showNotification(message, isSuccess = false) {
-      const notification = document.getElementById("notification");
-      notification.textContent = message;
-      notification.classList.remove("hide", "success");
-      if (isSuccess) {
-        notification.classList.add("success");
+        const notification = document.getElementById("notification");
+        notification.textContent = message;
+        notification.classList.remove("hide", "success");
+        if (isSuccess) {
+            notification.classList.add("success");
+        }
+        setTimeout(() => {
+            notification.classList.add("hide");
+        }, 3000);
+    }
+    
+    function showFailedScreen() {
+      // Pause BGM if it exists
+      if (currentBGM) {
+        currentBGM.pause();
+        currentBGM.currentTime = 0;
       }
+      
+      // Play fail sound effect
+      const failSound = new Audio("/bgm/playstop.wav");
+      failSound.volume = getAudioVolume() * 0.7; // 70% of user volume
+      failSound.play().catch(err => console.log("Fail sound play failed:", err));
+      
+      // Create overlay
+      const overlay = document.createElement("div");
+      overlay.className = "failed-overlay";
+      overlay.innerHTML = '<div class="failed-content">FAILED</div>';
+      document.body.appendChild(overlay);
+      
+      // Remove after 5 seconds
       setTimeout(() => {
-        notification.classList.add("hide");
-      }, 3000);
+        overlay.classList.add("hide");
+        setTimeout(() => {
+          overlay.remove();
+          evalScreen();
+        }, 300);
+      }, 5000);
     }
 
     function checkAns() {
-      // Validate quiz state
-      if (!allQuestions || allQuestions.length === 0) {
-        console.warn("No questions loaded");
-        return;
-      }
-
-      if (currQuestion < 0 || currQuestion >= allQuestions.length) {
-        console.warn("Invalid question index");
-        return;
-      }
-
-      // Check if quiz has ended (evalScreen is shown)
-      const evalDiv = document.querySelector(".evalscreen");
+        // Validate quiz state
+        if (!allQuestions || allQuestions.length === 0) {
+            console.warn("No questions loaded");
+            return;
+        }
+        
+        if (currQuestion < 0 || currQuestion >= allQuestions.length) {
+            console.warn("Invalid question index");
+            return;
+        }
+        
+        // Check if quiz has ended (evalScreen is shown)
+        const evalDiv = document.querySelector(".evalscreen");
       if (
         evalDiv &&
         evalDiv.style.display !== "none" &&
         evalDiv.style.display !== ""
       ) {
-        return; // Quiz has ended, don't process answers
-      }
-
+            return; // Quiz has ended, don't process answers
+        }
+        
       const selectedAns = document.querySelector(
         'input[name="answer"]:checked'
       );
-      if (selectedAns) {
-        const answerValue = selectedAns.value;
-        const correctAnswer = allQuestions[currQuestion].correct_answer;
-
-        // Decode HTML entities for comparison (answers are stored with entities)
-        function decodeHTMLEntities(text) {
-          if (!text) return "";
-          const txt = document.createElement("textarea");
-          txt.innerHTML = text;
-          return txt.value;
-        }
-
-        const decodedAnswerValue = decodeHTMLEntities(answerValue);
-        const decodedCorrectAnswer = decodeHTMLEntities(correctAnswer);
-
-        // Compare both decoded and original values to handle encoding differences
+        if (selectedAns) {
+            const answerValue = selectedAns.value;
+            const correctAnswer = allQuestions[currQuestion].correct_answer;
+            
+            // Decode HTML entities for comparison (answers are stored with entities)
+            function decodeHTMLEntities(text) {
+                if (!text) return "";
+                const txt = document.createElement("textarea");
+                txt.innerHTML = text;
+                return txt.value;
+            }
+            
+            const decodedAnswerValue = decodeHTMLEntities(answerValue);
+            const decodedCorrectAnswer = decodeHTMLEntities(correctAnswer);
+            
+            // Compare both decoded and original values to handle encoding differences
         if (
           decodedAnswerValue === decodedCorrectAnswer ||
           answerValue === correctAnswer
         ) {
-          score++;
-          elapsedQuestions++; // Track that we've answered a question
-          // Calculate and accumulate grade points for this question
-          const questionPoints = internalGrade();
-          totalGradePoints += questionPoints;
-          loadScore(); // Update score and grade display
-          // Clear the question timer before moving to next question
-          if (window.answerTimerId) {
-            clearInterval(window.answerTimerId);
+          // Mark question as answered
+          currentQuestionAnswered = true;
+          
+                score++;
+                elapsedQuestions++; // Track that we've answered a question
+                // Calculate and accumulate grade points for this question
+                const questionPoints = internalGrade();
+                totalGradePoints += questionPoints;
+                loadScore(); // Update score and grade display
+                // Clear the question timer before moving to next question
+                if (window.answerTimerId) {
+                    clearInterval(window.answerTimerId);
+                }
+                showNotification("Correct!", true);
+                nextQuestion();
+            } else {
+          // Wrong answer handling
+          if (livesEnabled && !currentQuestionAnswered) {
+            // Mark question as answered and deduct life (only once per question)
+            currentQuestionAnswered = true;
+            currentLives -= 1;
+            
+            // Update lives display
+            const livesDisplay = document.getElementById("livesDisplay");
+            const livesCount = document.getElementById("livesCount");
+            if (livesCount) {
+              livesCount.textContent = currentLives;
+            }
+            
+            // Apply color based on lives remaining
+            if (livesDisplay) {
+              livesDisplay.classList.remove("lives-green", "lives-yellow", "lives-orange", "lives-red");
+              if (currentLives > 50) {
+                livesDisplay.classList.add("lives-green");
+              } else if (currentLives > 20) {
+                livesDisplay.classList.add("lives-yellow");
+              } else if (currentLives > 10) {
+                livesDisplay.classList.add("lives-orange");
+              } else {
+                livesDisplay.classList.add("lives-red");
+              }
+            }
+            
+            if (currentLives <= 0) {
+              // Out of lives - show FAILED screen
+              if (window.answerTimerId) {
+                clearInterval(window.answerTimerId);
+              }
+              showFailedScreen();
+              return;
+            }
+            
+            // Show notification with remaining lives
+            showNotification(`Wrong! ${currentLives} ${currentLives === 1 ? 'life' : 'lives'} remaining.`);
+          } else {
+            // Lives disabled - just show wrong notification
+                showNotification("Wrong! You cannot progress with an incorrect answer.");
           }
-          showNotification("Correct!", true);
-          nextQuestion();
-        } else {
-          // Don't expose the correct answer
-          showNotification(
-            "Wrong! You cannot progress with an incorrect answer."
-          );
-          return;
+          // Mark question as answered to prevent multiple submissions
+          currentQuestionAnswered = true;
+                return;
+            }
+        } else if (allQuestions.length > 0) {
+            showNotification("Please select an answer.");
         }
-      } else if (allQuestions.length > 0) {
-        showNotification("Please select an answer.");
-      }
     }
 
     // Get background color based on hell mode grade
     function getGradeBackgroundColorHell(grade) {
-      if (!grade || grade === "") {
+        if (!grade || grade === "") {
+            return "rgba(255, 255, 255, 0.2)"; // Default white
+        }
+        if (grade === "Grand Master - Infinity") {
+            return "rgba(255, 215, 0, 0.3)"; // Gold for Grand Master - Infinity
+        }
+        if (grade === "Invalid") {
+            return "rgba(255, 0, 0, 0.3)"; // Red for Invalid
+        }
+        if (grade.startsWith("S")) {
+            return "rgba(255, 215, 0, 0.3)"; // Gold for S grades
+        }
         return "rgba(255, 255, 255, 0.2)"; // Default white
-      }
-      if (grade === "Grand Master - Infinity") {
-        return "rgba(255, 215, 0, 0.3)"; // Gold for Grand Master - Infinity
-      }
-      if (grade === "Invalid") {
-        return "rgba(255, 0, 0, 0.3)"; // Red for Invalid
-      }
-      if (grade.startsWith("S")) {
-        return "rgba(255, 215, 0, 0.3)"; // Gold for S grades
-      }
-      return "rgba(255, 255, 255, 0.2)"; // Default white
     }
-
+    
     // Get border color based on hell mode grade
     function getGradeBorderColorHell(grade) {
-      if (!grade || grade === "") {
+        if (!grade || grade === "") {
+            return "#ffffff"; // Default white
+        }
+        if (grade === "Grand Master - Infinity") {
+            return "#ffd700"; // Gold for Grand Master - Infinity
+        }
+        if (grade === "Invalid") {
+            return "#ff0000"; // Red for Invalid
+        }
+        if (grade.startsWith("S")) {
+            return "#ffd700"; // Gold for S grades
+        }
         return "#ffffff"; // Default white
-      }
-      if (grade === "Grand Master - Infinity") {
-        return "#ffd700"; // Gold for Grand Master - Infinity
-      }
-      if (grade === "Invalid") {
-        return "#ff0000"; // Red for Invalid
-      }
-      if (grade.startsWith("S")) {
-        return "#ffd700"; // Gold for S grades
-      }
-      return "#ffffff"; // Default white
     }
-  </script>
+</script>
 </html>
