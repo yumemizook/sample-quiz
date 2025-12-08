@@ -39,12 +39,35 @@
             <div class="tab-content active" id="easy-tab">
                 <div class="easy stats-card">
                     <h1>Easy mode:</h1>
-                    <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <label style="color: white; font-weight: bold;">Filter by input:</label>
-                        <button class="input-filter-btn active" data-input="all" data-mode="easy">All</button>
-                        <button class="input-filter-btn" data-input="keyboard" data-mode="easy">⌨️ Keyboard</button>
-                        <button class="input-filter-btn" data-input="controller" data-mode="easy">🎮 Controller</button>
-                        <button class="input-filter-btn" data-input="mobile" data-mode="easy">📱 Mobile</button>
+                    <div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by input:</label>
+                            <select class="input-filter-select" data-mode="easy">
+                                <option value="all">All</option>
+                                <option value="keyboard">⌨️ Keyboard</option>
+                                <option value="controller">🎮 Controller</option>
+                                <option value="mobile">📱 Mobile</option>
+                                <option value="mouse">🖱️ Mouse</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by time multiplier:</label>
+                            <select class="time-filter-select" data-mode="easy">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by clear type:</label>
+                            <select class="clear-filter-select" data-mode="easy">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by vanish mode:</label>
+                            <select class="vanish-filter-select" data-mode="easy">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="scores">
                         <table id="scoreTable">
@@ -67,12 +90,35 @@
             <div class="tab-content" id="normal-tab">
                 <div class="normal stats-card">
                     <h1>Normal mode:</h1>
-                    <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <label style="color: white; font-weight: bold;">Filter by input:</label>
-                        <button class="input-filter-btn active" data-input="all" data-mode="normal">All</button>
-                        <button class="input-filter-btn" data-input="keyboard" data-mode="normal">⌨️ Keyboard</button>
-                        <button class="input-filter-btn" data-input="controller" data-mode="normal">🎮 Controller</button>
-                        <button class="input-filter-btn" data-input="mobile" data-mode="normal">📱 Mobile</button>
+                    <div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by input:</label>
+                            <select class="input-filter-select" data-mode="normal">
+                                <option value="all">All</option>
+                                <option value="keyboard">⌨️ Keyboard</option>
+                                <option value="controller">🎮 Controller</option>
+                                <option value="mobile">📱 Mobile</option>
+                                <option value="mouse">🖱️ Mouse</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by time multiplier:</label>
+                            <select class="time-filter-select" data-mode="normal">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by clear type:</label>
+                            <select class="clear-filter-select" data-mode="normal">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by vanish mode:</label>
+                            <select class="vanish-filter-select" data-mode="normal">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="scores">
                         <table id="scoreTable2">
@@ -96,12 +142,35 @@
             <div class="tab-content" id="master-tab">
                 <div class="master stats-card">
                     <h1>Master mode:</h1>
-                    <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <label style="color: white; font-weight: bold;">Filter by input:</label>
-                        <button class="input-filter-btn active" data-input="all" data-mode="master">All</button>
-                        <button class="input-filter-btn" data-input="keyboard" data-mode="master">⌨️ Keyboard</button>
-                        <button class="input-filter-btn" data-input="controller" data-mode="master">🎮 Controller</button>
-                        <button class="input-filter-btn" data-input="mobile" data-mode="master">📱 Mobile</button>
+                    <div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by input:</label>
+                            <select class="input-filter-select" data-mode="master">
+                                <option value="all">All</option>
+                                <option value="keyboard">⌨️ Keyboard</option>
+                                <option value="controller">🎮 Controller</option>
+                                <option value="mobile">📱 Mobile</option>
+                                <option value="mouse">🖱️ Mouse</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by time multiplier:</label>
+                            <select class="time-filter-select" data-mode="master">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by clear type:</label>
+                            <select class="clear-filter-select" data-mode="master">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by vanish mode:</label>
+                            <select class="vanish-filter-select" data-mode="master">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="scores">
                         <table id="scoreTable3">
@@ -125,12 +194,35 @@
             <div class="tab-content" id="race-tab">
                 <div class="race stats-card">
                     <h1>Race mode:</h1>
-                    <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <label style="color: white; font-weight: bold;">Filter by input:</label>
-                        <button class="input-filter-btn active" data-input="all" data-mode="race">All</button>
-                        <button class="input-filter-btn" data-input="keyboard" data-mode="race">⌨️ Keyboard</button>
-                        <button class="input-filter-btn" data-input="controller" data-mode="race">🎮 Controller</button>
-                        <button class="input-filter-btn" data-input="mobile" data-mode="race">📱 Mobile</button>
+                    <div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by input:</label>
+                            <select class="input-filter-select" data-mode="race">
+                                <option value="all">All</option>
+                                <option value="keyboard">⌨️ Keyboard</option>
+                                <option value="controller">🎮 Controller</option>
+                                <option value="mobile">📱 Mobile</option>
+                                <option value="mouse">🖱️ Mouse</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by time multiplier:</label>
+                            <select class="time-filter-select" data-mode="race">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by clear type:</label>
+                            <select class="clear-filter-select" data-mode="race">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by vanish mode:</label>
+                            <select class="vanish-filter-select" data-mode="race">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="scores">
                         <table id="scoreTable5">
@@ -153,12 +245,35 @@
             <div class="tab-content" id="hell-tab">
                 <div class="hell stats-card">
                     <h1>Final mode:</h1>
-                    <div style="margin-bottom: 15px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                        <label style="color: white; font-weight: bold;">Filter by input:</label>
-                        <button class="input-filter-btn active" data-input="all" data-mode="hell">All</button>
-                        <button class="input-filter-btn" data-input="keyboard" data-mode="hell">⌨️ Keyboard</button>
-                        <button class="input-filter-btn" data-input="controller" data-mode="hell">🎮 Controller</button>
-                        <button class="input-filter-btn" data-input="mobile" data-mode="hell">📱 Mobile</button>
+                    <div style="margin-bottom: 15px; display: flex; flex-direction: column; gap: 10px;">
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by input:</label>
+                            <select class="input-filter-select" data-mode="hell">
+                                <option value="all">All</option>
+                                <option value="keyboard">⌨️ Keyboard</option>
+                                <option value="controller">🎮 Controller</option>
+                                <option value="mobile">📱 Mobile</option>
+                                <option value="mouse">🖱️ Mouse</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by time multiplier:</label>
+                            <select class="time-filter-select" data-mode="hell">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by clear type:</label>
+                            <select class="clear-filter-select" data-mode="hell">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
+                        <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <label style="color: white; font-weight: bold;">Filter by vanish mode:</label>
+                            <select class="vanish-filter-select" data-mode="hell">
+                                <option value="all">All</option>
+                            </select>
+                        </div>
                     </div>
                     <div class="scores">
                         <table id="scoreTable4">

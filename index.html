@@ -146,7 +146,7 @@
           </div>
           <div class="setting-item">
             <label class="setting-label">
-              <span class="setting-text">Fading Mode:</span>
+              <span class="setting-text">Vanish Mode:</span>
               <div class="arrow-selector" data-setting="fadingMode">
                 <button class="arrow-btn arrow-left" aria-label="Previous option">◀</button>
                 <span class="selector-value" id="fadingModeValue">Off</span>
@@ -159,7 +159,7 @@
                 </select>
               </div>
             </label>
-            <span class="setting-description">All question elements fade after the selected time</span>
+            <span class="setting-description">Question elements randomly vanish one at a time at the selected interval</span>
           </div>
           <div class="setting-item">
             <label class="setting-label">
@@ -271,11 +271,15 @@
           startQuestionSelect.innerHTML = '<option value="0">Question 1 (Start from beginning)</option>';
           
           // Add options for multiples of 10
+          // For race mode, skip 100, 110, 120 to avoid duplicates (they'll be added as 101, 111, 121)
+          const skipIndices = mode === "master130" ? [100, 110, 120] : [];
           for (let i = 10; i < questionCount; i += 10) {
-            const option = document.createElement("option");
-            option.value = i;
-            option.textContent = `Question ${i + 1}`;
-            startQuestionSelect.appendChild(option);
+            if (!skipIndices.includes(i)) {
+              const option = document.createElement("option");
+              option.value = i;
+              option.textContent = `Question ${i + 1}`;
+              startQuestionSelect.appendChild(option);
+            }
           }
           
           // For race mode (master130), add specific questions 101, 111, 121
@@ -432,6 +436,72 @@
         }
       }
       
+      // 5-click toggle for master/race mode cards
+      let masterCardClickCount = 0;
+      let raceCardClickCount = 0;
+      let masterCardClickTimer = null;
+      let raceCardClickTimer = null;
+      const masterModeCard = document.getElementById("masterModeCard");
+      const raceModeCard = document.getElementById("raceModeCard");
+      
+      // Master card 5-click toggle
+      if (masterModeCard) {
+        masterModeCard.addEventListener("click", (e) => {
+          masterCardClickCount++;
+          raceCardClickCount = 0; // Reset race card counter
+          if (raceCardClickTimer) {
+            clearTimeout(raceCardClickTimer);
+            raceCardClickTimer = null;
+          }
+          
+          // Clear previous timer
+          if (masterCardClickTimer) {
+            clearTimeout(masterCardClickTimer);
+          }
+          
+          // Check if clicked 5 times within 2 seconds
+          masterCardClickTimer = setTimeout(() => {
+            if (masterCardClickCount >= 5) {
+              masterModeCard.classList.add("hide");
+              raceModeCard.classList.remove("hide");
+              // Update mode selection to race mode
+              handleModeSelection("master130");
+            }
+            masterCardClickCount = 0;
+            masterCardClickTimer = null;
+          }, 2000);
+        });
+      }
+      
+      // Race card 5-click toggle
+      if (raceModeCard) {
+        raceModeCard.addEventListener("click", (e) => {
+          raceCardClickCount++;
+          masterCardClickCount = 0; // Reset master card counter
+          if (masterCardClickTimer) {
+            clearTimeout(masterCardClickTimer);
+            masterCardClickTimer = null;
+          }
+          
+          // Clear previous timer
+          if (raceCardClickTimer) {
+            clearTimeout(raceCardClickTimer);
+          }
+          
+          // Check if clicked 5 times within 2 seconds
+          raceCardClickTimer = setTimeout(() => {
+            if (raceCardClickCount >= 5) {
+              raceModeCard.classList.add("hide");
+              masterModeCard.classList.remove("hide");
+              // Update mode selection to master mode
+              handleModeSelection("master");
+            }
+            raceCardClickCount = 0;
+            raceCardClickTimer = null;
+          }, 2000);
+        });
+      }
+      
       // Listen for mode card clicks
       document.querySelectorAll(".mode-card").forEach(card => {
         card.addEventListener("click", () => {
@@ -487,7 +557,7 @@
             if (fadingMode !== "off") {
               const fadeIcon = document.createElement("div");
               fadeIcon.className = "modifier-icon";
-              fadeIcon.title = `Fading Mode: ${fadingMode}s`;
+              fadeIcon.title = `Vanish Mode: every ${fadingMode}s`;
               fadeIcon.textContent = `F${fadingMode}s`;
               container.appendChild(fadeIcon);
             }

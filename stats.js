@@ -33,6 +33,7 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
         keyboard: 0,
         controller: 0,
         mobile: 0,
+        mouse: 0,
         unknown: 0
     };
     
@@ -46,6 +47,8 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
             inputCounts.controller++;
         } else if (inputType === "mobile" || inputType === "📱") {
             inputCounts.mobile++;
+        } else if (inputType === "mouse" || inputType === "🖱️") {
+            inputCounts.mouse++;
         } else {
             inputCounts.unknown++;
         }
@@ -67,12 +70,17 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
         mainInput = "mobile";
         maxCount = inputCounts.mobile;
     }
+    if (inputCounts.mouse > maxCount) {
+        mainInput = "mouse";
+        maxCount = inputCounts.mouse;
+    }
     
     // Format with icon
     const icons = {
         keyboard: "⌨️",
         controller: "🎮",
         mobile: "📱",
+        mouse: "🖱️",
         unknown: "❓"
     };
     
@@ -80,6 +88,7 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
         keyboard: "Keyboard",
         controller: "Controller",
         mobile: "Mobile",
+        mouse: "Mouse",
         unknown: "Unknown"
     };
     
@@ -581,11 +590,11 @@ function updateLevelProgression(playerData, totalPlays = 0, mainInput = null, cr
 
 // Current filter state
 const currentFilter = {
-    easy: 'all',
-    normal: 'all',
-    master: 'all',
-    race: 'all',
-    hell: 'all'
+    easy: { input: 'all', time: 'all', clear: 'all', vanish: 'all' },
+    normal: { input: 'all', time: 'all', clear: 'all', vanish: 'all' },
+    master: { input: 'all', time: 'all', clear: 'all', vanish: 'all' },
+    race: { input: 'all', time: 'all', clear: 'all', vanish: 'all' },
+    hell: { input: 'all', time: 'all', clear: 'all', vanish: 'all' }
 };
 
 // Tab switching functionality
@@ -611,23 +620,146 @@ function initTabs() {
     });
 }
 
-// Initialize input filter buttons
-function initInputFilters() {
-    const filterButtons = document.querySelectorAll('.input-filter-btn');
+// Extract unique values from scores for a specific mode
+function extractUniqueValues(scores) {
+    const timeMultipliers = new Set();
+    const clearTypes = new Set();
+    const vanishModes = new Set();
     
-    filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const inputType = button.getAttribute('data-input');
-            const mode = button.getAttribute('data-mode');
-            
-            // Update active state
-            document.querySelectorAll(`.input-filter-btn[data-mode="${mode}"]`).forEach(btn => {
-                btn.classList.remove('active');
-            });
-            button.classList.add('active');
+    scores.forEach(score => {
+        // Extract time multipliers
+        if (score.modifiers?.timeMultiplier !== undefined) {
+            timeMultipliers.add(score.modifiers.timeMultiplier);
+        }
+        
+        // Extract clear types
+        if (score.clearType) {
+            clearTypes.add(score.clearType);
+        }
+        
+        // Extract vanish modes (fadingMode)
+        const vanishMode = score.modifiers?.fadingMode;
+        if (vanishMode && vanishMode !== 'off') {
+            vanishModes.add(vanishMode);
+        } else if (!vanishMode || vanishMode === 'off') {
+            vanishModes.add('off');
+        }
+    });
+    
+    return {
+        timeMultipliers: Array.from(timeMultipliers).sort((a, b) => a - b),
+        clearTypes: Array.from(clearTypes).sort(),
+        vanishModes: Array.from(vanishModes).sort((a, b) => {
+            if (a === 'off') return -1;
+            if (b === 'off') return 1;
+            return parseFloat(a) - parseFloat(b);
+        })
+    };
+}
+
+// Populate filter dropdowns for a specific mode
+function populateFilterDropdowns(mode, scores) {
+    const uniqueValues = extractUniqueValues(scores);
+    
+    // Populate time multiplier dropdown
+    const timeSelect = document.querySelector(`.time-filter-select[data-mode="${mode}"]`);
+    if (timeSelect) {
+        const currentValue = timeSelect.value || 'all';
+        timeSelect.innerHTML = '<option value="all">All</option>';
+        uniqueValues.timeMultipliers.forEach(tm => {
+            const option = document.createElement('option');
+            option.value = tm.toString();
+            option.textContent = `${tm.toFixed(2)}x`;
+            timeSelect.appendChild(option);
+        });
+        timeSelect.value = currentValue;
+    }
+    
+    // Populate clear type dropdown
+    const clearSelect = document.querySelector(`.clear-filter-select[data-mode="${mode}"]`);
+    if (clearSelect) {
+        const currentValue = clearSelect.value || 'all';
+        clearSelect.innerHTML = '<option value="all">All</option>';
+        uniqueValues.clearTypes.forEach(ct => {
+            const option = document.createElement('option');
+            option.value = ct;
+            option.textContent = ct;
+            clearSelect.appendChild(option);
+        });
+        clearSelect.value = currentValue;
+    }
+    
+    // Populate vanish mode dropdown
+    const vanishSelect = document.querySelector(`.vanish-filter-select[data-mode="${mode}"]`);
+    if (vanishSelect) {
+        const currentValue = vanishSelect.value || 'all';
+        vanishSelect.innerHTML = '<option value="all">All</option>';
+        uniqueValues.vanishModes.forEach(vm => {
+            const option = document.createElement('option');
+            option.value = vm;
+            option.textContent = vm === 'off' ? 'Off' : `${vm}s`;
+            vanishSelect.appendChild(option);
+        });
+        vanishSelect.value = currentValue;
+    }
+}
+
+// Initialize all filter dropdowns
+function initInputFilters() {
+    // Input filter selects
+    const inputFilterSelects = document.querySelectorAll('.input-filter-select');
+    inputFilterSelects.forEach(select => {
+        select.addEventListener('change', () => {
+            const inputType = select.value;
+            const mode = select.getAttribute('data-mode');
             
             // Update filter state
-            currentFilter[mode] = inputType;
+            currentFilter[mode].input = inputType;
+            
+            // Re-render the stats for this mode
+            renderModeStats(mode);
+        });
+    });
+    
+    // Time multiplier filter selects
+    const timeFilterSelects = document.querySelectorAll('.time-filter-select');
+    timeFilterSelects.forEach(select => {
+        select.addEventListener('change', () => {
+            const timeValue = select.value;
+            const mode = select.getAttribute('data-mode');
+            
+            // Update filter state
+            currentFilter[mode].time = timeValue;
+            
+            // Re-render the stats for this mode
+            renderModeStats(mode);
+        });
+    });
+    
+    // Clear type filter selects
+    const clearFilterSelects = document.querySelectorAll('.clear-filter-select');
+    clearFilterSelects.forEach(select => {
+        select.addEventListener('change', () => {
+            const clearValue = select.value;
+            const mode = select.getAttribute('data-mode');
+            
+            // Update filter state
+            currentFilter[mode].clear = clearValue;
+            
+            // Re-render the stats for this mode
+            renderModeStats(mode);
+        });
+    });
+    
+    // Vanish mode filter selects
+    const vanishFilterSelects = document.querySelectorAll('.vanish-filter-select');
+    vanishFilterSelects.forEach(select => {
+        select.addEventListener('change', () => {
+            const vanishValue = select.value;
+            const mode = select.getAttribute('data-mode');
+            
+            // Update filter state
+            currentFilter[mode].vanish = vanishValue;
             
             // Re-render the stats for this mode
             renderModeStats(mode);
@@ -635,12 +767,46 @@ function initInputFilters() {
     });
 }
 
-// Filter scores by input type
-function filterScores(scores, inputType) {
-    if (inputType === 'all') {
-        return scores;
-    }
-    return scores.filter(score => score.inputType === inputType);
+// Filter scores by all criteria
+function filterScores(scores, filterState) {
+    return scores.filter(score => {
+        // Filter by input type
+        if (filterState.input !== 'all' && score.inputType !== filterState.input) {
+            return false;
+        }
+        
+        // Filter by time multiplier
+        if (filterState.time !== 'all') {
+            const scoreTimeMultiplier = score.modifiers?.timeMultiplier;
+            const filterTime = parseFloat(filterState.time);
+            if (!scoreTimeMultiplier || Math.abs(scoreTimeMultiplier - filterTime) > 0.01) {
+                return false;
+            }
+        }
+        
+        // Filter by clear type
+        if (filterState.clear !== 'all' && score.clearType !== filterState.clear) {
+            return false;
+        }
+        
+        // Filter by vanish mode
+        if (filterState.vanish !== 'all') {
+            const scoreVanishMode = score.modifiers?.fadingMode;
+            if (filterState.vanish === 'off') {
+                // Show scores with no vanish mode or explicitly off
+                if (scoreVanishMode && scoreVanishMode !== 'off') {
+                    return false;
+                }
+            } else {
+                // Show scores with matching vanish mode
+                if (scoreVanishMode !== filterState.vanish) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    });
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -733,6 +899,13 @@ document.addEventListener("DOMContentLoaded", () => {
             const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + allRaceList.length + (secretList ? secretList.length : 0);
             const mainInput = calculateMainInputMethod(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList);
             updateLevelProgression(playerData, totalPlays, mainInput, createdAt);
+
+            // Populate filter dropdowns with unique values from database
+            populateFilterDropdowns('easy', allEasyList);
+            populateFilterDropdowns('normal', allNormalList);
+            populateFilterDropdowns('master', allMasterList);
+            populateFilterDropdowns('race', allRaceList);
+            populateFilterDropdowns('hell', allHellList);
 
             // Render all modes
             renderModeStats('easy');
@@ -948,6 +1121,7 @@ function renderModeStats(mode) {
             if (inputType === 'controller') return "🎮";
             if (inputType === 'keyboard') return "⌨️";
             if (inputType === 'mobile') return "📱";
+            if (inputType === 'mouse') return "🖱️";
             return "❓";
         };
         

@@ -112,12 +112,15 @@
     }
     
     // Track input type used during the quiz
-    let inputType = null; // 'controller', 'keyboard', or 'mobile'
+    let inputType = null; // 'controller', 'keyboard', 'mobile', or 'mouse'
     
     // Detect initial input type
     const isMobile = isMobileDevice();
     if (isMobile) {
         inputType = 'mobile';
+    } else {
+        // Default to mouse for desktop users who haven't used keyboard/controller yet
+        inputType = 'mouse';
     }
 
     let allQuestions = [];
@@ -347,12 +350,8 @@
     let totalWrongAnswers = 0; // Track total wrong answers for clear type calculation
     let questionTimedOut = false; // Track if player ran out of time on a question
     
-    // Fading mode variables
-    let fadeInterval = null;
-    let fadeDelay = null;
-    if (fadingMode) {
-        fadeDelay = parseFloat(fadingMode) * 1000; // Convert to milliseconds
-    }
+    // Fading mode variables (random fading like race mode)
+    let randomFadeInterval = null;
     let score = 0;
     let thresholdChecked = { q51: false }; // Track which thresholds have been checked
     let elapsedQuestions = 0;
@@ -419,7 +418,7 @@
         const livesIcon = document.createElement("div");
         livesIcon.className = "modifier-icon";
         livesIcon.title = `${currentLives} Lives`;
-        livesIcon.innerHTML = `<span style="font-size: 2.2em;">❤️</span><br><span style="font-size: 1.1em; font-weight: bold;">${currentLives === 100 ? "100" : currentLives.toString()}</span>`;
+        livesIcon.innerHTML = `<span style="font-size: 2.2em;">❤️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${currentLives === 100 ? "100" : currentLives.toString()}</span>`;
         livesIcon.style.width = `${iconSize}px`;
         livesIcon.style.height = `${iconSize}px`;
         livesIcon.style.display = "flex";
@@ -434,7 +433,7 @@
         const startIcon = document.createElement("div");
         startIcon.className = "modifier-icon";
         startIcon.title = `Start at Question ${startQuestionParam + 1}`;
-        startIcon.innerHTML = `<span style="font-size: 2.2em;">🎯</span><br><span style="font-size: 1.1em; font-weight: bold;">${startQuestionParam + 1}</span>`;
+        startIcon.innerHTML = `<span style="font-size: 2.2em;">🎯</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${startQuestionParam + 1}</span>`;
         startIcon.style.width = `${iconSize}px`;
         startIcon.style.height = `${iconSize}px`;
         startIcon.style.display = "flex";
@@ -449,7 +448,7 @@
         const timeIcon = document.createElement("div");
         timeIcon.className = "modifier-icon";
         timeIcon.title = `Time Multiplier: ${timeMultiplier.toFixed(2)}x`;
-        timeIcon.innerHTML = `<span style="font-size: 2.2em;">⏱️</span><br><span style="font-size: 1.1em; font-weight: bold;">${timeMultiplier.toFixed(2)}x</span>`;
+        timeIcon.innerHTML = `<span style="font-size: 2.2em;">⏱️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${timeMultiplier.toFixed(2)}x</span>`;
         timeIcon.style.width = `${iconSize}px`;
         timeIcon.style.height = `${iconSize}px`;
         timeIcon.style.display = "flex";
@@ -463,8 +462,8 @@
       if (fadingMode && fadingMode !== "off") {
         const fadeIcon = document.createElement("div");
         fadeIcon.className = "modifier-icon";
-        fadeIcon.title = `Fading Mode: ${fadingMode}s`;
-        fadeIcon.innerHTML = `<span style="font-size: 2.2em;">👁️</span><br><span style="font-size: 1.1em; font-weight: bold;">${fadingMode}s</span>`;
+        fadeIcon.title = `Vanish Mode: every ${fadingMode}s`;
+        fadeIcon.innerHTML = `<span style="font-size: 2.2em;">👁️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${fadingMode}s</span>`;
         fadeIcon.style.width = `${iconSize}px`;
         fadeIcon.style.height = `${iconSize}px`;
         fadeIcon.style.display = "flex";
@@ -591,6 +590,12 @@
         window.answerTimerId = null;
       }
       
+      // Pause random fading
+      if (randomFadeInterval) {
+        clearInterval(randomFadeInterval);
+        randomFadeInterval = null;
+      }
+      
       // Pause BGM
       if (currentBGM && !currentBGM.paused) {
         currentBGM.pause();
@@ -671,6 +676,11 @@
         currentBGM.play().catch(err => console.log("BGM resume failed:", err));
       }
       
+      // Resume random fading if fading mode is enabled
+      if (fadingMode && fadingMode !== "off" && !randomFadeInterval) {
+        startRandomFading();
+      }
+      
       // Hide pause menu
       if (pauseMenu) {
         pauseMenu.style.display = "none";
@@ -693,8 +703,8 @@
     // Keyboard support
     function initKeyboard() {
       document.addEventListener("keydown", (e) => {
-        // Track keyboard input type
-        if (!inputType || inputType === 'mobile') {
+        // Track keyboard input type (override mouse, but not controller)
+        if (inputType !== 'controller' && !isMobile) {
             inputType = 'keyboard';
         }
         
@@ -768,6 +778,12 @@
     if (livesDisplay) {
         livesDisplay.style.display = "none";
     }
+    
+    // Hide modifier icons (including hearts icon) while loading
+    const modifierIconsContainer = document.getElementById("modifierIcons");
+    if (modifierIconsContainer) {
+        modifierIconsContainer.style.display = "none";
+    }
 
     // Handle give up button
     const giveUpBtn = document.querySelector("[giveup]");
@@ -812,6 +828,11 @@
         // Display modifier icons (with slight delay to ensure pause button is rendered)
         setTimeout(() => {
           updateModifierIconsDisplay();
+          // Show modifier icons container after questions are loaded
+          const modifierIconsContainer = document.getElementById("modifierIcons");
+          if (modifierIconsContainer) {
+            modifierIconsContainer.style.display = "flex";
+          }
         }, 100);
         
         // Reset pause tracking
@@ -1143,6 +1164,10 @@
     let timeToAnswer;
     let initialTimeToAnswer; // Track initial time allocated for current question
     function loadQues() {
+      // Reset all text elements opacity at the start of each new question
+      // This ensures all elements are visible when vanish mode is enabled
+      resetAllTextElementsOpacity();
+      
       const opt = document.getElementById("opt");
       let currentQuestion = allQuestions[currQuestion].question;
       // Decode HTML entities in the question and answers
@@ -1254,6 +1279,10 @@
         // Make the div clickable to select the option
         choicesdiv.addEventListener("click", () => {
           choice.checked = true;
+          // Track mouse input type (only if keyboard/controller hasn't been used)
+          if (!isMobile && inputType !== 'keyboard' && inputType !== 'controller') {
+            inputType = 'mouse';
+          }
         });
         
         // Store reference for controller support
@@ -1565,36 +1594,17 @@
       // Update indicator visibility after loading question
       updateIndicatorVisibility();
       
-      // Fading mode: fade all question elements after specified delay
-      if (fadeDelay) {
-          // Clear any existing fade interval
-          if (fadeInterval) {
-              clearTimeout(fadeInterval);
-          }
-          
-          // Reset opacity of all elements first
-          const questionEl = document.getElementById("ques");
-          const optionsEl = document.getElementById("opt");
-          if (questionEl) questionEl.style.opacity = "1";
-          if (optionsEl) {
-              const labels = optionsEl.querySelectorAll("label");
-              labels.forEach(label => label.style.opacity = "1");
-          }
-          
-          // Fade all elements after delay
-          fadeInterval = setTimeout(() => {
-              if (questionEl) {
-                  questionEl.style.opacity = "0";
-                  questionEl.style.transition = "opacity 0.5s ease";
-              }
-              if (optionsEl) {
-                  const labels = optionsEl.querySelectorAll("label");
-                  labels.forEach(label => {
-                      label.style.opacity = "0";
-                      label.style.transition = "opacity 0.5s ease";
-                  });
-              }
-          }, fadeDelay);
+      // Start random fading if vanish mode is enabled
+      if (fadingMode && fadingMode !== "off") {
+        if (!randomFadeInterval) {
+          startRandomFading();
+        }
+      } else {
+        // Stop random fading if disabled
+        if (randomFadeInterval) {
+          clearInterval(randomFadeInterval);
+          randomFadeInterval = null;
+        }
       }
       
       // Check threshold time only when reaching question 51 (currQuestion === 50)
@@ -1989,6 +1999,12 @@
       if (window.answerTimerId) {
         clearInterval(window.answerTimerId);
       }
+      
+      // Stop random fading
+      if (randomFadeInterval) {
+        clearInterval(randomFadeInterval);
+        randomFadeInterval = null;
+      }
 
       // Hide grade displays when quiz is finished or abandoned
       const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
@@ -2012,6 +2028,8 @@
           inputTypeIcon = '⌨️';
       } else if (inputType === 'mobile') {
           inputTypeIcon = '📱';
+      } else if (inputType === 'mouse') {
+          inputTypeIcon = '🖱️';
       } else {
           inputTypeIcon = '❓';
       }
@@ -2135,7 +2153,7 @@
             time: document.getElementById("timeelapsed").textContent,
             date: new Date().toLocaleString(),
             line: line,
-            inputType: inputType || 'unknown',
+            inputType: inputType || 'mouse',
             pauseCount: pauseCount || 0,
             totalPausedTime: formatPausedTime(totalPausedTime || 0),
             clearType: clearType,
@@ -2167,8 +2185,19 @@
       // Manual click (kept for UX)
       submitBtn.addEventListener("click", submitMasterScore);
 
+      // Check for invalidating modifiers and disable submit button
+      const hasInvalidModifiers = startQuestionParam !== 0 || timeMultiplier < 1.0;
+      
+      if (hasInvalidModifiers) {
+        submitBtn.disabled = true;
+        if (startQuestionParam !== 0) {
+          submitBtn.textContent = "Cannot submit: started at question " + (startQuestionParam + 1);
+        } else {
+          submitBtn.textContent = "Cannot submit: time multiplier below 1x";
+        }
+        submitBtn.style.cursor = "not-allowed";
+      } else if (!quizAbandoned && localStorage.getItem("autoSubmitEnabled") !== "false") {
       // Automatic upload for logged‑in users (only if not abandoned and auto-submit is enabled)
-      if (!quizAbandoned && localStorage.getItem("autoSubmitEnabled") !== "false") {
         submitMasterScore();
       } else {
         // If abandoned, disable the submit button and show message

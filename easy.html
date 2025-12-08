@@ -103,12 +103,15 @@
     }
     
     // Track input type used during the quiz
-    let inputType = null; // 'controller', 'keyboard', or 'mobile'
+    let inputType = null; // 'controller', 'keyboard', 'mobile', or 'mouse'
     
     // Detect initial input type
     const isMobile = isMobileDevice();
     if (isMobile) {
         inputType = 'mobile';
+    } else {
+        // Default to mouse for desktop users who haven't used keyboard/controller yet
+        inputType = 'mouse';
     }
 
     let Questions = [];
@@ -159,11 +162,8 @@
     let quizStartTime = null; // Track when quiz starts for 5-minute completion bonus
     
     // Fading mode variables
-    let fadeInterval = null;
-    let fadeDelay = null;
-    if (fadingMode) {
-        fadeDelay = parseFloat(fadingMode) * 1000; // Convert to milliseconds
-    }
+    // Fading mode variables (random fading like race mode)
+    let randomFadeInterval = null;
     
     // Gamepad support
     let gamepadConnected = false;
@@ -254,7 +254,7 @@
         const livesIcon = document.createElement("div");
         livesIcon.className = "modifier-icon";
         livesIcon.title = `${currentLives} Lives`;
-        livesIcon.innerHTML = `<span style="font-size: 2.2em;">❤️</span><br><span style="font-size: 1.1em; font-weight: bold;">${currentLives === 100 ? "100" : currentLives.toString()}</span>`;
+        livesIcon.innerHTML = `<span style="font-size: 2.2em;">❤️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${currentLives === 100 ? "100" : currentLives.toString()}</span>`;
         livesIcon.style.cssText = `
           width: ${iconSize}px;
           height: ${iconSize}px;
@@ -278,7 +278,7 @@
         const startIcon = document.createElement("div");
         startIcon.className = "modifier-icon";
         startIcon.title = `Start at Question ${startQuestionParam + 1}`;
-        startIcon.innerHTML = `<span style="font-size: 2.2em;">🎯</span><br><span style="font-size: 1.1em; font-weight: bold;">${startQuestionParam + 1}</span>`;
+        startIcon.innerHTML = `<span style="font-size: 2.2em;">🎯</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${startQuestionParam + 1}</span>`;
         startIcon.style.cssText = `
           width: ${iconSize}px;
           height: ${iconSize}px;
@@ -302,7 +302,7 @@
         const timeIcon = document.createElement("div");
         timeIcon.className = "modifier-icon";
         timeIcon.title = `Time Multiplier: ${timeMultiplier.toFixed(2)}x`;
-        timeIcon.innerHTML = `<span style="font-size: 2.2em;">⏱️</span><br><span style="font-size: 1.1em; font-weight: bold;">${timeMultiplier.toFixed(2)}x</span>`;
+        timeIcon.innerHTML = `<span style="font-size: 2.2em;">⏱️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${timeMultiplier.toFixed(2)}x</span>`;
         timeIcon.style.cssText = `
           width: ${iconSize}px;
           height: ${iconSize}px;
@@ -325,8 +325,8 @@
       if (fadingMode && fadingMode !== "off") {
         const fadeIcon = document.createElement("div");
         fadeIcon.className = "modifier-icon";
-        fadeIcon.title = `Fading Mode: ${fadingMode}s`;
-        fadeIcon.innerHTML = `<span style="font-size: 2.2em;">👁️</span><br><span style="font-size: 1.1em; font-weight: bold;">${fadingMode}s</span>`;
+        fadeIcon.title = `Vanish Mode: every ${fadingMode}s`;
+        fadeIcon.innerHTML = `<span style="font-size: 2.2em;">👁️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${fadingMode}s</span>`;
         fadeIcon.style.cssText = `
           width: ${iconSize}px;
           height: ${iconSize}px;
@@ -426,6 +426,12 @@
             window.answerTimerId = null;
         }
         
+        // Pause random fading
+        if (randomFadeInterval) {
+            clearInterval(randomFadeInterval);
+            randomFadeInterval = null;
+        }
+        
         // Show pause menu
         if (pauseMenu) {
             pauseMenu.style.display = "flex";
@@ -491,6 +497,11 @@
                 }, 10);
             }
             pausedAnswerTimer = false;
+        }
+        
+        // Resume random fading if fading mode is enabled
+        if (fadingMode && fadingMode !== "off" && !randomFadeInterval) {
+            startRandomFading();
         }
         
         // Hide pause menu
@@ -561,8 +572,8 @@
     // Keyboard support
     function initKeyboard() {
         document.addEventListener("keydown", (e) => {
-            // Track keyboard input type
-            if (!inputType || inputType === 'mobile') {
+            // Track keyboard input type (override mouse, but not controller)
+            if (inputType !== 'controller' && !isMobile) {
                 inputType = 'keyboard';
             }
             
@@ -602,10 +613,7 @@
                 return;
             }
             
-            // Set input type to keyboard when keyboard is used
-            if (!isMobile) {
-                inputType = 'keyboard';
-            }
+            // Input type already set above, no need to set again
             if (e.key >= "1" && e.key <= "4") {
                 const index = parseInt(e.key) - 1;
                 if (answerOptions && answerOptions[index]) {
@@ -630,6 +638,12 @@
     const livesDisplay = document.getElementById("livesDisplay");
     if (livesDisplay) {
         livesDisplay.style.display = "none";
+    }
+    
+    // Hide modifier icons (including hearts icon) while loading
+    const modifierIconsContainer = document.getElementById("modifierIcons");
+    if (modifierIconsContainer) {
+        modifierIconsContainer.style.display = "none";
     }
     
     // Handle give up button
@@ -678,6 +692,11 @@
             // Display modifier icons (with slight delay to ensure pause button is rendered)
             setTimeout(() => {
               updateModifierIconsDisplay();
+              // Show modifier icons container after questions are loaded
+              const modifierIconsContainer = document.getElementById("modifierIcons");
+              if (modifierIconsContainer) {
+                modifierIconsContainer.style.display = "flex";
+              }
             }, 100);
             
             // Show give up button after questions are loaded
@@ -922,6 +941,10 @@
     }
 
     function loadQues() {
+        // Reset all text elements opacity at the start of each new question
+        // This ensures all elements are visible when vanish mode is enabled
+        resetAllTextElementsOpacity();
+        
         // Reset answered flag when loading a new question
         currentQuestionAnswered = false;
         wrongAnswersForCurrentQuestion = 0;
@@ -1015,6 +1038,10 @@
             // Make the div clickable to select the option
             choicesdiv.addEventListener("click", () => {
                 choice.checked = true;
+                // Track mouse input type (only if keyboard/controller hasn't been used)
+                if (!isMobile && inputType !== 'keyboard' && inputType !== 'controller') {
+                    inputType = 'mouse';
+                }
             });
             
             // Store reference for controller support
@@ -1059,37 +1086,99 @@
         // Play BGM
         playBGM();
         
-        // Fading mode: fade all question elements after specified delay
-        if (fadeDelay) {
-            // Clear any existing fade interval
-            if (fadeInterval) {
-                clearTimeout(fadeInterval);
-            }
-            
-            // Reset opacity of all elements first
-            const questionEl = document.getElementById("ques");
-            const optionsEl = document.getElementById("opt");
-            if (questionEl) questionEl.style.opacity = "1";
-            if (optionsEl) {
-                const labels = optionsEl.querySelectorAll("label");
-                labels.forEach(label => label.style.opacity = "1");
-            }
-            
-            // Fade all elements after delay
-            fadeInterval = setTimeout(() => {
-                if (questionEl) {
-                    questionEl.style.opacity = "0";
-                    questionEl.style.transition = "opacity 0.5s ease";
-                }
-                if (optionsEl) {
-                    const labels = optionsEl.querySelectorAll("label");
-                    labels.forEach(label => {
-                        label.style.opacity = "0";
-                        label.style.transition = "opacity 0.5s ease";
-                    });
-                }
-            }, fadeDelay);
+        // Start random fading if vanish mode is enabled
+        if (fadingMode && fadingMode !== "off") {
+          if (!randomFadeInterval) {
+            startRandomFading();
+          }
+        } else {
+          // Stop random fading if disabled
+          if (randomFadeInterval) {
+            clearInterval(randomFadeInterval);
+            randomFadeInterval = null;
+          }
         }
+    }
+    
+    // Function to reset all text elements' opacity
+    function resetAllTextElementsOpacity() {
+      const questionEl = document.getElementById("ques");
+      if (questionEl) {
+        questionEl.style.opacity = "1";
+      }
+
+      const optionsEl = document.getElementById("opt");
+      if (optionsEl) {
+        const labels = optionsEl.querySelectorAll("label");
+        labels.forEach(label => {
+          label.style.opacity = "1";
+        });
+      }
+
+      const scoreEl = document.getElementById("score");
+      if (scoreEl) {
+        scoreEl.style.opacity = "1";
+      }
+
+      const timeElapsedEl = document.getElementById("timeelapsed");
+      if (timeElapsedEl) {
+        timeElapsedEl.style.opacity = "1";
+      }
+    }
+
+    // Function to get all visible text elements (excludes score, timer)
+    function getVisibleTextElements() {
+      const elements = [];
+
+      const questionEl = document.getElementById("ques");
+      if (questionEl && questionEl.style.opacity !== "0" && questionEl.style.display !== "none") {
+        elements.push(questionEl);
+      }
+
+      const optionsEl = document.getElementById("opt");
+      if (optionsEl) {
+        const labels = optionsEl.querySelectorAll("label");
+        labels.forEach(label => {
+          if (label.style.opacity !== "0" && label.style.display !== "none") {
+            elements.push(label);
+          }
+        });
+      }
+
+      // Note: score and timer (timeelapsed) are excluded from fading
+
+      return elements;
+    }
+
+    // Function to start random text fading (uses fadingMode parameter as interval in seconds)
+    function startRandomFading() {
+      if (randomFadeInterval) {
+        clearInterval(randomFadeInterval);
+        randomFadeInterval = null;
+      }
+
+      function fadeRandomElement() {
+        const visibleElements = getVisibleTextElements();
+        if (visibleElements.length === 0) {
+          return; // All elements are already faded
+        }
+
+        // Randomly select one element
+        const randomIndex = Math.floor(Math.random() * visibleElements.length);
+        const element = visibleElements[randomIndex];
+
+        // Fade it to invisible
+        element.style.opacity = "0";
+        element.style.transition = "opacity 0.5s ease";
+      }
+
+      // Use fadingMode parameter as interval (in seconds, convert to milliseconds)
+      const intervalMs = parseFloat(fadingMode) * 1000;
+
+      // Start the interval
+      randomFadeInterval = setInterval(() => {
+        fadeRandomElement();
+      }, intervalMs);
     }
     
     // Calculate grade points for a question (Easy mode: 6x multiplier, 30s time bonus)
@@ -1273,6 +1362,12 @@
             clearInterval(window.questionTimerId);
         }
         
+        // Stop random fading
+        if (randomFadeInterval) {
+            clearInterval(randomFadeInterval);
+            randomFadeInterval = null;
+        }
+        
         // Calculate 5-minute completion bonus (only if quiz was completed, not abandoned)
         let timeBonus = 0;
         if (quizStartTime && !gaveUp && !quizAbandoned) {
@@ -1315,6 +1410,7 @@
         if (inputType === 'controller') inputTypeIcon = "🎮";
         else if (inputType === 'keyboard') inputTypeIcon = "⌨️";
         else if (inputType === 'mobile') inputTypeIcon = "📱";
+        else if (inputType === 'mouse') inputTypeIcon = "🖱️";
         
         evalDiv.innerHTML = `<h3>${title}</h3>
                     <p style="font-size:larger">Your score is:</p>
@@ -1366,6 +1462,17 @@
             // Prevent invalid scores from being submitted
             if (quizMinutes >= 15) {
                 alert("Invalid run! Scores cannot be submitted for runs that took 15 minutes or longer.");
+                return;
+            }
+            
+            // Only allow submission if starting question is 1 and time multiplier is 1x or higher
+            if (startQuestionParam !== 0) {
+                alert("Scores can only be submitted when starting from question 1.");
+                return;
+            }
+            
+            if (timeMultiplier < 1.0) {
+                alert("Scores can only be submitted when time multiplier is 1x or higher.");
                 return;
             }
 
@@ -1422,7 +1529,7 @@
                     score: totalGradePoints, // Use grade points instead of score
                     time: timeDisplay.textContent,
                     date: new Date().toLocaleString(),
-                    inputType: inputType || 'unknown',
+                    inputType: inputType || 'mouse',
                     pauseCount: pauseCount,
                     totalPausedTime: formatPausedTime(totalPausedTime),
                     clearType: clearType,
@@ -1451,8 +1558,21 @@
         // Manual click (kept for UX)
         submitBtn.addEventListener("click", submitEasyScore);
 
-        // Automatic upload for logged‑in users
-        submitEasyScore();
+        // Check for invalidating modifiers and disable submit button
+        const hasInvalidModifiers = startQuestionParam !== 0 || timeMultiplier < 1.0;
+        
+        if (hasInvalidModifiers) {
+            submitBtn.disabled = true;
+            if (startQuestionParam !== 0) {
+                submitBtn.textContent = "Cannot submit: started at question " + (startQuestionParam + 1);
+            } else {
+                submitBtn.textContent = "Cannot submit: time multiplier below 1x";
+            }
+            submitBtn.style.cursor = "not-allowed";
+        } else {
+            // Automatic upload for logged‑in users
+            submitEasyScore();
+        }
 
     }
     function nextQuestion() {

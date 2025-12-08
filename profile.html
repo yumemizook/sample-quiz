@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>Player Profile</title>
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div class="profile-banner" id="profileBanner"></div>
+    <div class="status">
+        <a login href="signin.html">Login</a>
+        <a signup href="signup.html">Signup</a>
+        <a logout class="hide" href="index.html">Log out</a>
+        <a href="index.html">Home</a>
+        <div class="player-info hide" id="playerInfo">
+            <div class="player-info-left">
+                <span class="name"></span>
+                <span class="player-level" id="playerLevel"></span>
+            </div>
+            <div class="player-avatar hide" id="playerAvatar">
+                <img id="playerAvatarImg" src="" alt="Avatar" />
+                <div class="player-avatar-placeholder">👤</div>
+            </div>
+        </div>
+    </div>
+    <div class="container2">
+        <div id="playerNotFound" class="profile-not-found" style="display: none;">
+            <h1>Player Not Found</h1>
+            <p>This player does not exist in the database.</p>
+            <a href="IR.html">Back to Rankings</a>
+        </div>
+        <div id="profileContent" class="profile-page-content" style="display: none;">
+            <div class="profile-banner-section">
+
+                <div class="profile-header">
+                    <div class="profile-avatar-container">
+                        <img class="profile-avatar" id="profileAvatar" src="" alt="Avatar">
+                        <div class="profile-avatar-placeholder" id="profileAvatarPlaceholder">👤</div>
+                    </div>
+                    <div class="profile-header-info">
+                        <h1 class="profile-name" id="profileName"></h1>
+                        <div class="profile-level-display">
+                            <span class="profile-badge" id="profileBadge"></span>
+                            <span class="profile-level-text" id="profileLevelText"></span>
+                        </div>
+                        <div class="profile-created" id="profileCreated"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="profile-about-section">
+                <h2>About Me</h2>
+                <div id="aboutMeDisplay" class="profile-about-text"></div>
+                <div id="aboutMeEdit" class="profile-about-edit" style="display: none;">
+                    <textarea id="aboutMeTextarea" class="profile-about-textarea" placeholder="Tell us about yourself..." maxlength="500"></textarea>
+                    <div class="profile-about-actions">
+                        <button class="profile-button" id="saveAboutMeBtn">Save</button>
+                        <button class="profile-button profile-button-secondary" id="cancelAboutMeBtn">Cancel</button>
+                    </div>
+                </div>
+                <button id="editAboutMeBtn" class="profile-button profile-edit-btn" style="display: none;">Edit About Me</button>
+                <div class="status-message" id="aboutMeStatus" style="display: none;"></div>
+            </div>
+            <div class="profile-scores-section">
+                <h2>Best Scores</h2>
+                <div class="profile-scores-grid">
+                    <div class="profile-score-card">
+                        <div class="score-card-mode">Easy Mode</div>
+                        <div class="score-card-value" id="easyScore">-</div>
+                    </div>
+                    <div class="profile-score-card">
+                        <div class="score-card-mode">Normal Mode</div>
+                        <div class="score-card-value" id="normalScore">-</div>
+                    </div>
+                    <div class="profile-score-card">
+                        <div class="score-card-mode">Master Mode</div>
+                        <div class="score-card-value" id="masterScore">-</div>
+                    </div>
+                    <div class="profile-score-card">
+                        <div class="score-card-mode">Race Mode</div>
+                        <div class="score-card-value" id="raceScore">-</div>
+                    </div>
+                    <div class="profile-score-card">
+                        <div class="score-card-mode">Hell Mode</div>
+                        <div class="score-card-value" id="hellScore">-</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Profile Settings (only visible when viewing own profile) -->
+            <div id="profileSettings" class="profile-settings-section" style="display: none;">
+                <div class="profile-settings-header">
+                    <h2>Profile Settings</h2>
+                    <button id="toggleSettingsBtn" class="profile-settings-toggle" aria-label="Toggle settings">
+                        <span class="toggle-icon">▼</span>
+                    </button>
+                </div>
+                <div id="profileSettingsContent" class="profile-settings-content">
+                
+                <!-- Avatar Upload -->
+                <div class="profile-setting-item">
+                    <label class="profile-setting-label">Profile Avatar</label>
+                    <p class="profile-setting-description">Upload a profile picture (JPG, PNG, max 2MB)</p>
+                    <div class="profile-upload-container">
+                        <img id="avatarPreview" src="" alt="Avatar" class="profile-upload-preview" style="display: none;">
+                        <div id="avatarPlaceholder" class="profile-upload-placeholder">👤</div>
+                        <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
+                        <div class="profile-upload-buttons">
+                            <button class="profile-button" id="avatarUploadBtn">Upload Avatar</button>
+                            <button class="profile-button profile-button-danger" id="avatarRemoveBtn" style="display: none;">Remove</button>
+                        </div>
+                    </div>
+                    <div class="status-message" id="avatarStatus"></div>
+                </div>
+
+                <!-- Banner Upload -->
+                <div class="profile-setting-item">
+                    <label class="profile-setting-label">Profile Banner</label>
+                    <p class="profile-setting-description">Upload a banner image (JPG, PNG, max 5MB, recommended: 1920x300px)</p>
+                    <div class="profile-upload-container">
+                        <img id="bannerPreview" src="" alt="Banner" class="profile-upload-preview" style="display: none;">
+                        <div id="bannerPlaceholder" class="profile-upload-placeholder">🎨</div>
+                        <input type="file" id="bannerInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
+                        <div class="profile-upload-buttons">
+                            <button class="profile-button" id="bannerUploadBtn">Upload Banner</button>
+                            <button class="profile-button profile-button-danger" id="bannerRemoveBtn" style="display: none;">Remove</button>
+                        </div>
+                    </div>
+                    <div class="status-message" id="bannerStatus"></div>
+                </div>
+
+                <!-- Site Background -->
+                <div class="profile-setting-item">
+                    <label class="profile-setting-label">Site Background</label>
+                    <p class="profile-setting-description">Upload a custom background image that applies to all pages (except quiz gameplay). (JPG, PNG, max 5MB)</p>
+                    <div class="profile-upload-container">
+                        <img id="siteBackgroundPreview" src="" alt="Site Background" class="profile-upload-preview" style="display: none;">
+                        <div id="siteBackgroundPlaceholder" class="profile-upload-placeholder">🖼️</div>
+                        <input type="file" id="siteBackgroundInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
+                        <div class="profile-upload-buttons">
+                            <button class="profile-button" id="siteBackgroundUploadBtn">Upload Background</button>
+                            <button class="profile-button profile-button-danger" id="siteBackgroundRemoveBtn" style="display: none;">Remove</button>
+                        </div>
+                    </div>
+                    <div class="status-message" id="siteBackgroundStatus"></div>
+                </div>
+
+                <!-- Display Name -->
+                <div class="profile-setting-item">
+                    <label class="profile-setting-label">Display Name</label>
+                    <p class="profile-setting-description">Change your display name shown in leaderboards and stats.</p>
+                    <div class="profile-input-group">
+                        <input type="text" id="displayNameInput" placeholder="Enter display name" class="profile-input">
+                        <button class="profile-button" id="displayNameBtn">Update</button>
+                    </div>
+                    <div class="status-message" id="displayNameStatus"></div>
+                </div>
+
+                <!-- Email -->
+                <div class="profile-setting-item">
+                    <label class="profile-setting-label">Email Address</label>
+                    <p class="profile-setting-description">Change your account email address. You'll need to verify the new email.</p>
+                    <div class="profile-input-group">
+                        <input type="email" id="emailInput" placeholder="Enter new email" class="profile-input">
+                        <button class="profile-button" id="emailBtn">Update</button>
+                    </div>
+                    <div class="status-message" id="emailStatus"></div>
+                </div>
+
+                <!-- Password -->
+                <div class="profile-setting-item">
+                    <label class="profile-setting-label">Password</label>
+                    <p class="profile-setting-description">Change your account password. You'll need to enter your current password.</p>
+                    <div class="profile-password-group">
+                        <input type="password" id="currentPasswordInput" placeholder="Current password" class="profile-input">
+                        <input type="password" id="newPasswordInput" placeholder="New password (min 6 characters)" class="profile-input">
+                        <input type="password" id="confirmPasswordInput" placeholder="Confirm new password" class="profile-input">
+                        <button class="profile-button" id="passwordBtn">Update Password</button>
+                    </div>
+                    <div class="status-message" id="passwordStatus"></div>
+                </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="hm.js"></script>
+    <script type="module" src="profile.js"></script>
+</body>
+</html>
+

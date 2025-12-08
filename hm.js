@@ -1,6 +1,7 @@
 import { getAuth, onAuthStateChanged, signOut } from "./firebase.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "./firebase.js";
 import { calculatePlayerLevel } from "./stats.js";
+import { loadSiteBackground } from "./profile.js";
 
 const auth = getAuth();
 let selectedMode = "normal"; // Default mode
@@ -289,6 +290,18 @@ document.addEventListener("DOMContentLoaded", () => {
             document.querySelector("[signup]")?.classList.add("hide");
             document.querySelector("[logout]")?.classList.remove("hide");
             
+            // Make playerInfo clickable to redirect to profile page
+            if (playerInfo) {
+                playerInfo.style.cursor = 'pointer';
+                const playerName = user.displayName || user.email || "-no credentials-disabled account-";
+                playerInfo.onclick = () => {
+                    window.location.href = `profile.html?player=${encodeURIComponent(playerName)}`;
+                };
+            }
+            
+            // Load site background when user is logged in
+            loadSiteBackground();
+            
             // Sync Firebase Auth data to userProfiles (for ranking screen avatar display)
             try {
                 const db = getFirestore();
@@ -347,16 +360,32 @@ document.addEventListener("DOMContentLoaded", () => {
                 const profileBanner = document.getElementById('profileBanner');
                 const bannerImage = document.getElementById('bannerImage');
                 
-                if (userProfileSnap.exists() && userProfileSnap.data().bannerURL && profileBanner && bannerImage) {
-                    bannerImage.src = userProfileSnap.data().bannerURL;
-                    profileBanner.style.display = 'block';
-                } else if (profileBanner) {
-                    profileBanner.style.display = 'none';
+                // Only handle banner on index.html (which has bannerImage element)
+                // Don't touch profile page banner (profile.html uses profileBanner differently)
+                if (bannerImage) {
+                    if (userProfileSnap.exists() && userProfileSnap.data().bannerURL && profileBanner) {
+                        bannerImage.src = userProfileSnap.data().bannerURL;
+                        profileBanner.style.display = 'block';
+                    } else if (profileBanner) {
+                        profileBanner.style.display = 'none';
+                    }
                 }
             } catch (error) {
                 console.error('Error loading profile data:', error);
             }
         } else {
+            // User logged out - remove custom background
+            const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html'];
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            
+            if (!gameplayPages.includes(currentPage)) {
+                document.body.style.backgroundImage = '';
+                document.body.style.backgroundSize = '';
+                document.body.style.backgroundPosition = '';
+                document.body.style.backgroundRepeat = '';
+                document.body.style.backgroundAttachment = '';
+            }
+            
             // Hide player info when logged out
             if (playerInfo) {
                 playerInfo.classList.add("hide");
@@ -374,9 +403,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 levelDisplay.classList.add("hide");
             }
             
-            // Hide banner when logged out
+            // Hide banner when logged out (only on index.html, not profile page)
             const profileBanner = document.getElementById('profileBanner');
-            if (profileBanner) {
+            const bannerImage = document.getElementById('bannerImage');
+            // Only hide banner if we're on index.html (has bannerImage), not profile.html
+            if (profileBanner && bannerImage) {
                 profileBanner.style.display = 'none';
             }
         }
@@ -699,4 +730,7 @@ document.addEventListener("DOMContentLoaded", () => {
             window.location.href = "wiki.html"; // Change this URL to your wiki page
         });
     }
+    
+    // Load site background on page load (in case user is already logged in)
+    loadSiteBackground();
 });

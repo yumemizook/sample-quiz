@@ -51,11 +51,11 @@ let allSecretScores = [];
 
 // Current filter state
 const currentFilter = {
-    easy: 'all',
-    normal: 'all',
-    master: 'all',
-    race: 'all',
-    hell: 'all'
+    easy: { input: 'all', time: 'all', clear: 'all', vanish: 'all' },
+    normal: { input: 'all', time: 'all', clear: 'all', vanish: 'all' },
+    master: { input: 'all', time: 'all', clear: 'all', vanish: 'all' },
+    race: { input: 'all', time: 'all', clear: 'all', vanish: 'all' },
+    hell: { input: 'all', time: 'all', clear: 'all', vanish: 'all' }
 };
 
 // Tab switching functionality
@@ -81,23 +81,146 @@ function initTabs() {
     });
 }
 
-// Initialize input filter buttons
-function initInputFilters() {
-    const filterButtons = document.querySelectorAll('.input-filter-btn');
+// Extract unique values from scores for a specific mode
+function extractUniqueValues(scores) {
+    const timeMultipliers = new Set();
+    const clearTypes = new Set();
+    const vanishModes = new Set();
     
-    filterButtons.forEach(button => {
-        button.addEventListener('click', () => {
-            const inputType = button.getAttribute('data-input');
-            const mode = button.getAttribute('data-mode');
-            
-            // Update active state
-            document.querySelectorAll(`.input-filter-btn[data-mode="${mode}"]`).forEach(btn => {
-                btn.classList.remove('active');
-            });
-            button.classList.add('active');
+    scores.forEach(score => {
+        // Extract time multipliers
+        if (score.modifiers?.timeMultiplier !== undefined) {
+            timeMultipliers.add(score.modifiers.timeMultiplier);
+        }
+        
+        // Extract clear types
+        if (score.clearType) {
+            clearTypes.add(score.clearType);
+        }
+        
+        // Extract vanish modes (fadingMode)
+        const vanishMode = score.modifiers?.fadingMode;
+        if (vanishMode && vanishMode !== 'off') {
+            vanishModes.add(vanishMode);
+        } else if (!vanishMode || vanishMode === 'off') {
+            vanishModes.add('off');
+        }
+    });
+    
+    return {
+        timeMultipliers: Array.from(timeMultipliers).sort((a, b) => a - b),
+        clearTypes: Array.from(clearTypes).sort(),
+        vanishModes: Array.from(vanishModes).sort((a, b) => {
+            if (a === 'off') return -1;
+            if (b === 'off') return 1;
+            return parseFloat(a) - parseFloat(b);
+        })
+    };
+}
+
+// Populate filter dropdowns for a specific mode
+function populateFilterDropdowns(mode, scores) {
+    const uniqueValues = extractUniqueValues(scores);
+    
+    // Populate time multiplier dropdown
+    const timeSelect = document.querySelector(`.time-filter-select[data-mode="${mode}"]`);
+    if (timeSelect) {
+        const currentValue = timeSelect.value || 'all';
+        timeSelect.innerHTML = '<option value="all">All</option>';
+        uniqueValues.timeMultipliers.forEach(tm => {
+            const option = document.createElement('option');
+            option.value = tm.toString();
+            option.textContent = `${tm.toFixed(2)}x`;
+            timeSelect.appendChild(option);
+        });
+        timeSelect.value = currentValue;
+    }
+    
+    // Populate clear type dropdown
+    const clearSelect = document.querySelector(`.clear-filter-select[data-mode="${mode}"]`);
+    if (clearSelect) {
+        const currentValue = clearSelect.value || 'all';
+        clearSelect.innerHTML = '<option value="all">All</option>';
+        uniqueValues.clearTypes.forEach(ct => {
+            const option = document.createElement('option');
+            option.value = ct;
+            option.textContent = ct;
+            clearSelect.appendChild(option);
+        });
+        clearSelect.value = currentValue;
+    }
+    
+    // Populate vanish mode dropdown
+    const vanishSelect = document.querySelector(`.vanish-filter-select[data-mode="${mode}"]`);
+    if (vanishSelect) {
+        const currentValue = vanishSelect.value || 'all';
+        vanishSelect.innerHTML = '<option value="all">All</option>';
+        uniqueValues.vanishModes.forEach(vm => {
+            const option = document.createElement('option');
+            option.value = vm;
+            option.textContent = vm === 'off' ? 'Off' : `${vm}s`;
+            vanishSelect.appendChild(option);
+        });
+        vanishSelect.value = currentValue;
+    }
+}
+
+// Initialize all filter dropdowns
+function initInputFilters() {
+    // Input filter selects
+    const inputFilterSelects = document.querySelectorAll('.input-filter-select');
+    inputFilterSelects.forEach(select => {
+        select.addEventListener('change', () => {
+            const inputType = select.value;
+            const mode = select.getAttribute('data-mode');
             
             // Update filter state
-            currentFilter[mode] = inputType;
+            currentFilter[mode].input = inputType;
+            
+            // Re-render the table for this mode
+            renderTable(mode);
+        });
+    });
+    
+    // Time multiplier filter selects
+    const timeFilterSelects = document.querySelectorAll('.time-filter-select');
+    timeFilterSelects.forEach(select => {
+        select.addEventListener('change', () => {
+            const timeValue = select.value;
+            const mode = select.getAttribute('data-mode');
+            
+            // Update filter state
+            currentFilter[mode].time = timeValue;
+            
+            // Re-render the table for this mode
+            renderTable(mode);
+        });
+    });
+    
+    // Clear type filter selects
+    const clearFilterSelects = document.querySelectorAll('.clear-filter-select');
+    clearFilterSelects.forEach(select => {
+        select.addEventListener('change', () => {
+            const clearValue = select.value;
+            const mode = select.getAttribute('data-mode');
+            
+            // Update filter state
+            currentFilter[mode].clear = clearValue;
+            
+            // Re-render the table for this mode
+            renderTable(mode);
+        });
+    });
+    
+    // Vanish mode filter selects
+    const vanishFilterSelects = document.querySelectorAll('.vanish-filter-select');
+    vanishFilterSelects.forEach(select => {
+        select.addEventListener('change', () => {
+            const vanishValue = select.value;
+            const mode = select.getAttribute('data-mode');
+            
+            // Update filter state
+            currentFilter[mode].vanish = vanishValue;
             
             // Re-render the table for this mode
             renderTable(mode);
@@ -105,17 +228,51 @@ function initInputFilters() {
     });
 }
 
-// Filter scores by input type
-function filterScores(scores, inputType) {
-    if (inputType === 'all') {
-        return scores;
-    }
-    return scores.filter(score => score.inputType === inputType);
+// Filter scores by all criteria
+function filterScores(scores, filterState) {
+    return scores.filter(score => {
+        // Filter by input type
+        if (filterState.input !== 'all' && score.inputType !== filterState.input) {
+            return false;
+        }
+        
+        // Filter by time multiplier
+        if (filterState.time !== 'all') {
+            const scoreTimeMultiplier = score.modifiers?.timeMultiplier;
+            const filterTime = parseFloat(filterState.time);
+            if (!scoreTimeMultiplier || Math.abs(scoreTimeMultiplier - filterTime) > 0.01) {
+                return false;
+            }
+        }
+        
+        // Filter by clear type
+        if (filterState.clear !== 'all' && score.clearType !== filterState.clear) {
+            return false;
+        }
+        
+        // Filter by vanish mode
+        if (filterState.vanish !== 'all') {
+            const scoreVanishMode = score.modifiers?.fadingMode;
+            if (filterState.vanish === 'off') {
+                // Show scores with no vanish mode or explicitly off
+                if (scoreVanishMode && scoreVanishMode !== 'off') {
+                    return false;
+                }
+            } else {
+                // Show scores with matching vanish mode
+                if (scoreVanishMode !== filterState.vanish) {
+                    return false;
+                }
+            }
+        }
+        
+        return true;
+    });
 }
 
 // Render table for a specific mode
 function renderTable(mode) {
-    const filterType = currentFilter[mode];
+    const filterState = currentFilter[mode];
     let scores = [];
     let tableId = '';
     let hasGrade = false;
@@ -123,7 +280,7 @@ function renderTable(mode) {
     
     switch(mode) {
         case 'easy':
-            scores = filterScores(allEasyScores, filterType);
+            scores = filterScores(allEasyScores, filterState);
             tableId = 'scoreTable';
             hasGrade = false;
             sortFunction = (a, b) => {
@@ -134,7 +291,7 @@ function renderTable(mode) {
             };
             break;
         case 'normal':
-            scores = filterScores(allNormalScores, filterType);
+            scores = filterScores(allNormalScores, filterState);
             tableId = 'scoreTable2';
             hasGrade = true;
             sortFunction = (a, b) => {
@@ -153,7 +310,7 @@ function renderTable(mode) {
             };
             break;
         case 'master':
-            scores = filterScores(allMasterScores, filterType);
+            scores = filterScores(allMasterScores, filterState);
             tableId = 'scoreTable3';
             hasGrade = true;
             sortFunction = (a, b) => {
@@ -177,7 +334,7 @@ function renderTable(mode) {
             };
             break;
         case 'hell':
-            scores = filterScores(allHellScores, filterType);
+            scores = filterScores(allHellScores, filterState);
             tableId = 'scoreTable4';
             hasGrade = true;
             sortFunction = (a, b) => {
@@ -205,7 +362,7 @@ function renderTable(mode) {
             };
             break;
         case 'race':
-            scores = filterScores(allRaceScores, filterType);
+            scores = filterScores(allRaceScores, filterState);
             tableId = 'scoreTable5';
             hasGrade = false; // No grades in race mode
             sortFunction = (a, b) => {
@@ -348,6 +505,7 @@ function createProfilePopup() {
     profilePopup = document.createElement('div');
     profilePopup.id = 'playerProfilePopup';
     profilePopup.className = 'player-profile-popup';
+    profilePopup.style.cursor = 'pointer';
     profilePopup.innerHTML = `
         <div class="profile-popup-banner"></div>
         <div class="profile-popup-content">
@@ -560,62 +718,7 @@ async function loadPlayerProfile(playerName) {
     // Set player name
     popup.querySelector('.profile-popup-name').textContent = playerName;
     
-    // Find best scores
-    const bestScores = findBestScores(playerName);
-    
-    // Calculate level from scores using the same formula as navbar and stats
-    const easyScores = allEasyScores.filter(s => s.name === playerName);
-    const normalScores = allNormalScores.filter(s => s.name === playerName);
-    const masterScores = allMasterScores.filter(s => s.name === playerName);
-    const raceScores = allRaceScores.filter(s => s.name === playerName);
-    const hellScores = allHellScores.filter(s => s.name === playerName);
-    
-    // Secret scores are not fetched for player profile tooltip
-    const secretScores = [];
-    
-    const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
-    const badge = getBadgeForLevel(playerData.level);
-    const badgeName = getBadgeName(playerData.level);
-    
-    // Update level display
-    const badgeEl = popup.querySelector('.profile-popup-badge');
-    const levelTextEl = popup.querySelector('.profile-popup-level-text');
-    badgeEl.textContent = badge;
-    levelTextEl.textContent = `Lv. ${playerData.level} (${badgeName})`;
-    
-    // Update best scores
-    const updateScore = (mode, scoreData) => {
-        const scoreItem = popup.querySelector(`.profile-popup-score-item:nth-child(${['easy', 'normal', 'master', 'race', 'hell'].indexOf(mode) + 2})`);
-        if (scoreItem) {
-            const scoreValue = scoreItem.querySelector('.score-value');
-            if (scoreData) {
-                if (mode === 'race') {
-                    // Race mode: show best time if completed (GM grade), otherwise show best score
-                    const isCompleted = scoreData.grade === "GM";
-                    if (isCompleted && scoreData.time) {
-                        scoreValue.textContent = scoreData.time;
-                    } else {
-                        scoreValue.textContent = scoreData.score.toLocaleString();
-                    }
-                } else if (mode === 'normal' || mode === 'master' || mode === 'hell') {
-                    const grade = scoreData.grade ? ` - ${scoreData.grade}` : '';
-                    scoreValue.textContent = `${scoreData.score}${grade}`;
-                } else {
-                    scoreValue.textContent = scoreData.score;
-                }
-            } else {
-                scoreValue.textContent = 'No score';
-            }
-        }
-    };
-    
-    updateScore('easy', bestScores.easy);
-    updateScore('normal', bestScores.normal);
-    updateScore('master', bestScores.master);
-    updateScore('race', bestScores.race);
-    updateScore('hell', bestScores.hell);
-    
-    // Try to load avatar and banner from Firestore
+    // First, check userProfiles database to see if player exists
     try {
         // Query userProfiles to find user by displayName or email
         const userProfilesRef = collection(db, 'userProfiles');
@@ -638,7 +741,6 @@ async function loadPlayerProfile(playerName) {
         // The name in scores could be either displayName or email from Firebase Auth
         if (!foundUser) {
             // Try to find user by checking if playerName matches any user's email or displayName
-            // by looking at the UID in userProfiles and checking if their stored email/displayName matches
             userProfilesSnapshot.forEach(doc => {
                 const data = doc.data();
                 // Check if playerName matches email (if stored) or displayName
@@ -649,77 +751,101 @@ async function loadPlayerProfile(playerName) {
             });
         }
         
-        // Load avatar - prioritize photoURL from Firebase Auth (stored in userProfiles)
-        const avatarImg = popup.querySelector('.profile-popup-avatar');
-        const avatarPlaceholder = popup.querySelector('.profile-popup-avatar-placeholder');
-        
-        if (foundUser) {
-            // Display account creation timestamp
+        // If player not found in userProfiles, show "Player not found" message
+        if (!foundUser) {
+            const badgeEl = popup.querySelector('.profile-popup-badge');
+            const levelTextEl = popup.querySelector('.profile-popup-level-text');
             const createdTextEl = popup.querySelector('.profile-popup-created-text');
-            if (createdTextEl && foundUser.createdAt) {
-                createdTextEl.textContent = `Joined ${formatRelativeTime(foundUser.createdAt)}`;
-            } else if (createdTextEl) {
-                createdTextEl.textContent = '';
+            badgeEl.textContent = '❓';
+            levelTextEl.textContent = 'Player not found';
+            if (createdTextEl) {
+                createdTextEl.textContent = 'This player does not exist in the database';
             }
             
-            // Get photoURL from Firebase Auth (stored in userProfiles when user signs in)
-            // Priority: photoURL (from Firebase Auth) > avatarURL (custom upload)
-            const avatarURL = foundUser.photoURL || foundUser.avatarURL;
+            // Hide avatar container
+            const avatarContainer = popup.querySelector('.profile-popup-avatar-container');
+            if (avatarContainer) {
+                avatarContainer.style.display = 'none';
+            }
             
-            if (avatarURL) {
-                // Set up image loading with error handling
-                avatarImg.onload = () => {
-                    avatarImg.classList.add('show');
-                    avatarPlaceholder.classList.add('hide');
-                };
-                avatarImg.onerror = () => {
-                    // If image fails to load, show placeholder
-                    avatarImg.classList.remove('show');
-                    avatarPlaceholder.classList.remove('hide');
-                    avatarImg.src = ''; // Clear failed src
-                };
-                avatarImg.src = avatarURL;
-            } else {
+            // Hide banner
+            const bannerEl = popup.querySelector('.profile-popup-banner');
+            if (bannerEl) {
+                bannerEl.style.display = 'none';
+            }
+            
+            // Hide scores section
+            const scoresSection = popup.querySelector('.profile-popup-scores');
+            if (scoresSection) {
+                scoresSection.style.display = 'none';
+            }
+            
+            // Adjust info margin since avatar is hidden
+            const infoEl = popup.querySelector('.profile-popup-info');
+            if (infoEl) {
+                infoEl.style.marginTop = '20px';
+            }
+            
+            return;
+        }
+        
+        // Player found in userProfiles - load their profile and scores
+        // Display account creation timestamp
+        const createdTextEl = popup.querySelector('.profile-popup-created-text');
+        if (createdTextEl && foundUser.createdAt) {
+            createdTextEl.textContent = `Joined ${formatRelativeTime(foundUser.createdAt)}`;
+        } else if (createdTextEl) {
+            createdTextEl.textContent = '';
+        }
+        
+        // Load avatar
+        const avatarURL = foundUser.photoURL || foundUser.avatarURL;
+        if (avatarURL) {
+            // Set up image loading with error handling
+            avatarImg.onload = () => {
+                avatarImg.classList.add('show');
+                avatarPlaceholder.classList.add('hide');
+            };
+            avatarImg.onerror = () => {
+                // If image fails to load, show placeholder
                 avatarImg.classList.remove('show');
                 avatarPlaceholder.classList.remove('hide');
-                avatarImg.src = ''; // Clear src if no URL
-            }
-            
-            // Load banner
-            const bannerEl = popup.querySelector('.profile-popup-banner');
-            const avatarContainer = popup.querySelector('.profile-popup-avatar-container');
-            const infoEl = popup.querySelector('.profile-popup-info');
-            if (foundUser.bannerURL) {
-                bannerEl.style.backgroundImage = `url(${foundUser.bannerURL})`;
-                bannerEl.style.display = 'block';
-                // Reset avatar position when banner is shown
-                if (avatarContainer) {
-                    avatarContainer.style.top = '-50px';
-                }
-                // Reset info margin when banner is shown
-                if (infoEl) {
-                    infoEl.style.marginTop = '60px';
-                }
-            } else {
-                bannerEl.style.display = 'none';
-                // Move avatar down when no banner
-                if (avatarContainer) {
-                    avatarContainer.style.top = '20px';
-                }
-                // Shift info down when no banner (avatar is at 20px, height 100px, so bottom at 120px, add 10px gap = 130px)
-                if (infoEl) {
-                    infoEl.style.marginTop = '130px';
-                }
-            }
+                avatarImg.src = ''; // Clear failed src
+            };
+            avatarImg.src = avatarURL;
         } else {
-            // No profile found, use defaults
             avatarImg.classList.remove('show');
             avatarPlaceholder.classList.remove('hide');
-            avatarImg.src = '';
-            
-            const bannerEl = popup.querySelector('.profile-popup-banner');
-            const avatarContainer = popup.querySelector('.profile-popup-avatar-container');
-            const infoEl = popup.querySelector('.profile-popup-info');
+            avatarImg.src = ''; // Clear src if no URL
+        }
+        
+        // Show avatar container (it might have been hidden previously)
+        const avatarContainer = popup.querySelector('.profile-popup-avatar-container');
+        if (avatarContainer) {
+            avatarContainer.style.display = '';
+        }
+        
+        // Show scores section (it might have been hidden previously)
+        const scoresSection = popup.querySelector('.profile-popup-scores');
+        if (scoresSection) {
+            scoresSection.style.display = '';
+        }
+        
+        // Load banner
+        const bannerEl = popup.querySelector('.profile-popup-banner');
+        const infoEl = popup.querySelector('.profile-popup-info');
+        if (foundUser.bannerURL) {
+            bannerEl.style.backgroundImage = `url(${foundUser.bannerURL})`;
+            bannerEl.style.display = 'block';
+            // Reset avatar position when banner is shown
+            if (avatarContainer) {
+                avatarContainer.style.top = '-50px';
+            }
+            // Reset info margin when banner is shown
+            if (infoEl) {
+                infoEl.style.marginTop = '60px';
+            }
+        } else {
             bannerEl.style.display = 'none';
             // Move avatar down when no banner
             if (avatarContainer) {
@@ -730,13 +856,97 @@ async function loadPlayerProfile(playerName) {
                 infoEl.style.marginTop = '130px';
             }
         }
+        
+        // Find best scores
+        const bestScores = findBestScores(playerName);
+        
+        // Calculate level from scores using the same formula as navbar and stats
+        const easyScores = allEasyScores.filter(s => s.name === playerName);
+        const normalScores = allNormalScores.filter(s => s.name === playerName);
+        const masterScores = allMasterScores.filter(s => s.name === playerName);
+        const raceScores = allRaceScores.filter(s => s.name === playerName);
+        const hellScores = allHellScores.filter(s => s.name === playerName);
+        
+        // Secret scores are not fetched for player profile tooltip
+        const secretScores = [];
+        
+        const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
+        const badge = getBadgeForLevel(playerData.level);
+        const badgeName = getBadgeName(playerData.level);
+        
+        // Update level display
+        const badgeEl = popup.querySelector('.profile-popup-badge');
+        const levelTextEl = popup.querySelector('.profile-popup-level-text');
+        badgeEl.textContent = badge;
+        levelTextEl.textContent = `Lv. ${playerData.level} (${badgeName})`;
+        
+        // Update best scores
+        const updateScore = (mode, scoreData) => {
+            const scoreItem = popup.querySelector(`.profile-popup-score-item:nth-child(${['easy', 'normal', 'master', 'race', 'hell'].indexOf(mode) + 2})`);
+            if (scoreItem) {
+                const scoreValue = scoreItem.querySelector('.score-value');
+                if (scoreData) {
+                    if (mode === 'race') {
+                        // Race mode: show best time if completed (GM grade), otherwise show best score
+                        const isCompleted = scoreData.grade === "GM";
+                        if (isCompleted && scoreData.time) {
+                            scoreValue.textContent = scoreData.time;
+                        } else {
+                            scoreValue.textContent = scoreData.score.toLocaleString();
+                        }
+                    } else if (mode === 'normal' || mode === 'master' || mode === 'hell') {
+                        const grade = scoreData.grade ? ` - ${scoreData.grade}` : '';
+                        scoreValue.textContent = `${scoreData.score}${grade}`;
+                    } else {
+                        scoreValue.textContent = scoreData.score;
+                    }
+                } else {
+                    scoreValue.textContent = 'No score';
+                }
+            }
+        };
+        
+        updateScore('easy', bestScores.easy);
+        updateScore('normal', bestScores.normal);
+        updateScore('master', bestScores.master);
+        updateScore('race', bestScores.race);
+        updateScore('hell', bestScores.hell);
+        
     } catch (error) {
         console.error('Error loading player profile:', error);
-        // On error, show placeholder
-        const avatarImg = popup.querySelector('.profile-popup-avatar');
-        const avatarPlaceholder = popup.querySelector('.profile-popup-avatar-placeholder');
-        avatarImg.classList.remove('show');
-        avatarPlaceholder.classList.remove('hide');
+        // On error, show "Player not found" message
+        const badgeEl = popup.querySelector('.profile-popup-badge');
+        const levelTextEl = popup.querySelector('.profile-popup-level-text');
+        const createdTextEl = popup.querySelector('.profile-popup-created-text');
+        badgeEl.textContent = '❓';
+        levelTextEl.textContent = 'Player not found';
+        if (createdTextEl) {
+            createdTextEl.textContent = 'Error loading player profile';
+        }
+        
+        // Hide avatar container
+        const avatarContainer = popup.querySelector('.profile-popup-avatar-container');
+        if (avatarContainer) {
+            avatarContainer.style.display = 'none';
+        }
+        
+        // Hide banner
+        const bannerEl = popup.querySelector('.profile-popup-banner');
+        if (bannerEl) {
+            bannerEl.style.display = 'none';
+        }
+        
+        // Hide scores section
+        const scoresSection = popup.querySelector('.profile-popup-scores');
+        if (scoresSection) {
+            scoresSection.style.display = 'none';
+        }
+        
+        // Adjust info margin since avatar is hidden
+        const infoEl = popup.querySelector('.profile-popup-info');
+        if (infoEl) {
+            infoEl.style.marginTop = '20px';
+        }
     }
 }
 
@@ -747,6 +957,13 @@ function attachPlayerNameHovers() {
     playerNames.forEach(nameEl => {
         const playerName = nameEl.getAttribute('data-player-name');
         
+        // Make name clickable to redirect to profile page
+        nameEl.style.cursor = 'pointer';
+        nameEl.addEventListener('click', (e) => {
+            e.stopPropagation();
+            window.location.href = `profile.html?player=${encodeURIComponent(playerName)}`;
+        });
+        
         nameEl.addEventListener('mouseenter', () => {
             if (profilePopupTimeout) {
                 clearTimeout(profilePopupTimeout);
@@ -755,6 +972,13 @@ function attachPlayerNameHovers() {
             profilePopupTimeout = setTimeout(async () => {
                 const popup = createProfilePopup();
                 await loadPlayerProfile(playerName);
+                
+                // Add click handler to navigate to profile page
+                popup.onclick = (e) => {
+                    e.stopPropagation();
+                    window.location.href = `profile.html?player=${encodeURIComponent(playerName)}`;
+                };
+                
                 popup.style.display = 'block';
                 positionPopup(popup, nameEl);
             }, 300); // Small delay to prevent accidental hovers
@@ -809,19 +1033,27 @@ function positionPopup(popup, targetElement) {
         popup.style.left = `${left}px`;
         popup.style.top = `${top}px`;
     } else {
-        // Desktop positioning
+        // Desktop positioning - raise tooltip up
         let left = rect.right + 15;
-        let top = rect.top;
+        // Position above the element instead of at its top
+        let top = rect.top - popupRect.height - 10;
         
-        // Adjust if popup would go off screen
+        // Adjust if popup would go off screen to the right
         if (left + popupRect.width > window.innerWidth) {
             left = rect.left - popupRect.width - 15;
         }
         
+        // If popup would go off screen above, position below instead
+        if (top < 10) {
+            top = rect.bottom + 10;
+        }
+        
+        // If popup would go off screen at the bottom, adjust to fit
         if (top + popupRect.height > window.innerHeight) {
             top = window.innerHeight - popupRect.height - 10;
         }
         
+        // Final check to ensure it's not too high
         if (top < 10) {
             top = 10;
         }
@@ -847,15 +1079,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Initialize input filters and set all to "All" filter
     initInputFilters();
     
-    // Ensure all "All" filter buttons are active on page load
-    const allFilterButtons = document.querySelectorAll('.input-filter-btn[data-input="all"]');
-    allFilterButtons.forEach(btn => {
-        btn.classList.add('active');
-        // Ensure the filter state is set to 'all' for each mode
-        const mode = btn.getAttribute('data-mode');
-        if (mode && currentFilter.hasOwnProperty(mode)) {
-            currentFilter[mode] = 'all';
-        }
+    // Ensure all dropdowns default to "All" on page load (already set in HTML, but ensure consistency)
+    const allInputSelects = document.querySelectorAll('.input-filter-select');
+    allInputSelects.forEach(select => {
+        if (select.value !== 'all') select.value = 'all';
+    });
+    const allTimeSelects = document.querySelectorAll('.time-filter-select');
+    allTimeSelects.forEach(select => {
+        if (select.value !== 'all') select.value = 'all';
+    });
+    const allClearSelects = document.querySelectorAll('.clear-filter-select');
+    allClearSelects.forEach(select => {
+        if (select.value !== 'all') select.value = 'all';
+    });
+    const allVanishSelects = document.querySelectorAll('.vanish-filter-select');
+    allVanishSelects.forEach(select => {
+        if (select.value !== 'all') select.value = 'all';
     });
     
     // Automatically fetch and display scores on page load
@@ -885,6 +1124,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         allSecretScores = []; // Initialize as empty array
         // Note: Secret scores are not displayed in rankings, but are needed for accurate level calculation
         // We'll fetch them on-demand when loading a player profile
+        
+        // Populate filter dropdowns with unique values from database
+        populateFilterDropdowns('easy', allEasyScores);
+        populateFilterDropdowns('normal', allNormalScores);
+        populateFilterDropdowns('master', allMasterScores);
+        populateFilterDropdowns('race', allRaceScores);
+        populateFilterDropdowns('hell', allHellScores);
         
         // Render all tables automatically
         renderTable('easy');

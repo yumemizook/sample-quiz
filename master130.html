@@ -370,12 +370,8 @@
   let totalWrongAnswers = 0; // Track total wrong answers for clear type calculation
   let questionTimedOut = false; // Track if player ran out of time on a question
   
-  // Fading mode variables
-  let fadeInterval = null;
-  let fadeDelay = null;
-  if (fadingMode) {
-    fadeDelay = parseFloat(fadingMode) * 1000; // Convert to milliseconds
-  }
+  // Vanish mode variables (random fading like other modes)
+  let randomFadeInterval = null; // Interval for random text fading (also used for built-in race mode fading)
   
   // Start question parameter
   const startQuestionParam = parseInt(urlParams.get("start") || "0");
@@ -387,7 +383,6 @@
   let quizAbandoned = false; // Track if quiz was abandoned (gave up)
   let totalGradePoints = 0; // Track accumulated grade points
   let previousGrade = ""; // Track previous grade for promotion detection
-  let randomFadeInterval = null; // Interval for random text fading
 
   // Gamepad support
   let gamepadConnected = false;
@@ -448,7 +443,7 @@
       const livesIcon = document.createElement("div");
       livesIcon.className = "modifier-icon";
       livesIcon.title = `${currentLives} Lives`;
-      livesIcon.innerHTML = `<span style="font-size: 2.2em;">❤️</span><br><span style="font-size: 1.1em; font-weight: bold;">${currentLives === 100 ? "100" : currentLives.toString()}</span>`;
+      livesIcon.innerHTML = `<span style="font-size: 2.2em;">❤️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${currentLives === 100 ? "100" : currentLives.toString()}</span>`;
       livesIcon.style.width = `${iconSize}px`;
       livesIcon.style.height = `${iconSize}px`;
       livesIcon.style.display = "flex";
@@ -463,7 +458,7 @@
       const startIcon = document.createElement("div");
       startIcon.className = "modifier-icon";
       startIcon.title = `Start at Question ${startQuestionParam + 1}`;
-      startIcon.innerHTML = `<span style="font-size: 2.2em;">🎯</span><br><span style="font-size: 1.1em; font-weight: bold;">${startQuestionParam + 1}</span>`;
+      startIcon.innerHTML = `<span style="font-size: 2.2em;">🎯</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${startQuestionParam + 1}</span>`;
       startIcon.style.width = `${iconSize}px`;
       startIcon.style.height = `${iconSize}px`;
       startIcon.style.display = "flex";
@@ -478,7 +473,7 @@
       const timeIcon = document.createElement("div");
       timeIcon.className = "modifier-icon";
       timeIcon.title = `Time Multiplier: ${timeMultiplier.toFixed(2)}x`;
-      timeIcon.innerHTML = `<span style="font-size: 2.2em;">⏱️</span><br><span style="font-size: 1.1em; font-weight: bold;">${timeMultiplier.toFixed(2)}x</span>`;
+      timeIcon.innerHTML = `<span style="font-size: 2.2em;">⏱️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${timeMultiplier.toFixed(2)}x</span>`;
       timeIcon.style.width = `${iconSize}px`;
       timeIcon.style.height = `${iconSize}px`;
       timeIcon.style.display = "flex";
@@ -492,8 +487,8 @@
     if (fadingMode && fadingMode !== "off") {
       const fadeIcon = document.createElement("div");
       fadeIcon.className = "modifier-icon";
-      fadeIcon.title = `Fading Mode: ${fadingMode}s`;
-      fadeIcon.innerHTML = `<span style="font-size: 2.2em;">👁️</span><br><span style="font-size: 1.1em; font-weight: bold;">${fadingMode}s</span>`;
+      fadeIcon.title = `Vanish Mode: every ${fadingMode}s`;
+      fadeIcon.innerHTML = `<span style="font-size: 2.2em;">👁️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${fadingMode}s</span>`;
       fadeIcon.style.width = `${iconSize}px`;
       fadeIcon.style.height = `${iconSize}px`;
       fadeIcon.style.display = "flex";
@@ -706,9 +701,11 @@
       currentBGM.play().catch(err => console.log("BGM resume failed:", err));
     }
 
-    // Resume random fading if we're past question 100
-    if (currQuestion >= 100 && !randomFadeInterval) {
-      startRandomFading();
+    // Resume random fading if vanish mode is enabled or we're past question 100
+    if ((fadingMode && fadingMode !== "off") || (currQuestion >= 100 && (!fadingMode || fadingMode === "off"))) {
+      if (!randomFadeInterval) {
+        startRandomFading();
+      }
     }
 
     // Hide pause menu
@@ -733,8 +730,8 @@
   // Keyboard support
   function initKeyboard() {
     document.addEventListener("keydown", (e) => {
-      // Track keyboard input type
-      if (!inputType || inputType === 'mobile') {
+      // Track keyboard input type (override mouse, but not controller)
+      if (inputType !== 'controller' && !isMobile) {
         inputType = 'keyboard';
       }
 
@@ -808,6 +805,12 @@
   if (livesDisplay) {
     livesDisplay.style.display = "none";
   }
+  
+  // Hide modifier icons (including hearts icon) while loading
+  const modifierIconsContainer = document.getElementById("modifierIcons");
+  if (modifierIconsContainer) {
+    modifierIconsContainer.style.display = "none";
+  }
 
   // Handle give up button
   const giveUpBtn = document.querySelector("[giveup]");
@@ -852,6 +855,11 @@
       // Display modifier icons (with slight delay to ensure pause button is rendered)
       setTimeout(() => {
         updateModifierIconsDisplay();
+        // Show modifier icons container after questions are loaded
+        const modifierIconsContainer = document.getElementById("modifierIcons");
+        if (modifierIconsContainer) {
+          modifierIconsContainer.style.display = "flex";
+        }
       }, 100);
 
       // Reset pause tracking
@@ -1177,6 +1185,17 @@
   let timeToAnswer;
   let initialTimeToAnswer; // Track initial time allocated for current question
     function loadQues() {
+      // Validate bounds to prevent softlock on question 130
+      if (currQuestion < 0 || currQuestion >= allQuestions.length) {
+        console.warn(`Invalid question index: ${currQuestion}. Calling evalScreen().`);
+        evalScreen();
+        return;
+      }
+      
+      // Reset all text elements opacity at the start of each new question
+      // This ensures all elements are visible when vanish mode is enabled
+      resetAllTextElementsOpacity();
+      
       // Reset answered flag and wrong answer counter when loading a new question
       currentQuestionAnswered = false;
       wrongAnswersForCurrentQuestion = 0;
@@ -1309,6 +1328,10 @@
       // Make the div clickable to select the option
       choicesdiv.addEventListener("click", () => {
         choice.checked = true;
+        // Track mouse input type (only if keyboard/controller hasn't been used)
+        if (!isMobile && inputType !== 'keyboard' && inputType !== 'controller') {
+          inputType = 'mouse';
+        }
       });
 
       // Store reference for controller support
@@ -1475,14 +1498,16 @@
     // Update indicator visibility after loading question
     updateIndicatorVisibility();
 
-    // Reset all fading elements for each new question after question 100
-    // This must happen after question/options are loaded but before random fading starts
-    if (currQuestion >= 100) {
-      resetAllTextElementsOpacity();
-    }
-
-    // Start or update random fading after question 100
-    if (currQuestion >= 100) {
+    // Start or update random fading
+    // If vanish mode modifier is enabled, use it from the start
+    // Otherwise, use built-in race mode fading after question 100
+    if (fadingMode && fadingMode !== "off") {
+      // Vanish mode modifier: use the modifier interval from the start
+      if (!randomFadeInterval) {
+        startRandomFading();
+      }
+    } else if (currQuestion >= 100) {
+      // Built-in race mode fading: starts at question 100
       // Check if we need to restart with new interval
       let needsRestart = false;
       if (currQuestion === 100 || currQuestion === 110 || currQuestion === 120) {
@@ -1495,6 +1520,12 @@
           randomFadeInterval = null;
         }
         startRandomFading();
+      }
+    } else {
+      // Stop random fading if not in vanish mode and before question 100
+      if (randomFadeInterval) {
+        clearInterval(randomFadeInterval);
+        randomFadeInterval = null;
       }
     }
 
@@ -1587,19 +1618,27 @@
       element.style.transition = "opacity 0.5s ease";
     }
 
-    // Determine interval based on current question
+    // Determine interval: use vanish mode modifier if enabled, otherwise use built-in race mode intervals
     let intervalMs;
-    if (currQuestion >= 120) {
-      intervalMs = 500; // 0.5 seconds after question 120
-    } else if (currQuestion >= 110) {
-      intervalMs = 1000; // 1 second after question 110
+    if (fadingMode && fadingMode !== "off") {
+      // Vanish mode modifier: use the modifier interval (in seconds, convert to milliseconds)
+      intervalMs = parseFloat(fadingMode) * 1000;
     } else {
-      intervalMs = 2000; // 2 seconds after question 100
+      // Built-in race mode fading: determine interval based on current question
+      if (currQuestion >= 120) {
+        intervalMs = 500; // 0.5 seconds after question 120
+      } else if (currQuestion >= 110) {
+        intervalMs = 1000; // 1 second after question 110
+      } else {
+        intervalMs = 2000; // 2 seconds after question 100
+      }
     }
 
     // Start the interval
     randomFadeInterval = setInterval(() => {
-      fadeRandomElement();
+      if (!isPaused) { // Only fade when not paused
+        fadeRandomElement();
+      }
     }, intervalMs);
   }
   let quizMinutes = 0; // Global variable to track minutes
@@ -1730,11 +1769,12 @@
 
     // Only show GM grade when all questions are completed
     const gradeText = document.getElementById("gradeText");
+    // Always use white line color in race mode
+    const line = "white";
+    
     if (gradeText) {
       if (allQuestionsCompleted) {
         // Check if player qualifies for GM (only grade in race mode)
-        let line = "white";
-
         gradeText.textContent = "GM";
       }
 
@@ -1745,11 +1785,9 @@
       }
 
       if (gradeText.textContent === "GM") {
-        const bgColor = getGradeBackgroundColor("GM", line);
-        const borderColor = getGradeBorderColor("GM", line);
         gradeText.style.color = textColor;
-        gradeText.style.backgroundColor = bgColor;
-        gradeText.style.borderColor = borderColor;
+        gradeText.style.backgroundColor = "rgba(255, 255, 255, 0.2)"; // White background
+        gradeText.style.borderColor = "#ffffff"; // White border
         gradeText.style.display = "block";
 
         // Make grade display box square (width = height)
@@ -2175,8 +2213,19 @@
     // Manual click (kept for UX)
     submitBtn.addEventListener("click", submitMasterScore);
 
-    // Automatic upload for logged‑in users (only if not abandoned and auto-submit is enabled)
-    if (!quizAbandoned && localStorage.getItem("autoSubmitEnabled") !== "false") {
+    // Check for invalidating modifiers and disable submit button
+    const hasInvalidModifiers = startQuestionParam !== 0 || timeMultiplier < 1.0;
+    
+    if (hasInvalidModifiers) {
+      submitBtn.disabled = true;
+      if (startQuestionParam !== 0) {
+        submitBtn.textContent = "Cannot submit: started at question " + (startQuestionParam + 1);
+      } else {
+        submitBtn.textContent = "Cannot submit: time multiplier below 1x";
+      }
+      submitBtn.style.cursor = "not-allowed";
+    } else if (!quizAbandoned && localStorage.getItem("autoSubmitEnabled") !== "false") {
+      // Automatic upload for logged‑in users (only if not abandoned and auto-submit is enabled)
       submitMasterScore();
     } else {
       // If abandoned, disable the submit button and show message
@@ -2370,50 +2419,6 @@
   }
   // Make checkAns available globally for onclick handlers
   window.checkAns = checkAns;
-
-
-
-  // Get background color based on grade
-  function getGradeBackgroundColor(grade, line) {
-    if (grade === "GM") {
-      if (line === "orange") return "rgba(255, 136, 0, 0.3)";
-      if (line === "green") return "rgba(0, 255, 0, 0.3)";
-      return "rgba(255, 255, 255, 0.2)";
-    }
-    if (grade.startsWith("S")) {
-      return "rgba(255, 215, 0, 0.3)"; // Gold for S grades
-    }
-    // Numeric grades
-    const num = parseInt(grade);
-    if (num >= 1 && num <= 3) {
-      return "rgba(0, 255, 0, 0.3)"; // Green for grades 1-3
-    }
-    if (num >= 4 && num <= 6) {
-      return "rgba(255, 255, 0, 0.3)"; // Yellow for grades 4-6
-    }
-    return "rgba(255, 0, 0, 0.3)"; // Red for grades 7-9
-  }
-
-  // Get border color based on grade
-  function getGradeBorderColor(grade, line) {
-    if (grade === "GM") {
-      if (line === "orange") return "#ff8800";
-      if (line === "green") return "#00ff00";
-      return "#ffffff";
-    }
-    if (grade.startsWith("S")) {
-      return "#ffd700"; // Gold for S grades
-    }
-    // Numeric grades
-    const num = parseInt(grade);
-    if (num >= 1 && num <= 3) {
-      return "#00ff00"; // Green for grades 1-3
-    }
-    if (num >= 4 && num <= 6) {
-      return "#ffff00"; // Yellow for grades 4-6
-    }
-    return "#ff0000"; // Red for grades 7-9
-  }
 
 </script>
 
