@@ -617,8 +617,12 @@ function getBadgeName(level) {
 
 // calculatePlayerLevel is now imported from stats.js to ensure synchronization
 
-// Find best scores for each mode
-function findBestScores(playerName) {
+// Find best scores for each mode (accepts single name string or array of names)
+function findBestScores(playerNames) {
+    // Convert single name to array if needed, then to Set for efficient lookup
+    const namesArray = Array.isArray(playerNames) ? playerNames : [playerNames];
+    const nameSet = new Set(namesArray);
+    
     const bestScores = {
         easy: null,
         normal: null,
@@ -628,7 +632,7 @@ function findBestScores(playerName) {
     };
     
     // Find best easy score
-    const easyPlayerScores = allEasyScores.filter(s => s.name === playerName);
+    const easyPlayerScores = allEasyScores.filter(s => nameSet.has(s.name));
     if (easyPlayerScores.length > 0) {
         easyPlayerScores.sort((a, b) => {
             if (a.score !== b.score) return b.score - a.score;
@@ -638,7 +642,7 @@ function findBestScores(playerName) {
     }
     
     // Find best normal score
-    const normalPlayerScores = allNormalScores.filter(s => s.name === playerName);
+    const normalPlayerScores = allNormalScores.filter(s => nameSet.has(s.name));
     if (normalPlayerScores.length > 0) {
         normalPlayerScores.sort((a, b) => {
             if (a.score !== b.score) return b.score - a.score;
@@ -651,7 +655,7 @@ function findBestScores(playerName) {
     }
     
     // Find best master score
-    const masterPlayerScores = allMasterScores.filter(s => s.name === playerName);
+    const masterPlayerScores = allMasterScores.filter(s => nameSet.has(s.name));
     if (masterPlayerScores.length > 0) {
         masterPlayerScores.sort((a, b) => {
             if (a.score !== b.score) return b.score - a.score;
@@ -670,7 +674,7 @@ function findBestScores(playerName) {
     }
     
     // Find best race score
-    const racePlayerScores = allRaceScores.filter(s => s.name === playerName);
+    const racePlayerScores = allRaceScores.filter(s => nameSet.has(s.name));
     if (racePlayerScores.length > 0) {
         racePlayerScores.sort((a, b) => {
             if (a.score !== b.score) return b.score - a.score;
@@ -680,7 +684,7 @@ function findBestScores(playerName) {
     }
     
     // Find best hell score
-    const hellPlayerScores = allHellScores.filter(s => s.name === playerName);
+    const hellPlayerScores = allHellScores.filter(s => nameSet.has(s.name));
     if (hellPlayerScores.length > 0) {
         hellPlayerScores.sort((a, b) => {
             if (a.score !== b.score) return b.score - a.score;
@@ -717,6 +721,7 @@ async function loadPlayerProfile(playerName) {
     
     // First, check userProfiles database to see if player exists
     let displayPlayerName = playerName; // Default to the searched name
+    let allPlayerNames = new Set([playerName]); // Start with the original name
     try {
         // Query userProfiles to find user by displayName or email
         const userProfilesRef = collection(db, 'userProfiles');
@@ -732,6 +737,15 @@ async function loadPlayerProfile(playerName) {
                 (isEmail && data.email === playerName) ||
                 (isEmail && playerName === data.displayName)) {
                 foundUser = { uid: doc.id, ...data };
+                // Build complete list of all usernames (current + previous)
+                allPlayerNames.add(data.displayName);
+                if (data.email) allPlayerNames.add(data.email);
+                if (data.previousUsernames && Array.isArray(data.previousUsernames)) {
+                    data.previousUsernames.forEach(name => {
+                        if (name) allPlayerNames.add(name);
+                    });
+                }
+                displayPlayerName = data.displayName || data.email || playerName;
             }
         });
         
@@ -743,6 +757,13 @@ async function loadPlayerProfile(playerName) {
                 // Check if playerName matches any previous username
                 if (previousUsernames.includes(playerName)) {
                     foundUser = { uid: doc.id, ...data };
+                    // Build complete list of all usernames (current + previous)
+                    allPlayerNames = new Set();
+                    allPlayerNames.add(data.displayName);
+                    if (data.email) allPlayerNames.add(data.email);
+                    previousUsernames.forEach(name => {
+                        if (name) allPlayerNames.add(name);
+                    });
                     // Use current display name for display
                     displayPlayerName = data.displayName || data.email || playerName;
                 }
@@ -759,6 +780,15 @@ async function loadPlayerProfile(playerName) {
                 if ((data.email && data.email === playerName) || 
                     (data.displayName && data.displayName === playerName)) {
                     foundUser = { uid: doc.id, ...data };
+                    // Build complete list of all usernames (current + previous)
+                    allPlayerNames.add(data.displayName);
+                    if (data.email) allPlayerNames.add(data.email);
+                    if (data.previousUsernames && Array.isArray(data.previousUsernames)) {
+                        data.previousUsernames.forEach(name => {
+                            if (name) allPlayerNames.add(name);
+                        });
+                    }
+                    displayPlayerName = data.displayName || data.email || playerName;
                 }
             });
         }
@@ -872,15 +902,16 @@ async function loadPlayerProfile(playerName) {
             }
         }
         
-        // Find best scores
-        const bestScores = findBestScores(playerName);
+        // Find best scores using all names (current + previous usernames)
+        const bestScores = findBestScores(Array.from(allPlayerNames));
         
         // Calculate level from scores using the same formula as navbar and stats
-        const easyScores = allEasyScores.filter(s => s.name === playerName);
-        const normalScores = allNormalScores.filter(s => s.name === playerName);
-        const masterScores = allMasterScores.filter(s => s.name === playerName);
-        const raceScores = allRaceScores.filter(s => s.name === playerName);
-        const hellScores = allHellScores.filter(s => s.name === playerName);
+        // Filter scores for this player (including all previous usernames)
+        const easyScores = allEasyScores.filter(s => allPlayerNames.has(s.name));
+        const normalScores = allNormalScores.filter(s => allPlayerNames.has(s.name));
+        const masterScores = allMasterScores.filter(s => allPlayerNames.has(s.name));
+        const raceScores = allRaceScores.filter(s => allPlayerNames.has(s.name));
+        const hellScores = allHellScores.filter(s => allPlayerNames.has(s.name));
         
         // Secret scores are not fetched for player profile tooltip
         const secretScores = [];
@@ -973,10 +1004,41 @@ function attachPlayerNameHovers() {
         const playerName = nameEl.getAttribute('data-player-name');
         
         // Make name clickable to redirect to profile page
+        // First, check if this is a previous username and get current displayName
         nameEl.style.cursor = 'pointer';
-        nameEl.addEventListener('click', (e) => {
+        nameEl.addEventListener('click', async (e) => {
             e.stopPropagation();
-            window.location.href = `profile.html?player=${encodeURIComponent(playerName)}`;
+            // Check if playerName is a previous username and get current displayName
+            let profilePlayerName = playerName;
+            try {
+                const userProfilesRef = collection(db, 'userProfiles');
+                const userProfilesSnapshot = await getDocs(userProfilesRef);
+                let foundUser = null;
+                
+                userProfilesSnapshot.forEach(doc => {
+                    const data = doc.data();
+                    if (data.displayName === playerName || 
+                        (playerName.includes('@') && data.email === playerName)) {
+                        foundUser = { uid: doc.id, ...data };
+                    }
+                });
+                
+                // If not found, check previous usernames
+                if (!foundUser) {
+                    userProfilesSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        const previousUsernames = data.previousUsernames || [];
+                        if (previousUsernames.includes(playerName)) {
+                            foundUser = { uid: doc.id, ...data };
+                            profilePlayerName = data.displayName || data.email || playerName;
+                        }
+                    });
+                }
+            } catch (error) {
+                console.error('Error checking username:', error);
+            }
+            
+            window.location.href = `profile.html?player=${encodeURIComponent(profilePlayerName)}`;
         });
         
         nameEl.addEventListener('mouseenter', () => {
@@ -986,12 +1048,44 @@ function attachPlayerNameHovers() {
             
             profilePopupTimeout = setTimeout(async () => {
                 const popup = createProfilePopup();
+                
+                // First resolve to current username if needed
+                let currentDisplayName = playerName;
+                try {
+                    const userProfilesRef = collection(db, 'userProfiles');
+                    const userProfilesSnapshot = await getDocs(userProfilesRef);
+                    let foundUser = null;
+                    
+                    userProfilesSnapshot.forEach(doc => {
+                        const data = doc.data();
+                        if (data.displayName === playerName || 
+                            (playerName.includes('@') && data.email === playerName)) {
+                            foundUser = { uid: doc.id, ...data };
+                            currentDisplayName = data.displayName || data.email || playerName;
+                        }
+                    });
+                    
+                    // If not found, check previous usernames
+                    if (!foundUser) {
+                        userProfilesSnapshot.forEach(doc => {
+                            const data = doc.data();
+                            const previousUsernames = data.previousUsernames || [];
+                            if (previousUsernames.includes(playerName)) {
+                                foundUser = { uid: doc.id, ...data };
+                                currentDisplayName = data.displayName || data.email || playerName;
+                            }
+                        });
+                    }
+                } catch (error) {
+                    console.error('Error resolving username:', error);
+                }
+                
                 await loadPlayerProfile(playerName);
                 
-                // Add click handler to navigate to profile page
+                // Add click handler to navigate to profile page (use current displayName)
                 popup.onclick = (e) => {
                     e.stopPropagation();
-                    window.location.href = `profile.html?player=${encodeURIComponent(playerName)}`;
+                    window.location.href = `profile.html?player=${encodeURIComponent(currentDisplayName)}`;
                 };
                 
                 popup.style.display = 'block';

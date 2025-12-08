@@ -3703,6 +3703,8 @@ td:first-child {
     font-weight: bold;
     margin-bottom: 15px;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
+    position: relative;
+    z-index: 10001;
 }
 
 .profile-level-display {
@@ -3776,6 +3778,9 @@ td:first-child {
     border: 2px solid rgba(255, 255, 255, 0.2);
     border-radius: 12px;
     padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
     text-align: center;
     transition: all 0.3s;
 }
@@ -3798,6 +3803,21 @@ td:first-child {
     color: #4CAF50;
     font-size: 1.8em;
     font-weight: bold;
+}
+
+.score-card-time {
+    font-size: 1.5em;
+    font-weight: bold;
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.score-card-details {
+    font-size: 0.9em;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+    margin-top: 5px;
+    line-height: 1.4;
 }
 
 /* About Me section */
@@ -3863,6 +3883,168 @@ td:first-child {
 }
 
 /* Profile Settings section */
+/* Profile Graph Section */
+.profile-graph-section {
+    padding: 0 20px;
+    margin-bottom: 40px;
+}
+
+.profile-graph-section h2 {
+    color: #dbffff;
+    font-size: 2em;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.profile-graph-controls {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.profile-graph-label {
+    color: #dbffff;
+    font-weight: bold;
+}
+
+.profile-graph-select {
+    padding: 10px 15px;
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #dbffff;
+    font-size: 1em;
+    cursor: pointer;
+    transition: border-color 0.3s ease;
+}
+
+.profile-graph-select:hover {
+    border-color: rgba(255, 255, 255, 0.4);
+}
+
+.profile-graph-select:focus {
+    outline: none;
+    border-color: #dbffff;
+}
+
+.profile-graph-container {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 300px;
+}
+
+/* Message Board Section */
+.profile-message-board-section {
+    padding: 0 20px;
+    margin-bottom: 40px;
+}
+
+.profile-message-board-section h2 {
+    color: #dbffff;
+    font-size: 2em;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.message-board-messages {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    min-height: 200px;
+    max-height: 500px;
+    overflow-y: auto;
+    margin-bottom: 20px;
+}
+
+.message-board-message {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px;
+}
+
+.message-board-message:last-child {
+    margin-bottom: 0;
+}
+
+.message-board-message-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.message-board-author {
+    color: #dbffff;
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.message-board-time {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9em;
+}
+
+.message-board-content {
+    color: rgba(255, 255, 255, 0.9);
+    line-height: 1.6;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+.message-board-empty,
+.message-board-error {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 40px 20px;
+    font-style: italic;
+}
+
+.message-board-error {
+    color: #ff6b6b;
+}
+
+.message-board-form {
+    background: rgba(0, 0, 0, 0.4);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+.message-board-textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    color: #dbffff;
+    font-size: 1em;
+    font-family: inherit;
+    resize: vertical;
+    margin-bottom: 15px;
+}
+
+.message-board-textarea:focus {
+    outline: none;
+    border-color: #dbffff;
+}
+
+.message-board-actions {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
 .profile-settings-section {
     padding: 0 20px;
     margin-bottom: 40px;
@@ -4760,4 +4942,701 @@ td:first-child {
     50% {
         box-shadow: 0 0 40px rgba(255, 69, 0, 1), 0 0 80px rgba(220, 20, 60, 0.9), 0 0 120px rgba(255, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
+}
+
+/* Color Theme Styles - Only applies to non-gameplay and non-auth pages */
+/* Green Theme */
+body.theme-green .status .name,
+body.theme-green .player-level,
+body.theme-green .profile-setting-label,
+body.theme-green .profile-settings-section h2,
+body.theme-green .profile-settings-toggle,
+body.theme-green .profile-name,
+body.theme-green .profile-level-text,
+body.theme-green .profile-about-section h2,
+body.theme-green .profile-scores-section h2,
+body.theme-green .menu-title,
+body.theme-green .menu-subtitle,
+body.theme-green .mode-selection-title,
+body.theme-green .level-progression-title,
+body.theme-green .stats-section-title,
+body.theme-green h1:not(.easy h1):not(.normal h1):not(.master h1):not(.hell h1):not(.race h1),
+body.theme-green h2,
+body.theme-green .profile-setting-label,
+body.theme-green a:not([login]):not([signup]):not([logout]):not([giveup]) {
+    color: #90ee90 !important;
+}
+
+/* Preserve mode-specific stats-card h1 colors */
+body.theme-green .easy.stats-card h1,
+body.theme-green .easy h1 {
+    color: #90ee90 !important;
+}
+
+body.theme-green .normal.stats-card h1,
+body.theme-green .normal h1 {
+    color: #87ceeb !important;
+}
+
+body.theme-green .master.stats-card h1,
+body.theme-green .master h1 {
+    color: #fffafa !important;
+}
+
+body.theme-green .hell.stats-card h1,
+body.theme-green .hell h1 {
+    color: #ffbaba !important;
+}
+
+body.theme-green .race.stats-card h1,
+body.theme-green .race h1 {
+    color: #ff8c42 !important;
+}
+
+body.theme-green .menu-title {
+    background: linear-gradient(135deg, #90ee90 0%, #7acc7a 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    text-shadow: 0 0 30px rgba(144, 238, 144, 0.5) !important;
+}
+
+body.theme-green .tips-title {
+    color: #90ee90 !important;
+}
+
+body.theme-green .tips-text {
+    color: #90ee90 !important;
+}
+
+body.theme-green .tips-container {
+    border-color: rgba(144, 238, 144, 0.3) !important;
+}
+
+body.theme-green .status a:not([login]):not([signup]):not([logout]):not([giveup]),
+body.theme-green .mode-card,
+body.theme-green .profile-button,
+body.theme-green .profile-setting-item,
+body.theme-green .container,
+body.theme-green .container2 {
+    border-color: rgba(144, 238, 144, 0.3) !important;
+}
+
+body.theme-green .profile-button:hover,
+body.theme-green .mode-card:hover {
+    border-color: rgba(144, 238, 144, 0.6) !important;
+    box-shadow: 0 0 10px rgba(144, 238, 144, 0.3) !important;
+}
+
+body.theme-green .secondary-btn:not(.play-btn),
+body.theme-green .menu-btn:not(.play-btn) {
+    background: rgba(144, 238, 144, 0.2) !important;
+    border-color: rgba(144, 238, 144, 0.4) !important;
+    color: #90ee90 !important;
+}
+
+body.theme-green .secondary-btn:not(.play-btn):hover,
+body.theme-green .menu-btn:not(.play-btn):hover {
+    background: rgba(144, 238, 144, 0.3) !important;
+    border-color: rgba(144, 238, 144, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(144, 238, 144, 0.3) !important;
+}
+
+body.theme-green .status a[login],
+body.theme-green .status a[signup],
+body.theme-green .status a[logout],
+body.theme-green .status a[href="index.html"] {
+    color: #90ee90 !important;
+    background-color: rgba(144, 238, 144, 0.15) !important;
+    border: 1px solid rgba(144, 238, 144, 0.3) !important;
+}
+
+body.theme-green .status a[login]:hover,
+body.theme-green .status a[signup]:hover,
+body.theme-green .status a[logout]:hover,
+body.theme-green .status a[href="index.html"]:hover {
+    color: #7acc7a !important;
+    background-color: rgba(144, 238, 144, 0.25) !important;
+    border-color: rgba(144, 238, 144, 0.5) !important;
+    box-shadow: 0 2px 8px rgba(144, 238, 144, 0.3) !important;
+}
+
+/* Purple Theme */
+body.theme-purple .status .name,
+body.theme-purple .player-level,
+body.theme-purple .profile-setting-label,
+body.theme-purple .profile-settings-section h2,
+body.theme-purple .profile-settings-toggle,
+body.theme-purple .profile-name,
+body.theme-purple .profile-level-text,
+body.theme-purple .profile-about-section h2,
+body.theme-purple .profile-scores-section h2,
+body.theme-purple .menu-title,
+body.theme-purple .menu-subtitle,
+body.theme-purple .mode-selection-title,
+body.theme-purple .level-progression-title,
+body.theme-purple .stats-section-title,
+body.theme-purple h1:not(.easy h1):not(.normal h1):not(.master h1):not(.hell h1):not(.race h1),
+body.theme-purple h2,
+body.theme-purple .profile-setting-label,
+body.theme-purple a:not([login]):not([signup]):not([logout]):not([giveup]) {
+    color: #dda0dd !important;
+}
+
+/* Preserve mode-specific stats-card h1 colors */
+body.theme-purple .easy.stats-card h1,
+body.theme-purple .easy h1 {
+    color: #90ee90 !important;
+}
+
+body.theme-purple .normal.stats-card h1,
+body.theme-purple .normal h1 {
+    color: #87ceeb !important;
+}
+
+body.theme-purple .master.stats-card h1,
+body.theme-purple .master h1 {
+    color: #fffafa !important;
+}
+
+body.theme-purple .hell.stats-card h1,
+body.theme-purple .hell h1 {
+    color: #ffbaba !important;
+}
+
+body.theme-purple .race.stats-card h1,
+body.theme-purple .race h1 {
+    color: #ff8c42 !important;
+}
+
+body.theme-purple .menu-title {
+    background: linear-gradient(135deg, #dda0dd 0%, #ba7dba 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    text-shadow: 0 0 30px rgba(221, 160, 221, 0.5) !important;
+}
+
+body.theme-purple .tips-title {
+    color: #dda0dd !important;
+}
+
+body.theme-purple .tips-text {
+    color: #dda0dd !important;
+}
+
+body.theme-purple .tips-container {
+    border-color: rgba(221, 160, 221, 0.3) !important;
+}
+
+body.theme-purple .status a:not([login]):not([signup]):not([logout]):not([giveup]),
+body.theme-purple .mode-card,
+body.theme-purple .profile-button,
+body.theme-purple .profile-setting-item,
+body.theme-purple .container,
+body.theme-purple .container2 {
+    border-color: rgba(221, 160, 221, 0.3) !important;
+}
+
+body.theme-purple .profile-button:hover,
+body.theme-purple .mode-card:hover {
+    border-color: rgba(221, 160, 221, 0.6) !important;
+    box-shadow: 0 0 10px rgba(221, 160, 221, 0.3) !important;
+}
+
+body.theme-purple .secondary-btn:not(.play-btn),
+body.theme-purple .menu-btn:not(.play-btn) {
+    background: rgba(221, 160, 221, 0.2) !important;
+    border-color: rgba(221, 160, 221, 0.4) !important;
+    color: #dda0dd !important;
+}
+
+body.theme-purple .secondary-btn:not(.play-btn):hover,
+body.theme-purple .menu-btn:not(.play-btn):hover {
+    background: rgba(221, 160, 221, 0.3) !important;
+    border-color: rgba(221, 160, 221, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(221, 160, 221, 0.3) !important;
+}
+
+body.theme-purple .status a[login],
+body.theme-purple .status a[signup],
+body.theme-purple .status a[logout],
+body.theme-purple .status a[href="index.html"] {
+    color: #dda0dd !important;
+    background-color: rgba(221, 160, 221, 0.15) !important;
+    border: 1px solid rgba(221, 160, 221, 0.3) !important;
+}
+
+body.theme-purple .status a[login]:hover,
+body.theme-purple .status a[signup]:hover,
+body.theme-purple .status a[logout]:hover,
+body.theme-purple .status a[href="index.html"]:hover {
+    color: #ba7dba !important;
+    background-color: rgba(221, 160, 221, 0.25) !important;
+    border-color: rgba(221, 160, 221, 0.5) !important;
+    box-shadow: 0 2px 8px rgba(221, 160, 221, 0.3) !important;
+}
+
+/* Orange Theme */
+body.theme-orange .status .name,
+body.theme-orange .player-level,
+body.theme-orange .profile-setting-label,
+body.theme-orange .profile-settings-section h2,
+body.theme-orange .profile-settings-toggle,
+body.theme-orange .profile-name,
+body.theme-orange .profile-level-text,
+body.theme-orange .profile-about-section h2,
+body.theme-orange .profile-scores-section h2,
+body.theme-orange .menu-title,
+body.theme-orange .menu-subtitle,
+body.theme-orange .mode-selection-title,
+body.theme-orange .level-progression-title,
+body.theme-orange .stats-section-title,
+body.theme-orange h1:not(.easy h1):not(.normal h1):not(.master h1):not(.hell h1):not(.race h1),
+body.theme-orange h2,
+body.theme-orange .profile-setting-label,
+body.theme-orange a:not([login]):not([signup]):not([logout]):not([giveup]) {
+    color: #ffa500 !important;
+}
+
+/* Preserve mode-specific stats-card h1 colors */
+body.theme-orange .easy.stats-card h1,
+body.theme-orange .easy h1 {
+    color: #90ee90 !important;
+}
+
+body.theme-orange .normal.stats-card h1,
+body.theme-orange .normal h1 {
+    color: #87ceeb !important;
+}
+
+body.theme-orange .master.stats-card h1,
+body.theme-orange .master h1 {
+    color: #fffafa !important;
+}
+
+body.theme-orange .hell.stats-card h1,
+body.theme-orange .hell h1 {
+    color: #ffbaba !important;
+}
+
+body.theme-orange .race.stats-card h1,
+body.theme-orange .race h1 {
+    color: #ff8c42 !important;
+}
+
+body.theme-orange .menu-title {
+    background: linear-gradient(135deg, #ffa500 0%, #ff8c00 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    text-shadow: 0 0 30px rgba(255, 165, 0, 0.5) !important;
+}
+
+body.theme-orange .tips-title {
+    color: #ffa500 !important;
+}
+
+body.theme-orange .tips-text {
+    color: #ffa500 !important;
+}
+
+body.theme-orange .tips-container {
+    border-color: rgba(255, 165, 0, 0.3) !important;
+}
+
+body.theme-orange .status a:not([login]):not([signup]):not([logout]):not([giveup]),
+body.theme-orange .mode-card,
+body.theme-orange .profile-button,
+body.theme-orange .profile-setting-item,
+body.theme-orange .container,
+body.theme-orange .container2 {
+    border-color: rgba(255, 165, 0, 0.3) !important;
+}
+
+body.theme-orange .profile-button:hover,
+body.theme-orange .mode-card:hover {
+    border-color: rgba(255, 165, 0, 0.6) !important;
+    box-shadow: 0 0 10px rgba(255, 165, 0, 0.3) !important;
+}
+
+body.theme-orange .secondary-btn:not(.play-btn),
+body.theme-orange .menu-btn:not(.play-btn) {
+    background: rgba(255, 165, 0, 0.2) !important;
+    border-color: rgba(255, 165, 0, 0.4) !important;
+    color: #ffa500 !important;
+}
+
+body.theme-orange .secondary-btn:not(.play-btn):hover,
+body.theme-orange .menu-btn:not(.play-btn):hover {
+    background: rgba(255, 165, 0, 0.3) !important;
+    border-color: rgba(255, 165, 0, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(255, 165, 0, 0.3) !important;
+}
+
+body.theme-orange .status a[login],
+body.theme-orange .status a[signup],
+body.theme-orange .status a[logout],
+body.theme-orange .status a[href="index.html"] {
+    color: #ffa500 !important;
+    background-color: rgba(255, 165, 0, 0.15) !important;
+    border: 1px solid rgba(255, 165, 0, 0.3) !important;
+}
+
+body.theme-orange .status a[login]:hover,
+body.theme-orange .status a[signup]:hover,
+body.theme-orange .status a[logout]:hover,
+body.theme-orange .status a[href="index.html"]:hover {
+    color: #ff8c00 !important;
+    background-color: rgba(255, 165, 0, 0.25) !important;
+    border-color: rgba(255, 165, 0, 0.5) !important;
+    box-shadow: 0 2px 8px rgba(255, 165, 0, 0.3) !important;
+}
+
+/* Red Theme */
+body.theme-red .status .name,
+body.theme-red .player-level,
+body.theme-red .profile-setting-label,
+body.theme-red .profile-settings-section h2,
+body.theme-red .profile-settings-toggle,
+body.theme-red .profile-name,
+body.theme-red .profile-level-text,
+body.theme-red .profile-about-section h2,
+body.theme-red .profile-scores-section h2,
+body.theme-red .menu-title,
+body.theme-red .menu-subtitle,
+body.theme-red .mode-selection-title,
+body.theme-red .level-progression-title,
+body.theme-red .stats-section-title,
+body.theme-red h1:not(.easy h1):not(.normal h1):not(.master h1):not(.hell h1):not(.race h1),
+body.theme-red h2,
+body.theme-red .profile-setting-label,
+body.theme-red a:not([login]):not([signup]):not([logout]):not([giveup]) {
+    color: #ff6b6b !important;
+}
+
+/* Preserve mode-specific stats-card h1 colors */
+body.theme-red .easy.stats-card h1,
+body.theme-red .easy h1 {
+    color: #90ee90 !important;
+}
+
+body.theme-red .normal.stats-card h1,
+body.theme-red .normal h1 {
+    color: #87ceeb !important;
+}
+
+body.theme-red .master.stats-card h1,
+body.theme-red .master h1 {
+    color: #fffafa !important;
+}
+
+body.theme-red .hell.stats-card h1,
+body.theme-red .hell h1 {
+    color: #ffbaba !important;
+}
+
+body.theme-red .race.stats-card h1,
+body.theme-red .race h1 {
+    color: #ff8c42 !important;
+}
+
+body.theme-red .menu-title {
+    background: linear-gradient(135deg, #ff6b6b 0%, #ff4444 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    text-shadow: 0 0 30px rgba(255, 107, 107, 0.5) !important;
+}
+
+body.theme-red .tips-title {
+    color: #ff6b6b !important;
+}
+
+body.theme-red .tips-text {
+    color: #ff6b6b !important;
+}
+
+body.theme-red .tips-container {
+    border-color: rgba(255, 107, 107, 0.3) !important;
+}
+
+body.theme-red .status a:not([login]):not([signup]):not([logout]):not([giveup]),
+body.theme-red .mode-card,
+body.theme-red .profile-button,
+body.theme-red .profile-setting-item,
+body.theme-red .container,
+body.theme-red .container2 {
+    border-color: rgba(255, 107, 107, 0.3) !important;
+}
+
+body.theme-red .profile-button:hover,
+body.theme-red .mode-card:hover {
+    border-color: rgba(255, 107, 107, 0.6) !important;
+    box-shadow: 0 0 10px rgba(255, 107, 107, 0.3) !important;
+}
+
+body.theme-red .secondary-btn:not(.play-btn),
+body.theme-red .menu-btn:not(.play-btn) {
+    background: rgba(255, 107, 107, 0.2) !important;
+    border-color: rgba(255, 107, 107, 0.4) !important;
+    color: #ff6b6b !important;
+}
+
+body.theme-red .secondary-btn:not(.play-btn):hover,
+body.theme-red .menu-btn:not(.play-btn):hover {
+    background: rgba(255, 107, 107, 0.3) !important;
+    border-color: rgba(255, 107, 107, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(255, 107, 107, 0.3) !important;
+}
+
+body.theme-red .status a[login],
+body.theme-red .status a[signup],
+body.theme-red .status a[logout],
+body.theme-red .status a[href="index.html"] {
+    color: #ff6b6b !important;
+    background-color: rgba(255, 107, 107, 0.15) !important;
+    border: 1px solid rgba(255, 107, 107, 0.3) !important;
+}
+
+body.theme-red .status a[login]:hover,
+body.theme-red .status a[signup]:hover,
+body.theme-red .status a[logout]:hover,
+body.theme-red .status a[href="index.html"]:hover {
+    color: #ff4444 !important;
+    background-color: rgba(255, 107, 107, 0.25) !important;
+    border-color: rgba(255, 107, 107, 0.5) !important;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.3) !important;
+}
+
+/* Pink Theme */
+body.theme-pink .status .name,
+body.theme-pink .player-level,
+body.theme-pink .profile-setting-label,
+body.theme-pink .profile-settings-section h2,
+body.theme-pink .profile-settings-toggle,
+body.theme-pink .profile-name,
+body.theme-pink .profile-level-text,
+body.theme-pink .profile-about-section h2,
+body.theme-pink .profile-scores-section h2,
+body.theme-pink .menu-title,
+body.theme-pink .menu-subtitle,
+body.theme-pink .mode-selection-title,
+body.theme-pink .level-progression-title,
+body.theme-pink .stats-section-title,
+body.theme-pink h1:not(.easy h1):not(.normal h1):not(.master h1):not(.hell h1):not(.race h1),
+body.theme-pink h2,
+body.theme-pink .profile-setting-label,
+body.theme-pink a:not([login]):not([signup]):not([logout]):not([giveup]) {
+    color: #ffb6c1 !important;
+}
+
+/* Preserve mode-specific stats-card h1 colors */
+body.theme-pink .easy.stats-card h1,
+body.theme-pink .easy h1 {
+    color: #90ee90 !important;
+}
+
+body.theme-pink .normal.stats-card h1,
+body.theme-pink .normal h1 {
+    color: #87ceeb !important;
+}
+
+body.theme-pink .master.stats-card h1,
+body.theme-pink .master h1 {
+    color: #fffafa !important;
+}
+
+body.theme-pink .hell.stats-card h1,
+body.theme-pink .hell h1 {
+    color: #ffbaba !important;
+}
+
+body.theme-pink .race.stats-card h1,
+body.theme-pink .race h1 {
+    color: #ff8c42 !important;
+}
+
+body.theme-pink .menu-title {
+    background: linear-gradient(135deg, #ffb6c1 0%, #ff91a4 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    text-shadow: 0 0 30px rgba(255, 182, 193, 0.5) !important;
+}
+
+body.theme-pink .tips-title {
+    color: #ffb6c1 !important;
+}
+
+body.theme-pink .tips-text {
+    color: #ffb6c1 !important;
+}
+
+body.theme-pink .tips-container {
+    border-color: rgba(255, 182, 193, 0.3) !important;
+}
+
+body.theme-pink .status a:not([login]):not([signup]):not([logout]):not([giveup]),
+body.theme-pink .mode-card,
+body.theme-pink .profile-button,
+body.theme-pink .profile-setting-item,
+body.theme-pink .container,
+body.theme-pink .container2 {
+    border-color: rgba(255, 182, 193, 0.3) !important;
+}
+
+body.theme-pink .profile-button:hover,
+body.theme-pink .mode-card:hover {
+    border-color: rgba(255, 182, 193, 0.6) !important;
+    box-shadow: 0 0 10px rgba(255, 182, 193, 0.3) !important;
+}
+
+body.theme-pink .secondary-btn:not(.play-btn),
+body.theme-pink .menu-btn:not(.play-btn) {
+    background: rgba(255, 182, 193, 0.2) !important;
+    border-color: rgba(255, 182, 193, 0.4) !important;
+    color: #ffb6c1 !important;
+}
+
+body.theme-pink .secondary-btn:not(.play-btn):hover,
+body.theme-pink .menu-btn:not(.play-btn):hover {
+    background: rgba(255, 182, 193, 0.3) !important;
+    border-color: rgba(255, 182, 193, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(255, 182, 193, 0.3) !important;
+}
+
+body.theme-pink .status a[login],
+body.theme-pink .status a[signup],
+body.theme-pink .status a[logout],
+body.theme-pink .status a[href="index.html"] {
+    color: #ffb6c1 !important;
+    background-color: rgba(255, 182, 193, 0.15) !important;
+    border: 1px solid rgba(255, 182, 193, 0.3) !important;
+}
+
+body.theme-pink .status a[login]:hover,
+body.theme-pink .status a[signup]:hover,
+body.theme-pink .status a[logout]:hover,
+body.theme-pink .status a[href="index.html"]:hover {
+    color: #ff91a4 !important;
+    background-color: rgba(255, 182, 193, 0.25) !important;
+    border-color: rgba(255, 182, 193, 0.5) !important;
+    box-shadow: 0 2px 8px rgba(255, 182, 193, 0.3) !important;
+}
+
+/* Yellow Theme */
+body.theme-yellow .status .name,
+body.theme-yellow .player-level,
+body.theme-yellow .profile-setting-label,
+body.theme-yellow .profile-settings-section h2,
+body.theme-yellow .profile-settings-toggle,
+body.theme-yellow .profile-name,
+body.theme-yellow .profile-level-text,
+body.theme-yellow .profile-about-section h2,
+body.theme-yellow .profile-scores-section h2,
+body.theme-yellow .menu-title,
+body.theme-yellow .menu-subtitle,
+body.theme-yellow .mode-selection-title,
+body.theme-yellow .level-progression-title,
+body.theme-yellow .stats-section-title,
+body.theme-yellow h1:not(.easy h1):not(.normal h1):not(.master h1):not(.hell h1):not(.race h1),
+body.theme-yellow h2,
+body.theme-yellow .profile-setting-label,
+body.theme-yellow a:not([login]):not([signup]):not([logout]):not([giveup]) {
+    color: #ffd700 !important;
+}
+
+/* Preserve mode-specific stats-card h1 colors */
+body.theme-yellow .easy.stats-card h1,
+body.theme-yellow .easy h1 {
+    color: #90ee90 !important;
+}
+
+body.theme-yellow .normal.stats-card h1,
+body.theme-yellow .normal h1 {
+    color: #87ceeb !important;
+}
+
+body.theme-yellow .master.stats-card h1,
+body.theme-yellow .master h1 {
+    color: #fffafa !important;
+}
+
+body.theme-yellow .hell.stats-card h1,
+body.theme-yellow .hell h1 {
+    color: #ffbaba !important;
+}
+
+body.theme-yellow .race.stats-card h1,
+body.theme-yellow .race h1 {
+    color: #ff8c42 !important;
+}
+
+body.theme-yellow .menu-title {
+    background: linear-gradient(135deg, #ffd700 0%, #ffcc00 100%) !important;
+    -webkit-background-clip: text !important;
+    -webkit-text-fill-color: transparent !important;
+    background-clip: text !important;
+    text-shadow: 0 0 30px rgba(255, 215, 0, 0.5) !important;
+}
+
+body.theme-yellow .tips-title {
+    color: #ffd700 !important;
+}
+
+body.theme-yellow .tips-text {
+    color: #ffd700 !important;
+}
+
+body.theme-yellow .tips-container {
+    border-color: rgba(255, 215, 0, 0.3) !important;
+}
+
+body.theme-yellow .status a:not([login]):not([signup]):not([logout]):not([giveup]),
+body.theme-yellow .mode-card,
+body.theme-yellow .profile-button,
+body.theme-yellow .profile-setting-item,
+body.theme-yellow .container,
+body.theme-yellow .container2 {
+    border-color: rgba(255, 215, 0, 0.3) !important;
+}
+
+body.theme-yellow .profile-button:hover,
+body.theme-yellow .mode-card:hover {
+    border-color: rgba(255, 215, 0, 0.6) !important;
+    box-shadow: 0 0 10px rgba(255, 215, 0, 0.3) !important;
+}
+
+body.theme-yellow .secondary-btn:not(.play-btn),
+body.theme-yellow .menu-btn:not(.play-btn) {
+    background: rgba(255, 215, 0, 0.2) !important;
+    border-color: rgba(255, 215, 0, 0.4) !important;
+    color: #ffd700 !important;
+}
+
+body.theme-yellow .secondary-btn:not(.play-btn):hover,
+body.theme-yellow .menu-btn:not(.play-btn):hover {
+    background: rgba(255, 215, 0, 0.3) !important;
+    border-color: rgba(255, 215, 0, 0.6) !important;
+    box-shadow: 0 4px 12px rgba(255, 215, 0, 0.3) !important;
+}
+
+body.theme-yellow .status a[login],
+body.theme-yellow .status a[signup],
+body.theme-yellow .status a[logout],
+body.theme-yellow .status a[href="index.html"] {
+    color: #ffd700 !important;
+    background-color: rgba(255, 215, 0, 0.15) !important;
+    border: 1px solid rgba(255, 215, 0, 0.3) !important;
+}
+
+body.theme-yellow .status a[login]:hover,
+body.theme-yellow .status a[signup]:hover,
+body.theme-yellow .status a[logout]:hover,
+body.theme-yellow .status a[href="index.html"]:hover {
+    color: #ffcc00 !important;
+    background-color: rgba(255, 215, 0, 0.25) !important;
+    border-color: rgba(255, 215, 0, 0.5) !important;
+    box-shadow: 0 2px 8px rgba(255, 215, 0, 0.3) !important;
 }

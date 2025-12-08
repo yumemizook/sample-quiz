@@ -6,6 +6,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <title>Player Profile</title>
     <link rel="stylesheet" href="index.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
     <div class="profile-banner" id="profileBanner"></div>
@@ -72,24 +73,65 @@
                     <div class="profile-score-card">
                         <div class="score-card-mode">Easy Mode</div>
                         <div class="score-card-value" id="easyScore">-</div>
+                        <div class="score-card-details" id="easyScoreDetails"></div>
                     </div>
                     <div class="profile-score-card">
                         <div class="score-card-mode">Normal Mode</div>
                         <div class="score-card-value" id="normalScore">-</div>
+                        <div class="score-card-details" id="normalScoreDetails"></div>
                     </div>
                     <div class="profile-score-card">
                         <div class="score-card-mode">Master Mode</div>
                         <div class="score-card-value" id="masterScore">-</div>
+                        <div class="score-card-details" id="masterScoreDetails"></div>
                     </div>
                     <div class="profile-score-card">
                         <div class="score-card-mode">Race Mode</div>
                         <div class="score-card-value" id="raceScore">-</div>
+                        <div class="score-card-details" id="raceScoreDetails"></div>
                     </div>
                     <div class="profile-score-card">
                         <div class="score-card-mode">Hell Mode</div>
+                        <div class="score-card-time" id="hellScoreTime" style="display: none;"></div>
                         <div class="score-card-value" id="hellScore">-</div>
+                        <div class="score-card-details" id="hellScoreDetails"></div>
                     </div>
                 </div>
+            </div>
+            
+            <!-- Performance Graph Section -->
+            <div class="profile-graph-section">
+                <h2>Performance Over Time</h2>
+                <div class="profile-graph-controls">
+                    <label for="graphModeSelect" class="profile-graph-label">Select Game Mode:</label>
+                    <select id="graphModeSelect" class="profile-graph-select">
+                        <option value="easy">Easy Mode</option>
+                        <option value="normal">Normal Mode</option>
+                        <option value="master">Master Mode</option>
+                        <option value="race">Race Mode</option>
+                        <option value="hell">Hell Mode</option>
+                    </select>
+                </div>
+                <div class="profile-graph-container">
+                    <canvas id="profileChart"></canvas>
+                </div>
+            </div>
+            
+            <!-- Message Board Section -->
+            <div class="profile-message-board-section">
+                <h2>Message Board</h2>
+                <div id="messageBoardMessages" class="message-board-messages">
+                    <!-- Messages will be loaded here -->
+                </div>
+                <div id="messageBoardForm" class="message-board-form" style="display: none;">
+                    <textarea id="messageBoardTextarea" class="message-board-textarea" placeholder="Write a message..." maxlength="500"></textarea>
+                    <div class="message-board-actions">
+                        <button class="profile-button" id="postMessageBtn">Post Message</button>
+                        <button class="profile-button profile-button-secondary" id="cancelMessageBtn">Cancel</button>
+                    </div>
+                    <div class="status-message" id="messageBoardStatus"></div>
+                </div>
+                <button id="newMessageBtn" class="profile-button" style="display: none;">New Message</button>
             </div>
             
             <!-- Profile Settings (only visible when viewing own profile) -->
@@ -150,6 +192,25 @@
                     <div class="status-message" id="siteBackgroundStatus"></div>
                 </div>
 
+                <!-- Color Theme -->
+                <div class="profile-setting-item">
+                    <label class="profile-setting-label">Color Theme</label>
+                    <p class="profile-setting-description">Choose a color theme for non-gameplay and non-auth screens. This affects text colors, borders, and UI elements.</p>
+                    <div class="profile-input-group">
+                        <select id="colorThemeSelect" class="profile-input">
+                            <option value="default">Default (Cyan/Blue)</option>
+                            <option value="green">Green</option>
+                            <option value="purple">Purple</option>
+                            <option value="orange">Orange</option>
+                            <option value="red">Red</option>
+                            <option value="pink">Pink</option>
+                            <option value="yellow">Yellow</option>
+                        </select>
+                        <button class="profile-button" id="colorThemeBtn">Apply Theme</button>
+                    </div>
+                    <div class="status-message" id="colorThemeStatus"></div>
+                </div>
+
                 <!-- Display Name -->
                 <div class="profile-setting-item">
                     <label class="profile-setting-label">Display Name</label>
@@ -192,6 +253,7 @@
     <script type="module" src="hm.js"></script>
     <script type="module" src="profile.js"></script>
     <script type="module" src="loadBackground.js"></script>
+    <script type="module" src="loadTheme.js"></script>
 </body>
 </html>
 

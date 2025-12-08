@@ -110,6 +110,15 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
     easyScores.forEach(score => {
         const gradePoints = score.score || 0; // In easy mode, score is grade points
         experience += Math.floor(gradePoints / 500); // 1 XP per 500 grade points
+        
+        // Clear type bonuses (excluding Failed and Clear/Normal)
+        if (score.clearType && score.clearType !== "Failed" && score.clearType !== "Clear") {
+            if (score.clearType === "Hard") experience += 25;
+            else if (score.clearType === "Brave") experience += 50;
+            else if (score.clearType === "Absolute") experience += 75;
+            else if (score.clearType === "Catastrophy") experience += 100;
+            else if (score.clearType === "All Correct!") experience += 150;
+        }
     });
     
     // Normal mode: score field contains correct answers (0-150)
@@ -123,6 +132,15 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
         else if (correctAnswers >= 75) experience += 15;
         else if (correctAnswers >= 50) experience += 10;
         else if (correctAnswers >= 25) experience += 5;
+        
+        // Clear type bonuses (excluding Failed and Clear/Normal)
+        if (score.clearType && score.clearType !== "Failed" && score.clearType !== "Clear") {
+            if (score.clearType === "Hard") experience += 25;
+            else if (score.clearType === "Brave") experience += 50;
+            else if (score.clearType === "Absolute") experience += 75;
+            else if (score.clearType === "Catastrophy") experience += 100;
+            else if (score.clearType === "All Correct!") experience += 150;
+        }
     });
     
     // Master mode: score field contains totalGradePoints
@@ -146,6 +164,15 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
         } 
         if (score.line === "orange") {experience += 50;}
         else if (score.line === "green") {experience += 25;}
+        
+        // Clear type bonuses (excluding Failed and Clear/Normal)
+        if (score.clearType && score.clearType !== "Failed" && score.clearType !== "Clear") {
+            if (score.clearType === "Hard") experience += 25;
+            else if (score.clearType === "Brave") experience += 50;
+            else if (score.clearType === "Absolute") experience += 75;
+            else if (score.clearType === "Catastrophy") experience += 100;
+            else if (score.clearType === "All Correct!") experience += 150;
+        }
     });
     
     // Hell mode: score field contains correct answers (0-200)
@@ -160,6 +187,15 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
             const sLevel = parseInt(score.grade.substring(1)) || 0;
             experience += sLevel * 10; // S1 = +10, S20 = +200
         }
+        
+        // Clear type bonuses (excluding Failed and Clear/Normal)
+        if (score.clearType && score.clearType !== "Failed" && score.clearType !== "Clear") {
+            if (score.clearType === "Hard") experience += 25;
+            else if (score.clearType === "Brave") experience += 50;
+            else if (score.clearType === "Absolute") experience += 75;
+            else if (score.clearType === "Catastrophy") experience += 100;
+            else if (score.clearType === "All Correct!") experience += 150;
+        }
     });
     
     // Race mode: score field contains totalGradePoints (similar to master mode)
@@ -171,7 +207,15 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
         if (score.grade === "GM") {
             experience += 250; // Higher bonus for race mode GM (harder to achieve)
         }
-
+        
+        // Clear type bonuses (excluding Failed and Clear/Normal)
+        if (score.clearType && score.clearType !== "Failed" && score.clearType !== "Clear") {
+            if (score.clearType === "Hard") experience += 25;
+            else if (score.clearType === "Brave") experience += 50;
+            else if (score.clearType === "Absolute") experience += 75;
+            else if (score.clearType === "Catastrophy") experience += 100;
+            else if (score.clearType === "All Correct!") experience += 150;
+        }
     });
     
     // Achievement bonuses (one-time)
@@ -1404,6 +1448,12 @@ function createChart(canvasId, dataList, label, color) {
     
     const zScores = calculateZScore(scores);
 
+    // Destroy existing chart if it exists
+    const existingChart = Chart.getChart(canvas);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+    
     // Chart.js configuration
     const ctx = canvas.getContext('2d');
     new Chart(ctx, {
