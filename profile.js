@@ -1,6 +1,7 @@
 import { getAuth, onAuthStateChanged, updateProfile, updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "./firebase.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "./firebase.js";
 import { calculatePlayerLevel } from "./stats.js";
+import { applySiteBackground, removeSiteBackground } from "./loadBackground.js";
 
 const auth = getAuth();
 const db = getFirestore();
@@ -275,6 +276,21 @@ async function loadProfile() {
         createdEl.textContent = '';
     }
     
+    // Display previous usernames
+    const previousUsernamesEl = document.getElementById('previousUsernames');
+    const previousUsernamesListEl = document.getElementById('previousUsernamesList');
+    if (previousUsernamesEl && previousUsernamesListEl) {
+        const previousUsernames = foundUser.previousUsernames || [];
+        if (previousUsernames.length > 0) {
+            previousUsernamesEl.style.display = 'block';
+            previousUsernamesListEl.innerHTML = previousUsernames.map(name => 
+                `<span class="profile-previous-name">${name}</span>`
+            ).join(', ');
+        } else {
+            previousUsernamesEl.style.display = 'none';
+        }
+    }
+    
     // Load avatar
     const avatarImg = document.getElementById('profileAvatar');
     const avatarPlaceholder = document.getElementById('profileAvatarPlaceholder');
@@ -375,6 +391,23 @@ async function loadUserProfileSettings(user, foundUser) {
     // Load display name
     if (user.displayName) {
         document.getElementById('displayNameInput').value = user.displayName;
+    }
+    
+    // Check and display time until next name change
+    const displayNameStatus = document.getElementById('displayNameStatus');
+    if (foundUser && foundUser.lastNameChange) {
+        const lastChange = foundUser.lastNameChange.toDate ? foundUser.lastNameChange.toDate() : new Date(foundUser.lastNameChange);
+        const now = new Date();
+        const daysSinceLastChange = (now - lastChange) / (1000 * 60 * 60 * 24);
+        
+        if (daysSinceLastChange < 7) {
+            const daysRemaining = Math.ceil(7 - daysSinceLastChange);
+            displayNameStatus.textContent = `You can change your display name again in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}.`;
+            displayNameStatus.style.display = 'block';
+            displayNameStatus.style.color = 'rgba(255, 255, 255, 0.7)';
+        } else {
+            displayNameStatus.style.display = 'none';
+        }
     }
     
     // Load email
@@ -728,13 +761,63 @@ function initProfileSettings() {
                 return;
             }
             
+            // Check if name is the same
+            if (newDisplayName === currentUser.displayName) {
+                showStatus('displayNameStatus', 'This is already your current display name', true);
+                return;
+            }
+            
             displayNameBtn.disabled = true;
-            displayNameBtn.textContent = 'Updating...';
+            displayNameBtn.textContent = 'Checking...';
             
             try {
-                await updateProfile(currentUser, { displayName: newDisplayName });
+                // Check 7-day delay restriction
                 const userProfileRef = doc(db, 'userProfiles', currentUser.uid);
-                await setDoc(userProfileRef, { displayName: newDisplayName }, { merge: true });
+                const userProfileSnap = await getDoc(userProfileRef);
+                
+                let lastNameChange = null;
+                let previousUsernames = [];
+                
+                if (userProfileSnap.exists()) {
+                    const userData = userProfileSnap.data();
+                    lastNameChange = userData.lastNameChange ? userData.lastNameChange.toDate() : null;
+                    previousUsernames = userData.previousUsernames || [];
+                }
+                
+                // Check if 7 days have passed since last name change
+                if (lastNameChange) {
+                    const now = new Date();
+                    const daysSinceLastChange = (now - lastNameChange) / (1000 * 60 * 60 * 24);
+                    
+                    if (daysSinceLastChange < 7) {
+                        const daysRemaining = Math.ceil(7 - daysSinceLastChange);
+                        showStatus('displayNameStatus', `You can change your display name again in ${daysRemaining} day${daysRemaining !== 1 ? 's' : ''}.`, true);
+                        displayNameBtn.disabled = false;
+                        displayNameBtn.textContent = 'Update';
+                        return;
+                    }
+                }
+                
+                // Get current display name before changing
+                const oldDisplayName = currentUser.displayName || currentUser.email || 'Unknown';
+                
+                // Update display name
+                displayNameBtn.textContent = 'Updating...';
+                await updateProfile(currentUser, { displayName: newDisplayName });
+                
+                // Store in Firestore with previous username tracking
+                const updateData = {
+                    displayName: newDisplayName,
+                    lastNameChange: new Date(),
+                    previousUsernames: previousUsernames
+                };
+                
+                // Add old display name to previous usernames if it's different and not already in the list
+                if (oldDisplayName && oldDisplayName !== newDisplayName && !previousUsernames.includes(oldDisplayName)) {
+                    updateData.previousUsernames = [...previousUsernames, oldDisplayName];
+                }
+                
+                await setDoc(userProfileRef, updateData, { merge: true });
                 
                 showStatus('displayNameStatus', 'Display name updated successfully!');
                 window.location.reload();
@@ -955,84 +1038,7 @@ function initProfileSettings() {
     }
 }
 
-// Apply site background to page
-function applySiteBackground(imageURL) {
-    // Only apply to non-gameplay pages
-    const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html'];
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    
-    if (gameplayPages.includes(currentPage)) {
-        return; // Don't apply to gameplay pages
-    }
-    
-    if (imageURL) {
-        document.body.style.backgroundImage = `url(${imageURL})`;
-        document.body.style.backgroundSize = 'cover';
-        document.body.style.backgroundPosition = 'center';
-        document.body.style.backgroundRepeat = 'no-repeat';
-        document.body.style.backgroundAttachment = 'fixed';
-    }
-}
-
-// Remove site background
-function removeSiteBackground() {
-    const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html'];
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    
-    if (gameplayPages.includes(currentPage)) {
-        return; // Don't modify gameplay pages
-    }
-    
-    // Reset to default backgrounds based on page
-    document.body.style.backgroundImage = '';
-    document.body.style.backgroundSize = '';
-    document.body.style.backgroundPosition = '';
-    document.body.style.backgroundRepeat = '';
-    document.body.style.backgroundAttachment = '';
-}
-
-// Load and apply site background on page load
-async function loadSiteBackground() {
-    const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html'];
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    
-    if (gameplayPages.includes(currentPage)) {
-        return; // Don't apply to gameplay pages
-    }
-    
-    try {
-        // Wait for auth to be ready (check current user, then listen for changes)
-        let user = auth.currentUser;
-        
-        // If no user immediately, wait a bit for auth to initialize
-        if (!user) {
-            await new Promise(resolve => setTimeout(resolve, 100));
-            user = auth.currentUser;
-        }
-        
-        if (!user) {
-            // Still no user - will be handled by onAuthStateChanged in hm.js or loadBackground.js
-            return;
-        }
-        
-        const userProfileRef = doc(db, 'userProfiles', user.uid);
-        const userProfileSnap = await getDoc(userProfileRef);
-        
-        if (userProfileSnap.exists() && userProfileSnap.data().siteBackgroundURL) {
-            const bgURL = userProfileSnap.data().siteBackgroundURL;
-            applySiteBackground(bgURL);
-        }
-    } catch (error) {
-        console.error('Error loading site background:', error);
-    }
-}
-
-// Export functions for use in other files
-export { applySiteBackground, removeSiteBackground, loadSiteBackground };
-
 document.addEventListener("DOMContentLoaded", () => {
-    // Load site background on profile page load
-    loadSiteBackground();
     
     // Ensure banner is visible on page load (before profile loads)
     const bannerEl = document.getElementById('profileBanner');

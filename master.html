@@ -1163,6 +1163,33 @@
 
     let timeToAnswer;
     let initialTimeToAnswer; // Track initial time allocated for current question
+    
+    // Function to reset all text elements' opacity
+    function resetAllTextElementsOpacity() {
+      const questionEl = document.getElementById("ques");
+      if (questionEl) {
+        questionEl.style.opacity = "1";
+      }
+
+      const optionsEl = document.getElementById("opt");
+      if (optionsEl) {
+        const labels = optionsEl.querySelectorAll("label");
+        labels.forEach(label => {
+          label.style.opacity = "1";
+        });
+      }
+
+      const scoreEl = document.getElementById("score");
+      if (scoreEl) {
+        scoreEl.style.opacity = "1";
+      }
+
+      const timeElapsedEl = document.getElementById("timeelapsed");
+      if (timeElapsedEl) {
+        timeElapsedEl.style.opacity = "1";
+      }
+    }
+    
     function loadQues() {
       // Reset all text elements opacity at the start of each new question
       // This ensures all elements are visible when vanish mode is enabled

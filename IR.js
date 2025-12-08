@@ -715,10 +715,8 @@ async function loadPlayerProfile(playerName) {
     avatarPlaceholder.classList.remove('hide');
     avatarImg.src = ''; // Clear any previous image
     
-    // Set player name
-    popup.querySelector('.profile-popup-name').textContent = playerName;
-    
     // First, check userProfiles database to see if player exists
+    let displayPlayerName = playerName; // Default to the searched name
     try {
         // Query userProfiles to find user by displayName or email
         const userProfilesRef = collection(db, 'userProfiles');
@@ -737,7 +735,21 @@ async function loadPlayerProfile(playerName) {
             }
         });
         
-        // If not found by displayName/email, try to find by matching the name in scores
+        // If not found by displayName/email, check previous usernames
+        if (!foundUser) {
+            userProfilesSnapshot.forEach(doc => {
+                const data = doc.data();
+                const previousUsernames = data.previousUsernames || [];
+                // Check if playerName matches any previous username
+                if (previousUsernames.includes(playerName)) {
+                    foundUser = { uid: doc.id, ...data };
+                    // Use current display name for display
+                    displayPlayerName = data.displayName || data.email || playerName;
+                }
+            });
+        }
+        
+        // If not found by displayName/email/previousUsernames, try to find by matching the name in scores
         // The name in scores could be either displayName or email from Firebase Auth
         if (!foundUser) {
             // Try to find user by checking if playerName matches any user's email or displayName
@@ -750,6 +762,9 @@ async function loadPlayerProfile(playerName) {
                 }
             });
         }
+        
+        // Set player name in popup (use current display name if found via previous username)
+        popup.querySelector('.profile-popup-name').textContent = displayPlayerName;
         
         // If player not found in userProfiles, show "Player not found" message
         if (!foundUser) {

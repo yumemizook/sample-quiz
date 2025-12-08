@@ -1,7 +1,6 @@
 import { getAuth, onAuthStateChanged, signOut } from "./firebase.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "./firebase.js";
 import { calculatePlayerLevel } from "./stats.js";
-import { loadSiteBackground } from "./profile.js";
 
 const auth = getAuth();
 let selectedMode = "normal"; // Default mode
@@ -299,8 +298,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 };
             }
             
-            // Load site background when user is logged in
-            loadSiteBackground();
             
             // Sync Firebase Auth data to userProfiles (for ranking screen avatar display)
             try {
@@ -731,6 +728,4 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
     
-    // Load site background on page load (in case user is already logged in)
-    loadSiteBackground();
 });

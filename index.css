@@ -3729,6 +3729,30 @@ td:first-child {
     margin-top: 8px;
 }
 
+.profile-previous-names {
+    margin-top: 12px;
+    font-size: 0.9em;
+}
+
+.profile-previous-names-label {
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 6px;
+    font-weight: normal;
+}
+
+.profile-previous-names-list {
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.profile-previous-name {
+    display: inline-block;
+    margin-right: 8px;
+    padding: 2px 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    font-style: italic;
+}
+
 .profile-scores-section {
     padding: 0 20px;
     margin-bottom: 40px;
