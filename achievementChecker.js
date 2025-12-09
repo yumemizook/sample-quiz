@@ -38,7 +38,7 @@ const COMPLETION_ACHIEVEMENTS = [
     icon: '<i class="fas fa-check-circle"></i>',
     title: 'Easy Mode Master',
     description: 'Complete Easy Mode with a perfect score of 30',
-    unlockedMessage: '<i class="fas fa-party-horn"></i> Perfect run! You\'ve mastered the basics!',
+    unlockedMessage: '<i class="fas fa-gift"></i> Perfect run! You\'ve mastered the basics!',
     checkUnlocked: (data) => data.easyScores?.some(s => s.score === 30) || false
   },
   {
@@ -122,10 +122,10 @@ const SPECIAL_ACHIEVEMENTS = [
   },
   {
     id: 'level_10',
-    icon: '<i class="fas fa-sparkles"></i>',
+    icon: '<i class="fas fa-star"></i>',
     title: 'Rising Star',
     description: 'Reach Level 10',
-    unlockedMessage: '<i class="fas fa-sparkles"></i> Shining bright! You\'re on the rise!',
+    unlockedMessage: '<i class="fas fa-star"></i> Shining bright! You\'re on the rise!',
     checkUnlocked: (data) => (data.playerData?.level || 0) >= 10
   },
   {
@@ -138,51 +138,51 @@ const SPECIAL_ACHIEVEMENTS = [
   },
   {
     id: 'level_100',
-    icon: '<i class="fas fa-sparkles"></i>',
+    icon: '<i class="fas fa-star"></i>',
     title: 'Sparkle Master',
     description: 'Reach Level 100',
-    unlockedMessage: '<i class="fas fa-sparkles"></i> Master of sparkles! You\'ve reached greatness!',
+    unlockedMessage: '<i class="fas fa-star"></i> Master of sparkles! You\'ve reached greatness!',
     checkUnlocked: (data) => (data.playerData?.level || 0) >= 100
   },
   // 10 Lives Clear Achievements (Absolute)
   {
     id: 'easy_10_lives',
-    icon: '<i class="fas fa-sword"></i>',
+    icon: '<i class="fas fa-crosshairs"></i>',
     title: 'Easy Mode Absolute',
     description: 'Clear Easy Mode with 10 lives (Absolute clear)',
-    unlockedMessage: '<i class="fas fa-sword"></i> Absolute precision! You\'ve mastered the art of survival!',
+    unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
     checkUnlocked: (data) => data.easyScores?.some(s => hasClearType(s, "Absolute")) || false
   },
   {
     id: 'normal_10_lives',
-    icon: '<i class="fas fa-sword"></i>',
+    icon: '<i class="fas fa-crosshairs"></i>',
     title: 'Normal Mode Absolute',
     description: 'Clear Normal Mode with 10 lives (Absolute clear)',
-    unlockedMessage: '<i class="fas fa-sword"></i> Absolute precision! You\'ve mastered the art of survival!',
+    unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
     checkUnlocked: (data) => data.normalScores?.some(s => hasClearType(s, "Absolute")) || false
   },
   {
     id: 'master_10_lives',
-    icon: '<i class="fas fa-sword"></i>',
+    icon: '<i class="fas fa-crosshairs"></i>',
     title: 'Master Mode Absolute',
     description: 'Clear Master Mode with 10 lives (Absolute clear)',
-    unlockedMessage: '<i class="fas fa-sword"></i> Absolute precision! You\'ve mastered the art of survival!',
+    unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
     checkUnlocked: (data) => data.masterScores?.some(s => hasClearType(s, "Absolute")) || false
   },
   {
     id: 'hell_10_lives',
-    icon: '<i class="fas fa-sword"></i>',
+    icon: '<i class="fas fa-crosshairs"></i>',
     title: 'Hell Mode Absolute',
     description: 'Clear Hell Mode with 10 lives (Absolute clear)',
-    unlockedMessage: '<i class="fas fa-sword"></i> Absolute precision! You\'ve mastered the art of survival!',
+    unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
     checkUnlocked: (data) => data.hellScores?.some(s => hasClearType(s, "Absolute")) || false
   },
   {
     id: 'race_10_lives',
-    icon: '<i class="fas fa-sword"></i>',
+    icon: '<i class="fas fa-crosshairs"></i>',
     title: 'Race Mode Absolute',
     description: 'Clear Race Mode with 10 lives (Absolute clear)',
-    unlockedMessage: '<i class="fas fa-sword"></i> Absolute precision! You\'ve mastered the art of survival!',
+    unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
     checkUnlocked: (data) => data.raceScores?.some(s => hasClearType(s, "Absolute")) || false
   },
   // 5 Lives Clear Achievements (Catastrophy)
@@ -354,10 +354,10 @@ const SPECIAL_ACHIEVEMENTS = [
 const COMBINATION_ACHIEVEMENTS = [
   {
     id: 'vanish_05s_10_lives',
-    icon: '<i class="fas fa-sword"></i><i class="fas fa-eye"></i>',
+    icon: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i>',
     title: 'Absolute Blink',
     description: 'Clear any mode with 0.5s vanish timer and 10 lives (Absolute clear)',
-    unlockedMessage: '<i class="fas fa-sword"></i><i class="fas fa-eye"></i> Perfect memory under pressure! Absolute mastery achieved!',
+    unlockedMessage: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i> Perfect memory under pressure! Absolute mastery achieved!',
     checkUnlocked: (data) => hasModifierCombination(data, (score) => 
       has05sVanishTimer(score) && hasClearType(score, "Absolute")
     )
@@ -384,10 +384,10 @@ const COMBINATION_ACHIEVEMENTS = [
   },
   {
     id: '2x_time_10_lives',
-    icon: '<i class="fas fa-bolt"></i><i class="fas fa-sword"></i>',
+    icon: '<i class="fas fa-bolt"></i><i class="fas fa-crosshairs"></i>',
     title: 'Absolute Speed',
     description: 'Clear any mode with 2x time multiplier and 10 lives (Absolute clear)',
-    unlockedMessage: '<i class="fas fa-bolt"></i><i class="fas fa-sword"></i> Lightning-fast precision! Absolute speed achieved!',
+    unlockedMessage: '<i class="fas fa-bolt"></i><i class="fas fa-crosshairs"></i> Lightning-fast precision! Absolute speed achieved!',
     checkUnlocked: (data) => hasModifierCombination(data, (score) => 
       has2xTimeMultiplier(score) && hasClearType(score, "Absolute")
     )
@@ -424,10 +424,10 @@ const COMBINATION_ACHIEVEMENTS = [
   },
   {
     id: 'vanish_05s_2x_time_10_lives',
-    icon: '<i class="fas fa-sword"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i>',
+    icon: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i>',
     title: 'Absolute Blink Speed',
     description: 'Clear any mode with 0.5s vanish, 2x time, and 10 lives (Absolute clear)',
-    unlockedMessage: '<i class="fas fa-sword"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i> Ultimate challenge conquered! Absolute blink-speed mastery!',
+    unlockedMessage: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i> Ultimate challenge conquered! Absolute blink-speed mastery!',
     checkUnlocked: (data) => hasModifierCombination(data, (score) => 
       has05sVanishTimer(score) && has2xTimeMultiplier(score) && hasClearType(score, "Absolute")
     )

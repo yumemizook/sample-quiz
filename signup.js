@@ -36,7 +36,8 @@ signupForm.addEventListener("submit", async (e) => {
         const userProfileRef = doc(db, 'userProfiles', user.uid);
         await setDoc(userProfileRef, { 
           hasSeenIntro: false,
-          createdAt: new Date().toISOString()
+          createdAt: new Date().toISOString(),
+          role: 'user' // Initialize role as 'user' for new accounts
         }, { merge: true });
         alert("Account created successfully! Redirecting to introduction...");
         window.location.href = "introduction.html";
@@ -75,7 +76,8 @@ googleButton.addEventListener("click", async () => {
         if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
             await setDoc(userProfileRef, { 
               hasSeenIntro: false,
-              createdAt: new Date().toISOString()
+              createdAt: new Date().toISOString(),
+              role: 'user' // Initialize role as 'user' for new accounts
             }, { merge: true });
             window.location.href = "introduction.html";
         } else {

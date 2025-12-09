@@ -3635,6 +3635,56 @@ td:first-child {
     color: white;
 }
 
+.profile-banned {
+    text-align: center;
+    padding: 60px 20px;
+    color: white;
+    min-height: 60vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.banned-content {
+    max-width: 600px;
+    padding: 40px;
+    background: rgba(0, 0, 0, 0.7);
+    border-radius: 15px;
+    border: 2px solid rgba(255, 107, 107, 0.3);
+}
+
+.banned-content h1 {
+    font-size: 2.5em;
+    margin-bottom: 20px;
+    color: #ff6b6b;
+}
+
+.banned-content p {
+    font-size: 1.2em;
+    margin-bottom: 30px;
+    color: rgba(255, 255, 255, 0.8);
+    line-height: 1.6;
+}
+
+.banned-button {
+    color: #dbffff;
+    text-decoration: none;
+    font-size: 1.1em;
+    border: 2px solid #dbffff;
+    padding: 12px 30px;
+    border-radius: 8px;
+    display: inline-block;
+    transition: all 0.3s;
+    background: rgba(219, 255, 255, 0.1);
+}
+
+.banned-button:hover {
+    background-color: #dbffff;
+    color: #000;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(219, 255, 255, 0.3);
+}
+
 .profile-banner-section {
     position: relative;
     width: 100%;

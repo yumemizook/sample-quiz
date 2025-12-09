@@ -259,6 +259,102 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
 // Export the function so it can be used by other modules (e.g., hm.js for navbar)
 export { calculatePlayerLevel };
 
+// Get badge for level (shared function with icon combinations)
+export function getBadgeForLevel(level) {
+    if (level >= 2000) return '<i class="fas fa-fire" style="color: #ff6b35;"></i><i class="fas fa-star" style="color: #ff6b35; margin-left: 2px; font-size: 0.7em;"></i>'; // Meteor (Lv 2000+)
+    if (level >= 1500) return '<i class="fas fa-moon" style="color: #c0c0c0;"></i>'; // Moon (Lv 1500-1999)
+    if (level >= 1250) return '<i class="fas fa-sun" style="color: #ffd700;"></i>'; // Sun (Lv 1250-1499)
+    if (level >= 1000) return '<i class="fas fa-globe" style="color: #4a90e2;"></i><i class="fas fa-mountain" style="color: #4a90e2; margin-left: 2px; font-size: 0.6em;"></i>'; // Earth (Lv 1000-1249)
+    if (level >= 800) return '<i class="fas fa-globe" style="color: #9b59b6;"></i><i class="fas fa-circle" style="color: #9b59b6; margin-left: 2px; font-size: 0.5em;"></i>'; // Planet (Lv 800-999)
+    if (level >= 600) return '<i class="fas fa-star" style="color: #ffd700;"></i><i class="fas fa-star" style="color: #ffd700; margin-left: -8px; font-size: 0.7em;"></i>'; // Double Star (Lv 600-799)
+    if (level >= 400) return '<i class="fas fa-star" style="color: #ffed4e;"></i><i class="fas fa-sun" style="color: #ffed4e; margin-left: 2px; font-size: 0.6em;"></i>'; // Glowing Star (Lv 400-599)
+    if (level >= 300) return '<i class="fas fa-star" style="color: #ffd700;"></i><i class="fas fa-circle" style="color: #ffd700; margin-left: 2px; font-size: 0.5em;"></i>'; // Dizzy Star (Lv 300-399)
+    if (level >= 250) return '<i class="fas fa-project-diagram" style="color: #6c5ce7;"></i>'; // Galaxy (Lv 250-299)
+    if (level >= 200) return '<i class="fas fa-fire" style="color: #ff6b35;"></i><i class="fas fa-star" style="color: #ff6b35; margin-left: 2px; font-size: 0.7em;"></i>'; // Shooting Star (Lv 200-249)
+    if (level >= 150) return '<i class="fas fa-circle" style="color: #00d4ff;"></i><i class="fas fa-dot-circle" style="color: #00d4ff; margin-left: 2px; font-size: 0.6em;"></i>'; // Atomic (Lv 150-199)
+    if (level >= 120) return '<i class="fas fa-gem" style="color: #a29bfe;"></i><i class="fas fa-circle" style="color: #a29bfe; margin-left: 2px; font-size: 0.5em;"></i>'; // Crystal (Lv 120-149)
+    if (level >= 100) return '<i class="fas fa-star" style="color: #ffd700;"></i><i class="fas fa-circle" style="color: #ffd700; margin-left: 2px; font-size: 0.5em;"></i>'; // Sparkle (Lv 100-119)
+    if (level >= 80) return '<i class="fas fa-trophy" style="color: #ffd700;"></i><i class="fas fa-crown" style="color: #ffd700; margin-left: 2px; font-size: 0.6em;"></i>'; // Champion (Lv 80-99)
+    if (level >= 70) return '<i class="fas fa-crown" style="color: #ffd700;"></i>'; // Royal (Lv 70-79)
+    if (level >= 60) return '<i class="fas fa-gem" style="color: #00d4ff;"></i><i class="fas fa-circle" style="color: #00d4ff; margin-left: 2px; font-size: 0.5em;"></i>'; // Diamond (Lv 60-69)
+    if (level >= 50) return '<i class="fas fa-star" style="color: #ffd700;"></i>'; // Star (Lv 50-59)
+    if (level >= 40) return '<i class="fas fa-fire" style="color: #ff6b35;"></i>'; // Fire (Lv 40-49)
+    if (level >= 35) return '<i class="fas fa-bolt" style="color: #ffff00;"></i>'; // Lightning (Lv 35-39)
+    if (level >= 30) return '<i class="fas fa-star" style="color: #ffd700;"></i><i class="fas fa-sun" style="color: #ffd700; margin-left: 2px; font-size: 0.6em;"></i>'; // Shining Star (Lv 30-34)
+    if (level >= 25) return '<i class="fas fa-bullseye" style="color: #ff6b6b;"></i>'; // Target (Lv 25-29)
+    if (level >= 20) return '<i class="fas fa-medal" style="color: #ffd700;"></i><i class="fas fa-award" style="color: #ffd700; margin-left: 2px; font-size: 0.6em;"></i>'; // Medal (Lv 20-24)
+    if (level >= 15) return '<i class="fas fa-trophy" style="color: #ffd700;"></i>'; // Trophy (Lv 15-19)
+    if (level >= 12) return '<i class="fas fa-medal" style="color: #ffd700;"></i><i class="fas fa-star" style="color: #ffd700; margin-left: 2px; font-size: 0.6em;"></i>'; // Gold Medal (Lv 12-14)
+    if (level >= 9) return '<i class="fas fa-medal" style="color: #c0c0c0;"></i><i class="fas fa-circle" style="color: #c0c0c0; margin-left: 2px; font-size: 0.6em;"></i>'; // Silver Medal (Lv 9-11)
+    if (level >= 6) return '<i class="fas fa-medal" style="color: #cd7f32;"></i><i class="fas fa-circle" style="color: #cd7f32; margin-left: 2px; font-size: 0.6em;"></i>'; // Bronze Medal (Lv 6-8)
+    if (level >= 3) return '<i class="fas fa-star" style="color: #ffd700;"></i><i class="fas fa-circle" style="color: #ffd700; margin-left: 2px; font-size: 0.5em;"></i>'; // Star (Lv 3-5)
+    return '<i class="fas fa-seedling" style="color: #2ecc71;"></i>'; // Sprout (Lv 1-2)
+}
+
+// Get badge name for level (shared function)
+export function getBadgeName(level) {
+    if (level >= 2000) return "Meteor";
+    if (level >= 1500) return "Moon";
+    if (level >= 1250) return "Sun";
+    if (level >= 1000) return "Earth";
+    if (level >= 800) return "Planet";
+    if (level >= 600) return "Star";
+    if (level >= 400) return "Glowing Star";
+    if (level >= 300) return "Dizzy Star";
+    if (level >= 250) return "Galaxy";
+    if (level >= 200) return "Shooting Star";
+    if (level >= 150) return "Atomic";
+    if (level >= 120) return "Crystal";
+    if (level >= 100) return "Sparkle";
+    if (level >= 80) return "Champion";
+    if (level >= 70) return "Royal";
+    if (level >= 60) return "Diamond";
+    if (level >= 50) return "Star";
+    if (level >= 40) return "Fire";
+    if (level >= 35) return "Lightning";
+    if (level >= 30) return "Shining Star";
+    if (level >= 25) return "Target";
+    if (level >= 20) return "Medal";
+    if (level >= 15) return "Trophy";
+    if (level >= 12) return "Gold Medal";
+    if (level >= 9) return "Silver Medal";
+    if (level >= 6) return "Bronze Medal";
+    if (level >= 3) return "Star";
+    return "Sprout";
+}
+
+// Get color class based on level (shared function)
+export function getLevelColorClass(level) {
+    if (level >= 2000) return "level-meteor";
+    if (level >= 1500) return "level-moon";
+    if (level >= 1250) return "level-sun";
+    if (level >= 1000) return "level-earth";
+    if (level >= 800) return "level-planet";
+    if (level >= 600) return "level-star-high";
+    if (level >= 400) return "level-glowing";
+    if (level >= 300) return "level-dizzy";
+    if (level >= 250) return "level-galaxy";
+    if (level >= 200) return "level-shooting";
+    if (level >= 150) return "level-atomic";
+    if (level >= 120) return "level-crystal";
+    if (level >= 100) return "level-sparkle";
+    if (level >= 80) return "level-champion";
+    if (level >= 70) return "level-royal";
+    if (level >= 60) return "level-diamond";
+    if (level >= 50) return "level-star";
+    if (level >= 40) return "level-fire";
+    if (level >= 35) return "level-lightning";
+    if (level >= 30) return "level-shining";
+    if (level >= 25) return "level-target";
+    if (level >= 20) return "level-medal";
+    if (level >= 15) return "level-trophy";
+    if (level >= 12) return "level-gold";
+    if (level >= 9) return "level-silver";
+    if (level >= 6) return "level-bronze";
+    if (level >= 3) return "level-star-low";
+    return "level-sprout";
+}
+
 // Helper function to compare line colors (orange > green > white)
 // Returns: 1 if line1 > line2, -1 if line1 < line2, 0 if equal
 function compareLineColors(line1, line2) {
@@ -417,36 +513,8 @@ let allHellList = [];
 let allRaceList = [];
 
 // Get badge for level (uses thresholds from getBadgeNameStats)
-function getBadgeForLevelStats(level) {
-    if (level >= 2000) return '<i class="fas fa-meteor" style="color: #ff6b35;"></i>'; // Meteor (Lv 2000+)
-    if (level >= 1500) return '<i class="fas fa-moon" style="color: #c0c0c0;"></i>'; // Moon (Lv 1500-1999)
-    if (level >= 1250) return '<i class="fas fa-sun" style="color: #ffd700;"></i>'; // Sun (Lv 1250-1499)
-    if (level >= 1000) return '<i class="fas fa-globe" style="color: #4a90e2;"></i>'; // Earth (Lv 1000-1249)
-    if (level >= 800) return '<i class="fas fa-planet-ringed" style="color: #9b59b6;"></i>'; // Planet (Lv 800-999)
-    if (level >= 600) return '<i class="fas fa-star" style="color: #ffd700;"></i>'; // Star (Lv 600-799)
-    if (level >= 400) return '<i class="fas fa-star" style="color: #ffed4e;"></i>'; // Glowing Star (Lv 400-599)
-    if (level >= 300) return '<i class="fas fa-star-shooting" style="color: #ffd700;"></i>'; // Dizzy Star (Lv 300-399)
-    if (level >= 250) return '<i class="fas fa-galaxy" style="color: #6c5ce7;"></i>'; // Galaxy (Lv 250-299)
-    if (level >= 200) return '<i class="fas fa-meteor" style="color: #ff6b35;"></i>'; // Shooting Star (Lv 200-249)
-    if (level >= 150) return '<i class="fas fa-atom" style="color: #00d4ff;"></i>'; // Atomic (Lv 150-199)
-    if (level >= 120) return '<i class="fas fa-crystal-ball" style="color: #a29bfe;"></i>'; // Crystal (Lv 120-149)
-    if (level >= 100) return '<i class="fas fa-sparkles" style="color: #ffd700;"></i>'; // Sparkle (Lv 100-119)
-    if (level >= 80) return '<i class="fas fa-trophy" style="color: #ffd700;"></i>'; // Champion (Lv 80-99)
-    if (level >= 70) return '<i class="fas fa-crown" style="color: #ffd700;"></i>'; // Royal (Lv 70-79)
-    if (level >= 60) return '<i class="fas fa-gem" style="color: #00d4ff;"></i>'; // Diamond (Lv 60-69)
-    if (level >= 50) return '<i class="fas fa-star" style="color: #ffd700;"></i>'; // Star (Lv 50-59)
-    if (level >= 40) return '<i class="fas fa-fire" style="color: #ff6b35;"></i>'; // Fire (Lv 40-49)
-    if (level >= 35) return '<i class="fas fa-bolt" style="color: #ffff00;"></i>'; // Lightning (Lv 35-39)
-    if (level >= 30) return '<i class="fas fa-star" style="color: #ffd700;"></i>'; // Shining Star (Lv 30-34)
-    if (level >= 25) return '<i class="fas fa-bullseye" style="color: #ff6b6b;"></i>'; // Target (Lv 25-29)
-    if (level >= 20) return '<i class="fas fa-medal" style="color: #ffd700;"></i>'; // Medal (Lv 20-24)
-    if (level >= 15) return '<i class="fas fa-trophy" style="color: #ffd700;"></i>'; // Trophy (Lv 15-19)
-    if (level >= 12) return '<i class="fas fa-medal" style="color: #ffd700;"></i>'; // Gold Medal (Lv 12-14)
-    if (level >= 9) return '<i class="fas fa-medal" style="color: #c0c0c0;"></i>'; // Silver Medal (Lv 9-11)
-    if (level >= 6) return '<i class="fas fa-medal" style="color: #cd7f32;"></i>'; // Bronze Medal (Lv 6-8)
-    if (level >= 3) return '<i class="fas fa-star" style="color: #ffd700;"></i>'; // Star (Lv 3-5)
-    return '<i class="fas fa-seedling" style="color: #2ecc71;"></i>'; // Sprout (Lv 1-2)
-}
+// Use shared function
+const getBadgeForLevelStats = getBadgeForLevel;
 
 // Update level progression display
 function updateLevelProgression(playerData, totalPlays = 0, mainInput = null, createdAt = null) {
@@ -526,68 +594,11 @@ function updateLevelProgression(playerData, totalPlays = 0, mainInput = null, cr
     }
     
     // Get badge name for tooltip
-    function getBadgeNameStats(level) {
-        if (level >= 2000) return "Meteor";
-        if (level >= 1500) return "Moon";
-        if (level >= 1250) return "Sun";
-        if (level >= 1000) return "Earth";
-        if (level >= 800) return "Planet";
-        if (level >= 600) return "Star";
-        if (level >= 400) return "Glowing Star";
-        if (level >= 300) return "Dizzy Star";
-        if (level >= 250) return "Galaxy";
-        if (level >= 200) return "Shooting Star";
-        if (level >= 150) return "Atomic";
-        if (level >= 120) return "Crystal";
-        if (level >= 100) return "Sparkle";
-        if (level >= 80) return "Champion";
-        if (level >= 70) return "Royal";
-        if (level >= 60) return "Diamond";
-        if (level >= 50) return "Star";
-        if (level >= 40) return "Fire";
-        if (level >= 35) return "Lightning";
-        if (level >= 30) return "Shining Star";
-        if (level >= 25) return "Target";
-        if (level >= 20) return "Medal";
-        if (level >= 15) return "Trophy";
-        if (level >= 12) return "Gold Medal";
-        if (level >= 9) return "Silver Medal";
-        if (level >= 6) return "Bronze Medal";
-        if (level >= 3) return "Star";
-        return "Sprout";
-    }
+    // Use shared function
+    const getBadgeNameStats = getBadgeName;
     
-    // Get color class based on level (synchronized with getBadgeNameStats thresholds)
-    function getLevelColorClassStats(level) {
-        if (level >= 2000) return "level-meteor";
-        if (level >= 1500) return "level-moon";
-        if (level >= 1250) return "level-sun";
-        if (level >= 1000) return "level-earth";
-        if (level >= 800) return "level-planet";
-        if (level >= 600) return "level-star-high";
-        if (level >= 400) return "level-glowing";
-        if (level >= 300) return "level-dizzy";
-        if (level >= 250) return "level-galaxy";
-        if (level >= 200) return "level-shooting";
-        if (level >= 150) return "level-atomic";
-        if (level >= 120) return "level-crystal";
-        if (level >= 100) return "level-sparkle";
-        if (level >= 80) return "level-champion";
-        if (level >= 70) return "level-royal";
-        if (level >= 60) return "level-diamond";
-        if (level >= 50) return "level-star";
-        if (level >= 40) return "level-fire";
-        if (level >= 35) return "level-lightning";
-        if (level >= 30) return "level-shining";
-        if (level >= 25) return "level-target";
-        if (level >= 20) return "level-medal";
-        if (level >= 15) return "level-trophy";
-        if (level >= 12) return "level-gold";
-        if (level >= 9) return "level-silver";
-        if (level >= 6) return "level-bronze";
-        if (level >= 3) return "level-star-low";
-        return "level-sprout";
-    }
+    // Use shared function
+    const getLevelColorClassStats = getLevelColorClass;
     
     // Apply color class to progression card for dynamic progress bar styling
     const colorClass = getLevelColorClassStats(finalLevel);

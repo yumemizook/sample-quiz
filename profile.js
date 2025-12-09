@@ -1,6 +1,6 @@
 import { getAuth, onAuthStateChanged, updateProfile, updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider } from "./firebase.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "./firebase.js";
-import { calculatePlayerLevel } from "./stats.js";
+import { calculatePlayerLevel, getBadgeForLevel, getBadgeName } from "./stats.js";
 import { applySiteBackground, removeSiteBackground } from "./loadBackground.js";
 import { applyColorTheme } from "./loadTheme.js";
 
@@ -53,65 +53,7 @@ function formatRelativeTime(timestamp) {
     return `${diffYears} year${diffYears !== 1 ? 's' : ''} ago`;
 }
 
-// Get badge emoji for level
-function getBadgeForLevel(level) {
-    if (level >= 1000) return '<i class="fas fa-meteor" style="color: #ff6b35;"></i>';
-    if (level >= 900) return '<i class="fas fa-moon" style="color: #c0c0c0;"></i>';
-    if (level >= 800) return '<i class="fas fa-sun" style="color: #ffd700;"></i>';
-    if (level >= 700) return '<i class="fas fa-globe" style="color: #4a90e2;"></i>';
-    if (level >= 600) return '<i class="fas fa-planet-ringed" style="color: #9b59b6;"></i>';
-    if (level >= 500) return '<i class="fas fa-star" style="color: #ffd700;"></i>';
-    if (level >= 400) return '<i class="fas fa-star" style="color: #ffed4e;"></i>';
-    if (level >= 300) return '<i class="fas fa-star-shooting" style="color: #ffd700;"></i>';
-    if (level >= 250) return '<i class="fas fa-galaxy" style="color: #6c5ce7;"></i>';
-    if (level >= 200) return '<i class="fas fa-meteor" style="color: #ff6b35;"></i>';
-    if (level >= 150) return '<i class="fas fa-atom" style="color: #00d4ff;"></i>';
-    if (level >= 120) return '<i class="fas fa-crystal-ball" style="color: #a29bfe;"></i>';
-    if (level >= 100) return '<i class="fas fa-sparkles" style="color: #ffd700;"></i>';
-    if (level >= 80) return '<i class="fas fa-trophy" style="color: #ffd700;"></i>';
-    if (level >= 70) return '<i class="fas fa-crown" style="color: #ffd700;"></i>';
-    if (level >= 60) return '<i class="fas fa-gem" style="color: #00d4ff;"></i>';
-    if (level >= 50) return '<i class="fas fa-star" style="color: #ffd700;"></i>';
-    if (level >= 40) return '<i class="fas fa-fire" style="color: #ff6b35;"></i>';
-    if (level >= 35) return '<i class="fas fa-bolt" style="color: #ffff00;"></i>';
-    if (level >= 30) return '<i class="fas fa-star" style="color: #ffd700;"></i>';
-    if (level >= 25) return '<i class="fas fa-star-shooting" style="color: #ffd700;"></i>';
-    if (level >= 20) return '<i class="fas fa-star" style="color: #ffd700;"></i>';
-    if (level >= 15) return '<i class="fas fa-star" style="color: #ffd700;"></i>';
-    if (level >= 10) return '<i class="fas fa-sparkles" style="color: #ffd700;"></i>';
-    if (level >= 5) return '<i class="fas fa-seedling" style="color: #2ecc71;"></i>';
-    return '<i class="fas fa-leaf" style="color: #2ecc71;"></i>';
-}
-
-// Get badge name for level
-function getBadgeName(level) {
-    if (level >= 1000) return "Meteor";
-    if (level >= 900) return "Moon";
-    if (level >= 800) return "Sun";
-    if (level >= 700) return "Earth";
-    if (level >= 600) return "Planet";
-    if (level >= 500) return "Star";
-    if (level >= 400) return "Glowing Star";
-    if (level >= 300) return "Dizzy Star";
-    if (level >= 250) return "Galaxy";
-    if (level >= 200) return "Shooting Star";
-    if (level >= 150) return "Atomic";
-    if (level >= 120) return "Crystal";
-    if (level >= 100) return "Sparkle";
-    if (level >= 80) return "Champion";
-    if (level >= 70) return "Royal";
-    if (level >= 60) return "Diamond";
-    if (level >= 50) return "Star";
-    if (level >= 40) return "Fire";
-    if (level >= 35) return "Lightning";
-    if (level >= 30) return "Shining Star";
-    if (level >= 25) return "Dizzy Star";
-    if (level >= 20) return "Star";
-    if (level >= 15) return "Glowing Star";
-    if (level >= 10) return "Sparkle";
-    if (level >= 5) return "Sprout";
-    return "Seedling";
-}
+// Badge functions are now imported from stats.js
 
 // Find best score for each mode
 function findBestScore(scores, mode) {
@@ -566,6 +508,14 @@ async function loadProfile() {
             foundUser.aboutMe = foundUser.aboutMe || '';
             foundUser.createdAt = foundUser.createdAt || null;
             
+            // Initialize role if missing
+            if (!foundUser.role) {
+                foundUser.role = 'user';
+                // Update in database
+                const userProfileRef = doc(db, 'userProfiles', foundUser.uid);
+                await setDoc(userProfileRef, { role: 'user' }, { merge: true });
+            }
+            
             console.log('Profile fetched successfully:', {
                 uid: foundUser.uid,
                 displayName: foundUser.displayName,
@@ -607,11 +557,21 @@ async function loadProfile() {
     if (!foundUser) {
         document.getElementById('playerNotFound').style.display = 'block';
         document.getElementById('profileContent').style.display = 'none';
+        document.getElementById('playerBanned').style.display = 'none';
         return;
     }
     
-    // Player found - display profile
+    // Check if player is banned
+    if (foundUser.role === 'banned') {
+        document.getElementById('playerNotFound').style.display = 'none';
+        document.getElementById('profileContent').style.display = 'none';
+        document.getElementById('playerBanned').style.display = 'block';
+        return;
+    }
+    
+    // Player found and not banned - display profile
     document.getElementById('playerNotFound').style.display = 'none';
+    document.getElementById('playerBanned').style.display = 'none';
     const profileContent = document.getElementById('profileContent');
     profileContent.style.display = 'block';
     

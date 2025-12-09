@@ -279,70 +279,14 @@
     <script type="module">
       import { getAuth, onAuthStateChanged } from "./firebase.js";
       import { getFirestore, collection, getDocs, doc, getDoc } from "./firebase.js";
-      import { calculatePlayerLevel } from "./stats.js";
+      import { calculatePlayerLevel, getBadgeForLevel, getBadgeName } from "./stats.js";
 
       const auth = getAuth();
       const db = getFirestore();
 
-      // Get badge FontAwesome icon for level
-      function getBadgeForLevel(level) {
-        if (level >= 1000) return '<i class="fas fa-meteor"></i>';
-        if (level >= 900) return '<i class="fas fa-moon"></i>';
-        if (level >= 800) return '<i class="fas fa-sun"></i>';
-        if (level >= 700) return '<i class="fas fa-globe"></i>';
-        if (level >= 600) return '<i class="fas fa-planet-ringed"></i>';
-        if (level >= 500) return '<i class="fas fa-star"></i>';
-        if (level >= 400) return '<i class="fas fa-star"></i>';
-        if (level >= 300) return '<i class="fas fa-star-shooting"></i>';
-        if (level >= 250) return '<i class="fas fa-galaxy"></i>';
-        if (level >= 200) return '<i class="fas fa-meteor"></i>';
-        if (level >= 150) return '<i class="fas fa-atom"></i>';
-        if (level >= 120) return '<i class="fas fa-crystal-ball"></i>';
-        if (level >= 100) return '<i class="fas fa-sparkles"></i>';
-        if (level >= 80) return '<i class="fas fa-trophy"></i>';
-        if (level >= 70) return '<i class="fas fa-crown"></i>';
-        if (level >= 60) return '<i class="fas fa-gem"></i>';
-        if (level >= 50) return '<i class="fas fa-star"></i>';
-        if (level >= 40) return '<i class="fas fa-fire"></i>';
-        if (level >= 35) return '<i class="fas fa-bolt"></i>';
-        if (level >= 30) return '<i class="fas fa-star"></i>';
-        if (level >= 25) return '<i class="fas fa-star-shooting"></i>';
-        if (level >= 20) return '<i class="fas fa-star"></i>';
-        if (level >= 15) return '<i class="fas fa-star"></i>';
-        if (level >= 10) return '<i class="fas fa-sparkles"></i>';
-        if (level >= 5) return '<i class="fas fa-seedling"></i>';
-        return '<i class="fas fa-leaf"></i>';
-      }
+      // getBadgeForLevel and getBadgeName are now imported from stats.js
 
-      // Get badge name for level
-      function getBadgeName(level) {
-        if (level >= 1000) return "Meteor";
-        if (level >= 900) return "Moon";
-        if (level >= 800) return "Sun";
-        if (level >= 700) return "Earth";
-        if (level >= 600) return "Planet";
-        if (level >= 500) return "Star";
-        if (level >= 400) return "Glowing Star";
-        if (level >= 300) return "Dizzy Star";
-        if (level >= 250) return "Galaxy";
-        if (level >= 200) return "Shooting Star";
-        if (level >= 150) return "Atomic";
-        if (level >= 120) return "Crystal";
-        if (level >= 100) return "Sparkle";
-        if (level >= 80) return "Champion";
-        if (level >= 70) return "Royal";
-        if (level >= 60) return "Diamond";
-        if (level >= 50) return "Star";
-        if (level >= 40) return "Fire";
-        if (level >= 35) return "Lightning";
-        if (level >= 30) return "Shining Star";
-        if (level >= 25) return "Dizzy Star";
-        if (level >= 20) return "Star";
-        if (level >= 15) return "Glowing Star";
-        if (level >= 10) return "Sparkle";
-        if (level >= 5) return "Sprout";
-        return "Seedling";
-      }
+      // getBadgeName is now imported from stats.js
 
       // Show notification function
       function showNotification(message, isSuccess = false) {
@@ -444,7 +388,7 @@
           icon: '<i class="fas fa-check-circle"></i>',
           title: 'Easy Mode Master',
           description: 'Complete Easy Mode with a perfect score of 30',
-          unlockedMessage: '<i class="fas fa-party-horn"></i> Perfect run! You\'ve mastered the basics!',
+          unlockedMessage: '<i class="fas fa-gift"></i> Perfect run! You\'ve mastered the basics!',
           checkUnlocked: (data) => data.easyScores?.some(s => s.score === 30) || false
         },
         {
@@ -498,34 +442,37 @@
         }
       ];
 
-      // Level Badge Achievements (automatically generated from badge thresholds)
+      // Level Badge Achievements (synced with stats.js thresholds, using shared getBadgeForLevel function)
+      // Generate badges dynamically from thresholds to ensure consistency
       const LEVEL_BADGES = [
-        { level: 1000, icon: '<i class="fas fa-meteor" style="color: #ff6b35;"></i>', name: 'Meteor' },
-        { level: 900, icon: '<i class="fas fa-moon" style="color: #c0c0c0;"></i>', name: 'Moon' },
-        { level: 800, icon: '<i class="fas fa-sun" style="color: #ffd700;"></i>', name: 'Sun' },
-        { level: 700, icon: '<i class="fas fa-globe" style="color: #4a90e2;"></i>', name: 'Earth' },
-        { level: 600, icon: '<i class="fas fa-planet-ringed" style="color: #9b59b6;"></i>', name: 'Planet' },
-        { level: 500, icon: '<i class="fas fa-star" style="color: #ffd700;"></i>', name: 'Star' },
-        { level: 400, icon: '<i class="fas fa-star" style="color: #ffed4e;"></i>', name: 'Glowing Star' },
-        { level: 300, icon: '<i class="fas fa-star-shooting" style="color: #ffd700;"></i>', name: 'Dizzy Star' },
-        { level: 250, icon: '<i class="fas fa-galaxy" style="color: #6c5ce7;"></i>', name: 'Galaxy' },
-        { level: 200, icon: '<i class="fas fa-meteor" style="color: #ff6b35;"></i>', name: 'Shooting Star' },
-        { level: 150, icon: '<i class="fas fa-atom" style="color: #00d4ff;"></i>', name: 'Atomic' },
-        { level: 120, icon: '<i class="fas fa-crystal-ball" style="color: #a29bfe;"></i>', name: 'Crystal' },
-        { level: 100, icon: '<i class="fas fa-sparkles" style="color: #ffd700;"></i>', name: 'Sparkle' },
-        { level: 80, icon: '<i class="fas fa-trophy" style="color: #ffd700;"></i>', name: 'Champion' },
-        { level: 70, icon: '<i class="fas fa-crown" style="color: #ffd700;"></i>', name: 'Royal' },
-        { level: 60, icon: '<i class="fas fa-gem" style="color: #00d4ff;"></i>', name: 'Diamond' },
-        { level: 50, icon: '<i class="fas fa-star" style="color: #ffd700;"></i>', name: 'Star' },
-        { level: 40, icon: '<i class="fas fa-fire" style="color: #ff6b35;"></i>', name: 'Fire' },
-        { level: 35, icon: '<i class="fas fa-bolt" style="color: #ffff00;"></i>', name: 'Lightning' },
-        { level: 30, icon: '<i class="fas fa-star" style="color: #ffd700;"></i>', name: 'Shining Star' },
-        { level: 25, icon: '<i class="fas fa-star-shooting" style="color: #ffd700;"></i>', name: 'Dizzy Star' },
-        { level: 20, icon: '<i class="fas fa-star" style="color: #ffd700;"></i>', name: 'Star' },
-        { level: 15, icon: '<i class="fas fa-star" style="color: #ffd700;"></i>', name: 'Glowing Star' },
-        { level: 10, icon: '<i class="fas fa-sparkles" style="color: #ffd700;"></i>', name: 'Sparkle' },
-        { level: 5, icon: '<i class="fas fa-seedling" style="color: #2ecc71;"></i>', name: 'Sprout' },
-        { level: 1, icon: '<i class="fas fa-leaf" style="color: #2ecc71;"></i>', name: 'Seedling' }
+        { level: 2000, icon: getBadgeForLevel(2000), name: getBadgeName(2000) },
+        { level: 1500, icon: getBadgeForLevel(1500), name: getBadgeName(1500) },
+        { level: 1250, icon: getBadgeForLevel(1250), name: getBadgeName(1250) },
+        { level: 1000, icon: getBadgeForLevel(1000), name: getBadgeName(1000) },
+        { level: 800, icon: getBadgeForLevel(800), name: getBadgeName(800) },
+        { level: 600, icon: getBadgeForLevel(600), name: getBadgeName(600) },
+        { level: 400, icon: getBadgeForLevel(400), name: getBadgeName(400) },
+        { level: 300, icon: getBadgeForLevel(300), name: getBadgeName(300) },
+        { level: 250, icon: getBadgeForLevel(250), name: getBadgeName(250) },
+        { level: 200, icon: getBadgeForLevel(200), name: getBadgeName(200) },
+        { level: 150, icon: getBadgeForLevel(150), name: getBadgeName(150) },
+        { level: 120, icon: getBadgeForLevel(120), name: getBadgeName(120) },
+        { level: 100, icon: getBadgeForLevel(100), name: getBadgeName(100) },
+        { level: 80, icon: getBadgeForLevel(80), name: getBadgeName(80) },
+        { level: 70, icon: getBadgeForLevel(70), name: getBadgeName(70) },
+        { level: 60, icon: getBadgeForLevel(60), name: getBadgeName(60) },
+        { level: 50, icon: getBadgeForLevel(50), name: getBadgeName(50) },
+        { level: 40, icon: getBadgeForLevel(40), name: getBadgeName(40) },
+        { level: 35, icon: getBadgeForLevel(35), name: getBadgeName(35) },
+        { level: 30, icon: getBadgeForLevel(30), name: getBadgeName(30) },
+        { level: 25, icon: getBadgeForLevel(25), name: getBadgeName(25) },
+        { level: 20, icon: getBadgeForLevel(20), name: getBadgeName(20) },
+        { level: 15, icon: getBadgeForLevel(15), name: getBadgeName(15) },
+        { level: 12, icon: getBadgeForLevel(12), name: getBadgeName(12) },
+        { level: 9, icon: getBadgeForLevel(9), name: getBadgeName(9) },
+        { level: 6, icon: getBadgeForLevel(6), name: getBadgeName(6) },
+        { level: 3, icon: getBadgeForLevel(3), name: getBadgeName(3) },
+        { level: 1, icon: getBadgeForLevel(1), name: getBadgeName(1) }
       ];
 
       // Helper function to check if a score has a specific clear type
@@ -589,10 +536,10 @@
         },
         {
           id: 'level_10',
-          icon: '<i class="fas fa-sparkles"></i>',
+          icon: '<i class="fas fa-star"></i>',
           title: 'Rising Star',
           description: 'Reach Level 10',
-          unlockedMessage: '<i class="fas fa-sparkles"></i> Shining bright! You\'re on the rise!',
+          unlockedMessage: '<i class="fas fa-star"></i> Shining bright! You\'re on the rise!',
           checkUnlocked: (data) => (data.playerData?.level || 0) >= 10
         },
         {
@@ -605,51 +552,51 @@
         },
         {
           id: 'level_100',
-          icon: '<i class="fas fa-sparkles"></i>',
+          icon: '<i class="fas fa-star"></i>',
           title: 'Sparkle Master',
           description: 'Reach Level 100',
-          unlockedMessage: '<i class="fas fa-sparkles"></i> Master of sparkles! You\'ve reached greatness!',
+          unlockedMessage: '<i class="fas fa-star"></i> Master of sparkles! You\'ve reached greatness!',
           checkUnlocked: (data) => (data.playerData?.level || 0) >= 100
         },
         // 10 Lives Clear Achievements (Absolute)
         {
           id: 'easy_10_lives',
-          icon: '<i class="fas fa-sword"></i>',
+          icon: '<i class="fas fa-crosshairs"></i>',
           title: 'Easy Mode Absolute',
           description: 'Clear Easy Mode with 10 lives (Absolute clear)',
-          unlockedMessage: '<i class="fas fa-sword"></i> Absolute precision! You\'ve mastered the art of survival!',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
           checkUnlocked: (data) => data.easyScores?.some(s => hasClearType(s, "Absolute")) || false
         },
         {
           id: 'normal_10_lives',
-          icon: '<i class="fas fa-sword"></i>',
+          icon: '<i class="fas fa-crosshairs"></i>',
           title: 'Normal Mode Absolute',
           description: 'Clear Normal Mode with 10 lives (Absolute clear)',
-          unlockedMessage: '<i class="fas fa-sword"></i> Absolute precision! You\'ve mastered the art of survival!',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
           checkUnlocked: (data) => data.normalScores?.some(s => hasClearType(s, "Absolute")) || false
         },
         {
           id: 'master_10_lives',
-          icon: '<i class="fas fa-sword"></i>',
+          icon: '<i class="fas fa-crosshairs"></i>',
           title: 'Master Mode Absolute',
           description: 'Clear Master Mode with 10 lives (Absolute clear)',
-          unlockedMessage: '<i class="fas fa-sword"></i> Absolute precision! You\'ve mastered the art of survival!',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
           checkUnlocked: (data) => data.masterScores?.some(s => hasClearType(s, "Absolute")) || false
         },
         {
           id: 'hell_10_lives',
-          icon: '<i class="fas fa-sword"></i>',
+          icon: '<i class="fas fa-crosshairs"></i>',
           title: 'Hell Mode Absolute',
           description: 'Clear Hell Mode with 10 lives (Absolute clear)',
-          unlockedMessage: '<i class="fas fa-sword"></i> Absolute precision! You\'ve mastered the art of survival!',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
           checkUnlocked: (data) => data.hellScores?.some(s => hasClearType(s, "Absolute")) || false
         },
         {
           id: 'race_10_lives',
-          icon: '<i class="fas fa-sword"></i>',
+          icon: '<i class="fas fa-crosshairs"></i>',
           title: 'Race Mode Absolute',
           description: 'Clear Race Mode with 10 lives (Absolute clear)',
-          unlockedMessage: '<i class="fas fa-sword"></i> Absolute precision! You\'ve mastered the art of survival!',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
           checkUnlocked: (data) => data.raceScores?.some(s => hasClearType(s, "Absolute")) || false
         },
         // 5 Lives Clear Achievements (Catastrophy)
@@ -822,10 +769,10 @@
       const COMBINATION_ACHIEVEMENTS = [
         {
           id: 'vanish_05s_10_lives',
-          icon: '<i class="fas fa-sword"></i><i class="fas fa-eye"></i>',
+          icon: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i>',
           title: 'Absolute Blink',
           description: 'Clear any mode with 0.5s vanish timer and 10 lives (Absolute clear)',
-          unlockedMessage: '<i class="fas fa-sword"></i><i class="fas fa-eye"></i> Perfect memory under pressure! Absolute mastery achieved!',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i> Perfect memory under pressure! Absolute mastery achieved!',
           checkUnlocked: (data) => hasModifierCombination(data, (score) => 
             has05sVanishTimer(score) && hasClearType(score, "Absolute")
           )
@@ -852,10 +799,10 @@
         },
         {
           id: '2x_time_10_lives',
-          icon: '<i class="fas fa-bolt"></i><i class="fas fa-sword"></i>',
+          icon: '<i class="fas fa-bolt"></i><i class="fas fa-crosshairs"></i>',
           title: 'Absolute Speed',
           description: 'Clear any mode with 2x time multiplier and 10 lives (Absolute clear)',
-          unlockedMessage: '<i class="fas fa-bolt"></i><i class="fas fa-sword"></i> Lightning-fast precision! Absolute speed achieved!',
+          unlockedMessage: '<i class="fas fa-bolt"></i><i class="fas fa-crosshairs"></i> Lightning-fast precision! Absolute speed achieved!',
           checkUnlocked: (data) => hasModifierCombination(data, (score) => 
             has2xTimeMultiplier(score) && hasClearType(score, "Absolute")
           )
@@ -892,10 +839,10 @@
         },
         {
           id: 'vanish_05s_2x_time_10_lives',
-          icon: '<i class="fas fa-sword"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i>',
+          icon: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i>',
           title: 'Absolute Blink Speed',
           description: 'Clear any mode with 0.5s vanish, 2x time, and 10 lives (Absolute clear)',
-          unlockedMessage: '<i class="fas fa-sword"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i> Ultimate challenge conquered! Absolute blink-speed mastery!',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i> Ultimate challenge conquered! Absolute blink-speed mastery!',
           checkUnlocked: (data) => hasModifierCombination(data, (score) => 
             has05sVanishTimer(score) && has2xTimeMultiplier(score) && hasClearType(score, "Absolute")
           )
@@ -1079,32 +1026,34 @@
           if (unlocked) {
             // Custom message for level badges
             const levelMessages = {
-              1000: '<i class="fas fa-meteor" style="color: #ff6b35;"></i> Cosmic legend! You\'ve transcended all limits!',
-              900: '<i class="fas fa-moon" style="color: #c0c0c0;"></i> Lunar mastery! You shine in the darkness!',
-              800: '<i class="fas fa-sun" style="color: #ffd700;"></i> Solar brilliance! You\'re a beacon of excellence!',
-              700: '<i class="fas fa-globe" style="color: #4a90e2;"></i> Earthly dominance! You rule this realm!',
-              600: '<i class="fas fa-planet-ringed" style="color: #9b59b6;"></i> Planetary prestige! You\'ve reached new worlds!',
-              500: '<i class="fas fa-star" style="color: #ffd700;"></i> Stellar achievement! You\'re among the stars!',
-              400: '<i class="fas fa-star" style="color: #ffed4e;"></i> Glowing greatness! Your light never fades!',
-              300: '<i class="fas fa-star-shooting" style="color: #ffd700;"></i> Dizzying heights! You\'re spinning with success!',
-              250: '<i class="fas fa-galaxy" style="color: #6c5ce7;"></i> Galactic wonder! You\'ve explored the cosmos!',
-              200: '<i class="fas fa-meteor" style="color: #ff6b35;"></i> Shooting star! You streak across the sky!',
-              150: '<i class="fas fa-atom" style="color: #00d4ff;"></i> Atomic power! You\'ve split the atom of achievement!',
-              120: '<i class="fas fa-crystal-ball" style="color: #a29bfe;"></i> Crystal clarity! Your vision is perfect!',
-              100: '<i class="fas fa-sparkles" style="color: #ffd700;"></i> Sparkling success! You\'ve reached the century!',
-              80: '<i class="fas fa-trophy" style="color: #ffd700;"></i> Champion status! You\'re a true winner!',
-              70: '<i class="fas fa-crown" style="color: #ffd700;"></i> Royal excellence! You wear the crown!',
-              60: '<i class="fas fa-gem" style="color: #00d4ff;"></i> Diamond quality! You\'re a rare gem!',
-              50: '<i class="fas fa-star" style="color: #ffd700;"></i> Star status! You\'re shining bright!',
-              40: '<i class="fas fa-fire" style="color: #ff6b35;"></i> Fire of determination! You\'re burning with skill!',
-              35: '<i class="fas fa-bolt" style="color: #ffff00;"></i> Lightning fast! You strike with precision!',
-              30: '<i class="fas fa-star" style="color: #ffd700;"></i> Shining star! You\'re glowing with achievement!',
-              25: '<i class="fas fa-star-shooting" style="color: #ffd700;"></i> Dizzying progress! You\'re spinning upward!',
-              20: '<i class="fas fa-star" style="color: #ffd700;"></i> Star quality! You\'re on the rise!',
-              15: '<i class="fas fa-star" style="color: #ffd700;"></i> Glowing progress! You\'re getting brighter!',
-              10: '<i class="fas fa-sparkles" style="color: #ffd700;"></i> Sparkling start! You\'re on your way!',
-              5: '<i class="fas fa-seedling" style="color: #2ecc71;"></i> Growing strong! You\'re sprouting success!',
-              1: '<i class="fas fa-leaf" style="color: #2ecc71;"></i> Seedling start! Your journey begins!'
+              2000: `${getBadgeForLevel(2000)} Cosmic legend! You've transcended all limits!`,
+              1500: `${getBadgeForLevel(1500)} Lunar mastery! You shine in the darkness!`,
+              1250: `${getBadgeForLevel(1250)} Solar brilliance! You're a beacon of excellence!`,
+              1000: `${getBadgeForLevel(1000)} Earthly dominance! You rule this realm!`,
+              800: `${getBadgeForLevel(800)} Planetary prestige! You've reached new worlds!`,
+              600: `${getBadgeForLevel(600)} Stellar achievement! You're among the stars!`,
+              400: `${getBadgeForLevel(400)} Glowing greatness! Your light never fades!`,
+              300: `${getBadgeForLevel(300)} Dizzying heights! You're spinning with success!`,
+              250: `${getBadgeForLevel(250)} Galactic wonder! You've explored the cosmos!`,
+              200: `${getBadgeForLevel(200)} Shooting star! You streak across the sky!`,
+              150: `${getBadgeForLevel(150)} Atomic power! You've split the atom of achievement!`,
+              120: `${getBadgeForLevel(120)} Crystal clarity! Your vision is perfect!`,
+              100: `${getBadgeForLevel(100)} Sparkling success! You've reached the century!`,
+              80: `${getBadgeForLevel(80)} Champion status! You're a true winner!`,
+              70: `${getBadgeForLevel(70)} Royal excellence! You wear the crown!`,
+              60: `${getBadgeForLevel(60)} Diamond quality! You're a rare gem!`,
+              50: `${getBadgeForLevel(50)} Star status! You're shining bright!`,
+              40: `${getBadgeForLevel(40)} Fire of determination! You're burning with skill!`,
+              35: `${getBadgeForLevel(35)} Lightning fast! You strike with precision!`,
+              30: `${getBadgeForLevel(30)} Shining star! You're glowing with achievement!`,
+              25: `${getBadgeForLevel(25)} Rising star! Keep going!`,
+              20: `${getBadgeForLevel(20)} Star quality! You're on the rise!`,
+              15: `${getBadgeForLevel(15)} Glowing progress! You're getting brighter!`,
+              12: `${getBadgeForLevel(12)} Gold medal! You're excelling!`,
+              9: `${getBadgeForLevel(9)} Silver medal! You're improving!`,
+              6: `${getBadgeForLevel(6)} Bronze medal! You're progressing!`,
+              3: `${getBadgeForLevel(3)} Rising star! Keep going!`,
+              1: `${getBadgeForLevel(1)} Seedling start! Your journey begins!`
             };
             progressText = levelMessages[badge.level] || `✓ Unlocked at Level ${currentLevel}`;
           } else {

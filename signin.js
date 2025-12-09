@@ -22,7 +22,7 @@ await signInWithEmailAndPassword(auth, email, password)
     const userProfileSnap = await getDoc(userProfileRef);
     const existingData = userProfileSnap.exists() ? userProfileSnap.data() : {};
     
-    // Backfill createdAt if it doesn't exist
+    // Backfill createdAt and role if they don't exist
     const updateData = {
         displayName: user.displayName || user.email,
         email: user.email,
@@ -30,6 +30,9 @@ await signInWithEmailAndPassword(auth, email, password)
     };
     if (!existingData.createdAt) {
         updateData.createdAt = new Date().toISOString();
+    }
+    if (!existingData.role) {
+        updateData.role = 'user'; // Initialize role as 'user' if missing
     }
     await setDoc(userProfileRef, updateData, { merge: true });
     
@@ -78,7 +81,7 @@ googleButton.addEventListener("click", async () => {
         const userProfileSnap = await getDoc(userProfileRef);
         const existingData = userProfileSnap.exists() ? userProfileSnap.data() : {};
         
-        // Backfill createdAt if it doesn't exist
+        // Backfill createdAt and role if they don't exist
         const updateData = {
             displayName: user.displayName || user.email,
             email: user.email,
@@ -86,6 +89,9 @@ googleButton.addEventListener("click", async () => {
         };
         if (!existingData.createdAt) {
             updateData.createdAt = new Date().toISOString();
+        }
+        if (!existingData.role) {
+            updateData.role = 'user'; // Initialize role as 'user' if missing
         }
         await setDoc(userProfileRef, updateData, { merge: true });
         
