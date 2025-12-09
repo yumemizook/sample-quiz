@@ -2174,7 +2174,8 @@
         
         const payload = {
           name: user.displayName || user.email,
-          score: score, // Use total grade points instead of correct answer count
+          score: score, // Correct answer count (0-130)
+          gradePoints: totalGradePoints, // Total accumulated grade points
           grade: grade,
           time: elapsedTimeFormatted, // Use elapsed time instead of time remaining
           date: new Date().toLocaleString(),
@@ -2184,8 +2185,6 @@
           totalPausedTime: formatPausedTime(totalPausedTime || 0),
           clearType: clearType,
           modifiers: modifiers,
-          pauseCount: pauseCount || 0,
-          totalPausedTime: formatPausedTime(totalPausedTime || 0),
         };
 
         // Global leaderboard entry

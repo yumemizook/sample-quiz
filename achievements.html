@@ -408,13 +408,23 @@
           icon: '✅',
           title: 'Easy Mode Master',
           description: 'Complete Easy Mode with a perfect score of 30',
+          unlockedMessage: '🎉 Perfect run! You\'ve mastered the basics!',
           checkUnlocked: (data) => data.easyScores?.some(s => s.score === 30) || false
+        },
+        {
+          id: 'normal_complete',
+          icon: '⭐',
+          title: 'Normal Mode Expert',
+          description: 'Complete Normal Mode with a perfect score of 150',
+          unlockedMessage: '🌟 Flawless execution! You\'re a true expert!',
+          checkUnlocked: (data) => data.normalScores?.some(s => s.score === 150) || false
         },
         {
           id: 'master_complete',
           icon: '👑',
           title: 'Master Mode Champion',
           description: 'Complete Master Mode with a perfect score of 90',
+          unlockedMessage: '👑 Royal perfection! You\'ve conquered the master challenge!',
           checkUnlocked: (data) => data.masterScores?.some(s => s.score === 90) || false
         },
         {
@@ -422,6 +432,7 @@
           icon: '🔥',
           title: 'Hell Mode Conqueror',
           description: 'Complete Hell Mode with a perfect score of 200',
+          unlockedMessage: '🔥 Infernal mastery! You\'ve survived the impossible!',
           checkUnlocked: (data) => data.hellScores?.some(s => s.score === 200) || false
         },
         {
@@ -429,14 +440,16 @@
           icon: '🏁',
           title: 'Race Mode Grand Master',
           description: 'Complete Race Mode and achieve GM grade',
+          unlockedMessage: '🏁 Grand Master achieved! The ultimate racing legend!',
           checkUnlocked: (data) => data.raceScores?.some(s => s.grade === "GM") || false
         },
         {
           id: 'race_high_score',
           icon: '💎',
           title: 'Race Mode Excellence',
-          description: 'Achieve a score of 1,264,000 or higher in Race Mode',
-          checkUnlocked: (data) => data.raceScores?.some(s => s.score >= 1264000) || false
+          description: 'Achieve 1,246,000 grade points or higher in Race Mode',
+          unlockedMessage: '💎 Exceptional performance! You\'ve reached the pinnacle!',
+          checkUnlocked: (data) => data.raceScores?.some(s => (s.gradePoints || s.score || 0) >= 1246000) || false
         }
       ];
 
@@ -470,6 +483,25 @@
         { level: 1, icon: '🌿', name: 'Seedling' }
       ];
 
+      // Helper function to check if a score has a clear type with 10 lives or less
+      function hasLowLivesClear(score) {
+        if (!score || !score.clearType) return false;
+        const lowLivesClears = ["Absolute", "Catastrophy", "All Correct!"];
+        return lowLivesClears.includes(score.clearType);
+      }
+
+      // Helper function to check if a score has 2x time multiplier
+      function has2xTimeMultiplier(score) {
+        if (!score || !score.modifiers) return false;
+        return score.modifiers.timeMultiplier >= 2.0;
+      }
+
+      // Helper function to check if a score has 0.5s vanish timer
+      function has05sVanishTimer(score) {
+        if (!score || !score.modifiers) return false;
+        return score.modifiers.fadingMode === "0.5" || score.modifiers.fadingMode === 0.5;
+      }
+
       // Special Achievements
       const SPECIAL_ACHIEVEMENTS = [
         {
@@ -477,6 +509,7 @@
           icon: '🎮',
           title: 'First Steps',
           description: 'Complete your first game in any mode',
+          unlockedMessage: '🎮 Welcome to the journey! Your adventure begins!',
           checkUnlocked: (data) => {
             const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
                               (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
@@ -489,6 +522,7 @@
           icon: '🌟',
           title: 'Mode Explorer',
           description: 'Play at least one game in all 5 game modes',
+          unlockedMessage: '🌟 True explorer! You\'ve experienced every challenge!',
           checkUnlocked: (data) => {
             return (data.easyScores?.length || 0) > 0 && 
                    (data.normalScores?.length || 0) > 0 && 
@@ -502,6 +536,7 @@
           icon: '✨',
           title: 'Rising Star',
           description: 'Reach Level 10',
+          unlockedMessage: '✨ Shining bright! You\'re on the rise!',
           checkUnlocked: (data) => (data.playerData?.level || 0) >= 10
         },
         {
@@ -509,6 +544,7 @@
           icon: '⭐',
           title: 'Star Player',
           description: 'Reach Level 50',
+          unlockedMessage: '⭐ Stellar achievement! You\'re a true star!',
           checkUnlocked: (data) => (data.playerData?.level || 0) >= 50
         },
         {
@@ -516,7 +552,131 @@
           icon: '✨',
           title: 'Sparkle Master',
           description: 'Reach Level 100',
+          unlockedMessage: '✨ Master of sparkles! You\'ve reached greatness!',
           checkUnlocked: (data) => (data.playerData?.level || 0) >= 100
+        },
+        // Low Lives Clear Achievements (10 lives or less)
+        {
+          id: 'easy_low_lives',
+          icon: '💀',
+          title: 'Easy Mode Daredevil',
+          description: 'Clear Easy Mode with 10 lives or less (Absolute/Catastrophy/All Correct!)',
+          unlockedMessage: '💀 Living dangerously! You\'ve mastered risk-taking!',
+          checkUnlocked: (data) => data.easyScores?.some(hasLowLivesClear) || false
+        },
+        {
+          id: 'normal_low_lives',
+          icon: '💀',
+          title: 'Normal Mode Daredevil',
+          description: 'Clear Normal Mode with 10 lives or less (Absolute/Catastrophy/All Correct!)',
+          unlockedMessage: '💀 Living dangerously! You\'ve mastered risk-taking!',
+          checkUnlocked: (data) => data.normalScores?.some(hasLowLivesClear) || false
+        },
+        {
+          id: 'master_low_lives',
+          icon: '💀',
+          title: 'Master Mode Daredevil',
+          description: 'Clear Master Mode with 10 lives or less (Absolute/Catastrophy/All Correct!)',
+          unlockedMessage: '💀 Living dangerously! You\'ve mastered risk-taking!',
+          checkUnlocked: (data) => data.masterScores?.some(hasLowLivesClear) || false
+        },
+        {
+          id: 'hell_low_lives',
+          icon: '💀',
+          title: 'Hell Mode Daredevil',
+          description: 'Clear Hell Mode with 10 lives or less (Absolute/Catastrophy/All Correct!)',
+          unlockedMessage: '💀 Living dangerously! You\'ve mastered risk-taking!',
+          checkUnlocked: (data) => data.hellScores?.some(hasLowLivesClear) || false
+        },
+        {
+          id: 'race_low_lives',
+          icon: '💀',
+          title: 'Race Mode Daredevil',
+          description: 'Clear Race Mode with 10 lives or less (Absolute/Catastrophy/All Correct!)',
+          unlockedMessage: '💀 Living dangerously! You\'ve mastered risk-taking!',
+          checkUnlocked: (data) => data.raceScores?.some(hasLowLivesClear) || false
+        },
+        // 2x Time Multiplier Achievements
+        {
+          id: 'easy_2x_time',
+          icon: '⚡',
+          title: 'Easy Mode Speed Demon',
+          description: 'Clear Easy Mode with 2x time multiplier',
+          unlockedMessage: '⚡ Lightning fast! Time is your enemy, but you conquered it!',
+          checkUnlocked: (data) => data.easyScores?.some(has2xTimeMultiplier) || false
+        },
+        {
+          id: 'normal_2x_time',
+          icon: '⚡',
+          title: 'Normal Mode Speed Demon',
+          description: 'Clear Normal Mode with 2x time multiplier',
+          unlockedMessage: '⚡ Lightning fast! Time is your enemy, but you conquered it!',
+          checkUnlocked: (data) => data.normalScores?.some(has2xTimeMultiplier) || false
+        },
+        {
+          id: 'master_2x_time',
+          icon: '⚡',
+          title: 'Master Mode Speed Demon',
+          description: 'Clear Master Mode with 2x time multiplier',
+          unlockedMessage: '⚡ Lightning fast! Time is your enemy, but you conquered it!',
+          checkUnlocked: (data) => data.masterScores?.some(has2xTimeMultiplier) || false
+        },
+        {
+          id: 'hell_2x_time',
+          icon: '⚡',
+          title: 'Hell Mode Speed Demon',
+          description: 'Clear Hell Mode with 2x time multiplier',
+          unlockedMessage: '⚡ Lightning fast! Time is your enemy, but you conquered it!',
+          checkUnlocked: (data) => data.hellScores?.some(has2xTimeMultiplier) || false
+        },
+        {
+          id: 'race_2x_time',
+          icon: '⚡',
+          title: 'Race Mode Speed Demon',
+          description: 'Clear Race Mode with 2x time multiplier',
+          unlockedMessage: '⚡ Lightning fast! Time is your enemy, but you conquered it!',
+          checkUnlocked: (data) => data.raceScores?.some(has2xTimeMultiplier) || false
+        },
+        // 0.5s Vanish Timer Achievements
+        {
+          id: 'easy_05s_vanish',
+          icon: '👁️',
+          title: 'Easy Mode Blink Master',
+          description: 'Clear Easy Mode with 0.5s vanish timer',
+          unlockedMessage: '👁️ Blink and you\'ll miss it! Your memory is legendary!',
+          checkUnlocked: (data) => data.easyScores?.some(has05sVanishTimer) || false
+        },
+        {
+          id: 'normal_05s_vanish',
+          icon: '👁️',
+          title: 'Normal Mode Blink Master',
+          description: 'Clear Normal Mode with 0.5s vanish timer',
+          unlockedMessage: '👁️ Blink and you\'ll miss it! Your memory is legendary!',
+          checkUnlocked: (data) => data.normalScores?.some(has05sVanishTimer) || false
+        },
+        {
+          id: 'master_05s_vanish',
+          icon: '👁️',
+          title: 'Master Mode Blink Master',
+          description: 'Clear Master Mode with 0.5s vanish timer',
+          unlockedMessage: '👁️ Blink and you\'ll miss it! Your memory is legendary!',
+          checkUnlocked: (data) => data.masterScores?.some(has05sVanishTimer) || false
+        },
+        {
+          id: 'hell_05s_vanish',
+          icon: '👁️',
+          title: 'Hell Mode Blink Master',
+          description: 'Clear Hell Mode with 0.5s vanish timer',
+          unlockedMessage: '👁️ Blink and you\'ll miss it! Your memory is legendary!',
+          checkUnlocked: (data) => data.hellScores?.some(has05sVanishTimer) || false
+        },
+        {
+          id: 'race_05s_vanish',
+          icon: '👁️',
+          title: 'Race Mode Blink Master',
+          description: 'Clear Race Mode with 0.5s vanish timer',
+          unlockedMessage: '👁️ Blink and you\'ll miss it! Your memory is legendary!',
+          checkUnlocked: (data) => data.raceScores?.some(has05sVanishTimer) || false
         }
       ];
 
@@ -526,7 +686,13 @@
 
       // Render a single achievement card
       function renderAchievementCard(achievement, unlocked, progressText = null) {
-        const progress = progressText || (unlocked ? '✓ Unlocked' : 'Locked');
+        let progress;
+        if (unlocked) {
+          // Use custom unlocked message if provided, otherwise use progressText or default
+          progress = achievement.unlockedMessage || progressText || '✓ Unlocked';
+        } else {
+          progress = progressText || 'Locked';
+        }
         const progressColor = unlocked ? '#ffd700' : 'rgba(255, 255, 255, 0.6)';
         
         return `
@@ -596,9 +762,41 @@
         const levelBadgesGrid = document.getElementById('levelBadges');
         levelBadgesGrid.innerHTML = LEVEL_BADGES.map(badge => {
           const unlocked = currentLevel >= badge.level;
-          const progressText = unlocked ? 
-            `✓ Unlocked at Level ${currentLevel}` : 
-            `Requires Level ${badge.level}`;
+          let progressText;
+          if (unlocked) {
+            // Custom message for level badges
+            const levelMessages = {
+              1000: '🌠 Cosmic legend! You\'ve transcended all limits!',
+              900: '🌙 Lunar mastery! You shine in the darkness!',
+              800: '☀️ Solar brilliance! You\'re a beacon of excellence!',
+              700: '🌍 Earthly dominance! You rule this realm!',
+              600: '🪐 Planetary prestige! You\'ve reached new worlds!',
+              500: '⭐ Stellar achievement! You\'re among the stars!',
+              400: '🌟 Glowing greatness! Your light never fades!',
+              300: '💫 Dizzying heights! You\'re spinning with success!',
+              250: '🌌 Galactic wonder! You\'ve explored the cosmos!',
+              200: '🌠 Shooting star! You streak across the sky!',
+              150: '⚛️ Atomic power! You\'ve split the atom of achievement!',
+              120: '🔮 Crystal clarity! Your vision is perfect!',
+              100: '✨ Sparkling success! You\'ve reached the century!',
+              80: '🏆 Champion status! You\'re a true winner!',
+              70: '👑 Royal excellence! You wear the crown!',
+              60: '💎 Diamond quality! You\'re a rare gem!',
+              50: '⭐ Star status! You\'re shining bright!',
+              40: '🔥 Fire of determination! You\'re burning with skill!',
+              35: '⚡ Lightning fast! You strike with precision!',
+              30: '🌟 Shining star! You\'re glowing with achievement!',
+              25: '💫 Dizzying progress! You\'re spinning upward!',
+              20: '⭐ Star quality! You\'re on the rise!',
+              15: '🌟 Glowing progress! You\'re getting brighter!',
+              10: '✨ Sparkling start! You\'re on your way!',
+              5: '🌱 Growing strong! You\'re sprouting success!',
+              1: '🌿 Seedling start! Your journey begins!'
+            };
+            progressText = levelMessages[badge.level] || `✓ Unlocked at Level ${currentLevel}`;
+          } else {
+            progressText = `Requires Level ${badge.level}`;
+          }
           return renderAchievementCard(
             { icon: badge.icon, title: badge.name, description: `Reach Level ${badge.level}` },
             unlocked,

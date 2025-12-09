@@ -198,9 +198,9 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
         }
     });
     
-    // Race mode: score field contains totalGradePoints (similar to master mode)
+    // Race mode: gradePoints field contains totalGradePoints
     raceScores.forEach(score => {
-        const gradePoints = score.score || 0;
+        const gradePoints = score.gradePoints || score.score || 0; // Use gradePoints if available, fallback to score for backwards compatibility
         experience += Math.floor(gradePoints / 120); // 1 XP per 120 grade points (slightly less than master)
         
         // Bonus XP for GM grade
@@ -231,8 +231,8 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
     const raceCompleted = raceScores.some(s => s.grade === "GM"); // Completed all 130 questions (GM grade)
     if (raceCompleted) experience += 80;
     
-    // Extra XP bonus for high score in race mode (score >= 1264000)
-    const raceHighScore = raceScores.some(s => s.score >= 1264000);
+    // Extra XP bonus for high grade points in race mode (gradePoints >= 1246000)
+    const raceHighScore = raceScores.some(s => (s.gradePoints || s.score || 0) >= 1246000);
     if (raceHighScore) experience += 50; // Additional bonus for exceptional performance
         // Calculate level using exponential scaling
     // Level formula: level = floor(1 + sqrt(experience / 30))
