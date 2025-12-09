@@ -407,7 +407,7 @@
         const fadeIcon = document.createElement("div");
         fadeIcon.className = "modifier-icon";
         fadeIcon.title = `Vanish Mode: every ${fadingMode}s`;
-        fadeIcon.innerHTML = `<span style="font-size: 2.2em;">👁️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${fadingMode}s</span>`;
+        fadeIcon.innerHTML = `<span style="font-size: 2.2em;"><i class="fas fa-eye" style="color: #a29bfe;"></i></span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${fadingMode}s</span>`;
         fadeIcon.style.width = `${iconSize}px`;
         fadeIcon.style.height = `${iconSize}px`;
         fadeIcon.style.display = "flex";
@@ -1537,11 +1537,11 @@
         const title = gaveUp ? "Quiz Abandoned" : "Quiz Completed!";
 
         // Get input type icon
-        let inputTypeIcon = "❓";
-        if (inputType === 'controller') inputTypeIcon = "🎮";
-        else if (inputType === 'keyboard') inputTypeIcon = "⌨️";
-        else if (inputType === 'mobile') inputTypeIcon = "📱";
-        else if (inputType === 'mouse') inputTypeIcon = "🖱️";
+        let inputTypeIcon = '<i class="fas fa-question-circle" style="color: #dbffff;"></i>';
+        if (inputType === 'controller') inputTypeIcon = '<i class="fas fa-gamepad" style="color: #9b59b6;"></i>';
+        else if (inputType === 'keyboard') inputTypeIcon = '<i class="fas fa-keyboard" style="color: #dbffff;"></i>';
+        else if (inputType === 'mobile') inputTypeIcon = '<i class="fas fa-mobile-alt" style="color: #4a90e2;"></i>';
+        else if (inputType === 'mouse') inputTypeIcon = '<i class="fas fa-mouse" style="color: #dbffff;"></i>';
         
         evalDiv.innerHTML = `<h3>${title}</h3>
                     <p style="font-size:larger">Your score is:</p>

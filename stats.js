@@ -418,34 +418,34 @@ let allRaceList = [];
 
 // Get badge for level (uses thresholds from getBadgeNameStats)
 function getBadgeForLevelStats(level) {
-    if (level >= 2000) return "🌠"; // Meteor (Lv 2000+)
-    if (level >= 1500) return "🌙"; // Moon (Lv 1500-1999)
-    if (level >= 1250) return "☀️"; // Sun (Lv 1250-1499)
-    if (level >= 1000) return "🌍"; // Earth (Lv 1000-1249)
-    if (level >= 800) return "🪐"; // Planet (Lv 800-999)
-    if (level >= 600) return "⭐"; // Star (Lv 600-799)
-    if (level >= 400) return "🌟"; // Glowing Star (Lv 400-599)
-    if (level >= 300) return "💫"; // Dizzy Star (Lv 300-399)
-    if (level >= 250) return "🌌"; // Galaxy (Lv 250-299)
-    if (level >= 200) return "🌠"; // Shooting Star (Lv 200-249)
-    if (level >= 150) return "⚛️"; // Atomic (Lv 150-199)
-    if (level >= 120) return "🔮"; // Crystal (Lv 120-149)
-    if (level >= 100) return "✨"; // Sparkle (Lv 100-119)
-    if (level >= 80) return "🏆"; // Champion (Lv 80-99)
-    if (level >= 70) return "👑"; // Royal (Lv 70-79)
-    if (level >= 60) return "💎"; // Diamond (Lv 60-69)
-    if (level >= 50) return "⭐"; // Star (Lv 50-59)
-    if (level >= 40) return "🔥"; // Fire (Lv 40-49)
-    if (level >= 35) return "⚡"; // Lightning (Lv 35-39)
-    if (level >= 30) return "🌟"; // Shining Star (Lv 30-34)
-    if (level >= 25) return "🎯"; // Target (Lv 25-29)
-    if (level >= 20) return "🎖️"; // Medal (Lv 20-24)
-    if (level >= 15) return "🏅"; // Trophy (Lv 15-19)
-    if (level >= 12) return "🥇"; // Gold Medal (Lv 12-14)
-    if (level >= 9) return "🥈"; // Silver Medal (Lv 9-11)
-    if (level >= 6) return "🥉"; // Bronze Medal (Lv 6-8)
-    if (level >= 3) return "⭐"; // Star (Lv 3-5)
-    return "🌱"; // Sprout (Lv 1-2)
+    if (level >= 2000) return '<i class="fas fa-meteor" style="color: #ff6b35;"></i>'; // Meteor (Lv 2000+)
+    if (level >= 1500) return '<i class="fas fa-moon" style="color: #c0c0c0;"></i>'; // Moon (Lv 1500-1999)
+    if (level >= 1250) return '<i class="fas fa-sun" style="color: #ffd700;"></i>'; // Sun (Lv 1250-1499)
+    if (level >= 1000) return '<i class="fas fa-globe" style="color: #4a90e2;"></i>'; // Earth (Lv 1000-1249)
+    if (level >= 800) return '<i class="fas fa-planet-ringed" style="color: #9b59b6;"></i>'; // Planet (Lv 800-999)
+    if (level >= 600) return '<i class="fas fa-star" style="color: #ffd700;"></i>'; // Star (Lv 600-799)
+    if (level >= 400) return '<i class="fas fa-star" style="color: #ffed4e;"></i>'; // Glowing Star (Lv 400-599)
+    if (level >= 300) return '<i class="fas fa-star-shooting" style="color: #ffd700;"></i>'; // Dizzy Star (Lv 300-399)
+    if (level >= 250) return '<i class="fas fa-galaxy" style="color: #6c5ce7;"></i>'; // Galaxy (Lv 250-299)
+    if (level >= 200) return '<i class="fas fa-meteor" style="color: #ff6b35;"></i>'; // Shooting Star (Lv 200-249)
+    if (level >= 150) return '<i class="fas fa-atom" style="color: #00d4ff;"></i>'; // Atomic (Lv 150-199)
+    if (level >= 120) return '<i class="fas fa-crystal-ball" style="color: #a29bfe;"></i>'; // Crystal (Lv 120-149)
+    if (level >= 100) return '<i class="fas fa-sparkles" style="color: #ffd700;"></i>'; // Sparkle (Lv 100-119)
+    if (level >= 80) return '<i class="fas fa-trophy" style="color: #ffd700;"></i>'; // Champion (Lv 80-99)
+    if (level >= 70) return '<i class="fas fa-crown" style="color: #ffd700;"></i>'; // Royal (Lv 70-79)
+    if (level >= 60) return '<i class="fas fa-gem" style="color: #00d4ff;"></i>'; // Diamond (Lv 60-69)
+    if (level >= 50) return '<i class="fas fa-star" style="color: #ffd700;"></i>'; // Star (Lv 50-59)
+    if (level >= 40) return '<i class="fas fa-fire" style="color: #ff6b35;"></i>'; // Fire (Lv 40-49)
+    if (level >= 35) return '<i class="fas fa-bolt" style="color: #ffff00;"></i>'; // Lightning (Lv 35-39)
+    if (level >= 30) return '<i class="fas fa-star" style="color: #ffd700;"></i>'; // Shining Star (Lv 30-34)
+    if (level >= 25) return '<i class="fas fa-bullseye" style="color: #ff6b6b;"></i>'; // Target (Lv 25-29)
+    if (level >= 20) return '<i class="fas fa-medal" style="color: #ffd700;"></i>'; // Medal (Lv 20-24)
+    if (level >= 15) return '<i class="fas fa-trophy" style="color: #ffd700;"></i>'; // Trophy (Lv 15-19)
+    if (level >= 12) return '<i class="fas fa-medal" style="color: #ffd700;"></i>'; // Gold Medal (Lv 12-14)
+    if (level >= 9) return '<i class="fas fa-medal" style="color: #c0c0c0;"></i>'; // Silver Medal (Lv 9-11)
+    if (level >= 6) return '<i class="fas fa-medal" style="color: #cd7f32;"></i>'; // Bronze Medal (Lv 6-8)
+    if (level >= 3) return '<i class="fas fa-star" style="color: #ffd700;"></i>'; // Star (Lv 3-5)
+    return '<i class="fas fa-seedling" style="color: #2ecc71;"></i>'; // Sprout (Lv 1-2)
 }
 
 // Update level progression display
@@ -1174,16 +1174,16 @@ function renderModeStats(mode) {
             if (!modifiers || Object.keys(modifiers).length === 0) return "";
             const parts = [];
             if (modifiers.lives) {
-                parts.push(`❤️ ${modifiers.lives}`);
+                parts.push(`<i class="fas fa-heart" style="color: #ff6b6b;"></i> ${modifiers.lives}`);
             }
             if (modifiers.timeMultiplier && modifiers.timeMultiplier !== 1) {
-                parts.push(`⏱️ ${modifiers.timeMultiplier.toFixed(2)}x`);
+                parts.push(`<i class="fas fa-stopwatch" style="color: #dbffff;"></i> ${modifiers.timeMultiplier.toFixed(2)}x`);
             }
             if (modifiers.fadingMode) {
-                parts.push(`👁️ ${modifiers.fadingMode}s`);
+                parts.push(`<i class="fas fa-eye" style="color: #a29bfe;"></i> ${modifiers.fadingMode}s`);
             }
             if (modifiers.startQuestion) {
-                parts.push(`🎯 ${modifiers.startQuestion + 1}`);
+                parts.push(`<i class="fas fa-bullseye" style="color: #ff6b6b;"></i> ${modifiers.startQuestion + 1}`);
             }
             return parts.length > 0 ? `<div style="font-size: 0.75em; color: #aaa; margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap;">${parts.join(' ')}</div>` : "";
         };

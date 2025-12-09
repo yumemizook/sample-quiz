@@ -55,32 +55,32 @@ function formatRelativeTime(timestamp) {
 
 // Get badge emoji for level
 function getBadgeForLevel(level) {
-    if (level >= 1000) return '<i class="fas fa-meteor"></i>';
-    if (level >= 900) return '<i class="fas fa-moon"></i>';
-    if (level >= 800) return '<i class="fas fa-sun"></i>';
-    if (level >= 700) return '<i class="fas fa-globe"></i>';
-    if (level >= 600) return '<i class="fas fa-planet-ringed"></i>';
-    if (level >= 500) return '<i class="fas fa-star"></i>';
-    if (level >= 400) return '<i class="fas fa-star"></i>';
-    if (level >= 300) return '<i class="fas fa-star-shooting"></i>';
-    if (level >= 250) return '<i class="fas fa-galaxy"></i>';
-    if (level >= 200) return '<i class="fas fa-meteor"></i>';
-    if (level >= 150) return '<i class="fas fa-atom"></i>';
-    if (level >= 120) return '<i class="fas fa-crystal-ball"></i>';
-    if (level >= 100) return '<i class="fas fa-sparkles"></i>';
-    if (level >= 80) return '<i class="fas fa-trophy"></i>';
-    if (level >= 70) return '<i class="fas fa-crown"></i>';
-    if (level >= 60) return '<i class="fas fa-gem"></i>';
-    if (level >= 50) return '<i class="fas fa-star"></i>';
-    if (level >= 40) return '<i class="fas fa-fire"></i>';
-    if (level >= 35) return '<i class="fas fa-bolt"></i>';
-    if (level >= 30) return '<i class="fas fa-star"></i>';
-    if (level >= 25) return '<i class="fas fa-star-shooting"></i>';
-    if (level >= 20) return '<i class="fas fa-star"></i>';
-    if (level >= 15) return '<i class="fas fa-star"></i>';
-    if (level >= 10) return '<i class="fas fa-sparkles"></i>';
-    if (level >= 5) return '<i class="fas fa-seedling"></i>';
-    return '<i class="fas fa-leaf"></i>';
+    if (level >= 1000) return '<i class="fas fa-meteor" style="color: #ff6b35;"></i>';
+    if (level >= 900) return '<i class="fas fa-moon" style="color: #c0c0c0;"></i>';
+    if (level >= 800) return '<i class="fas fa-sun" style="color: #ffd700;"></i>';
+    if (level >= 700) return '<i class="fas fa-globe" style="color: #4a90e2;"></i>';
+    if (level >= 600) return '<i class="fas fa-planet-ringed" style="color: #9b59b6;"></i>';
+    if (level >= 500) return '<i class="fas fa-star" style="color: #ffd700;"></i>';
+    if (level >= 400) return '<i class="fas fa-star" style="color: #ffed4e;"></i>';
+    if (level >= 300) return '<i class="fas fa-star-shooting" style="color: #ffd700;"></i>';
+    if (level >= 250) return '<i class="fas fa-galaxy" style="color: #6c5ce7;"></i>';
+    if (level >= 200) return '<i class="fas fa-meteor" style="color: #ff6b35;"></i>';
+    if (level >= 150) return '<i class="fas fa-atom" style="color: #00d4ff;"></i>';
+    if (level >= 120) return '<i class="fas fa-crystal-ball" style="color: #a29bfe;"></i>';
+    if (level >= 100) return '<i class="fas fa-sparkles" style="color: #ffd700;"></i>';
+    if (level >= 80) return '<i class="fas fa-trophy" style="color: #ffd700;"></i>';
+    if (level >= 70) return '<i class="fas fa-crown" style="color: #ffd700;"></i>';
+    if (level >= 60) return '<i class="fas fa-gem" style="color: #00d4ff;"></i>';
+    if (level >= 50) return '<i class="fas fa-star" style="color: #ffd700;"></i>';
+    if (level >= 40) return '<i class="fas fa-fire" style="color: #ff6b35;"></i>';
+    if (level >= 35) return '<i class="fas fa-bolt" style="color: #ffff00;"></i>';
+    if (level >= 30) return '<i class="fas fa-star" style="color: #ffd700;"></i>';
+    if (level >= 25) return '<i class="fas fa-star-shooting" style="color: #ffd700;"></i>';
+    if (level >= 20) return '<i class="fas fa-star" style="color: #ffd700;"></i>';
+    if (level >= 15) return '<i class="fas fa-star" style="color: #ffd700;"></i>';
+    if (level >= 10) return '<i class="fas fa-sparkles" style="color: #ffd700;"></i>';
+    if (level >= 5) return '<i class="fas fa-seedling" style="color: #2ecc71;"></i>';
+    return '<i class="fas fa-leaf" style="color: #2ecc71;"></i>';
 }
 
 // Get badge name for level
@@ -238,7 +238,7 @@ function formatModifiers(modifiers) {
         parts.push(`<i class="fas fa-eye"></i> ${modifiers.fadingMode}s`);
     }
     if (modifiers.startQuestion) {
-        parts.push(`🎯 ${modifiers.startQuestion + 1}`);
+        parts.push(`<i class="fas fa-bullseye" style="color: #ff6b6b;"></i> ${modifiers.startQuestion + 1}`);
     }
     return parts.length > 0 ? parts.join(' ') : "";
 }
@@ -636,7 +636,7 @@ async function loadProfile() {
     const badge = getBadgeForLevel(playerData.level);
     const badgeName = getBadgeName(playerData.level);
     
-    document.getElementById('profileBadge').textContent = badge;
+    document.getElementById('profileBadge').innerHTML = badge;
     document.getElementById('profileLevelText').textContent = `Lv. ${playerData.level} (${badgeName})`;
     
     // Set created date

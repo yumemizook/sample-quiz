@@ -241,7 +241,7 @@
     </div>
     <div class="achievements-container">
       <div class="achievements-header">
-        <h1>🏆 Achievements</h1>
+        <h1><i class="fas fa-trophy" style="color: #ffd700;"></i> Achievements</h1>
         <p>Track your progress and unlock achievements</p>
       </div>
 
@@ -500,32 +500,32 @@
 
       // Level Badge Achievements (automatically generated from badge thresholds)
       const LEVEL_BADGES = [
-        { level: 1000, icon: '🌠', name: 'Meteor' },
-        { level: 900, icon: '🌙', name: 'Moon' },
-        { level: 800, icon: '☀️', name: 'Sun' },
-        { level: 700, icon: '🌍', name: 'Earth' },
-        { level: 600, icon: '🪐', name: 'Planet' },
-        { level: 500, icon: '⭐', name: 'Star' },
-        { level: 400, icon: '🌟', name: 'Glowing Star' },
-        { level: 300, icon: '💫', name: 'Dizzy Star' },
-        { level: 250, icon: '🌌', name: 'Galaxy' },
-        { level: 200, icon: '🌠', name: 'Shooting Star' },
-        { level: 150, icon: '⚛️', name: 'Atomic' },
-        { level: 120, icon: '🔮', name: 'Crystal' },
-        { level: 100, icon: '✨', name: 'Sparkle' },
-        { level: 80, icon: '🏆', name: 'Champion' },
-        { level: 70, icon: '👑', name: 'Royal' },
-        { level: 60, icon: '💎', name: 'Diamond' },
-        { level: 50, icon: '⭐', name: 'Star' },
-        { level: 40, icon: '🔥', name: 'Fire' },
-        { level: 35, icon: '⚡', name: 'Lightning' },
-        { level: 30, icon: '🌟', name: 'Shining Star' },
-        { level: 25, icon: '💫', name: 'Dizzy Star' },
-        { level: 20, icon: '⭐', name: 'Star' },
-        { level: 15, icon: '🌟', name: 'Glowing Star' },
-        { level: 10, icon: '✨', name: 'Sparkle' },
-        { level: 5, icon: '🌱', name: 'Sprout' },
-        { level: 1, icon: '🌿', name: 'Seedling' }
+        { level: 1000, icon: '<i class="fas fa-meteor" style="color: #ff6b35;"></i>', name: 'Meteor' },
+        { level: 900, icon: '<i class="fas fa-moon" style="color: #c0c0c0;"></i>', name: 'Moon' },
+        { level: 800, icon: '<i class="fas fa-sun" style="color: #ffd700;"></i>', name: 'Sun' },
+        { level: 700, icon: '<i class="fas fa-globe" style="color: #4a90e2;"></i>', name: 'Earth' },
+        { level: 600, icon: '<i class="fas fa-planet-ringed" style="color: #9b59b6;"></i>', name: 'Planet' },
+        { level: 500, icon: '<i class="fas fa-star" style="color: #ffd700;"></i>', name: 'Star' },
+        { level: 400, icon: '<i class="fas fa-star" style="color: #ffed4e;"></i>', name: 'Glowing Star' },
+        { level: 300, icon: '<i class="fas fa-star-shooting" style="color: #ffd700;"></i>', name: 'Dizzy Star' },
+        { level: 250, icon: '<i class="fas fa-galaxy" style="color: #6c5ce7;"></i>', name: 'Galaxy' },
+        { level: 200, icon: '<i class="fas fa-meteor" style="color: #ff6b35;"></i>', name: 'Shooting Star' },
+        { level: 150, icon: '<i class="fas fa-atom" style="color: #00d4ff;"></i>', name: 'Atomic' },
+        { level: 120, icon: '<i class="fas fa-crystal-ball" style="color: #a29bfe;"></i>', name: 'Crystal' },
+        { level: 100, icon: '<i class="fas fa-sparkles" style="color: #ffd700;"></i>', name: 'Sparkle' },
+        { level: 80, icon: '<i class="fas fa-trophy" style="color: #ffd700;"></i>', name: 'Champion' },
+        { level: 70, icon: '<i class="fas fa-crown" style="color: #ffd700;"></i>', name: 'Royal' },
+        { level: 60, icon: '<i class="fas fa-gem" style="color: #00d4ff;"></i>', name: 'Diamond' },
+        { level: 50, icon: '<i class="fas fa-star" style="color: #ffd700;"></i>', name: 'Star' },
+        { level: 40, icon: '<i class="fas fa-fire" style="color: #ff6b35;"></i>', name: 'Fire' },
+        { level: 35, icon: '<i class="fas fa-bolt" style="color: #ffff00;"></i>', name: 'Lightning' },
+        { level: 30, icon: '<i class="fas fa-star" style="color: #ffd700;"></i>', name: 'Shining Star' },
+        { level: 25, icon: '<i class="fas fa-star-shooting" style="color: #ffd700;"></i>', name: 'Dizzy Star' },
+        { level: 20, icon: '<i class="fas fa-star" style="color: #ffd700;"></i>', name: 'Star' },
+        { level: 15, icon: '<i class="fas fa-star" style="color: #ffd700;"></i>', name: 'Glowing Star' },
+        { level: 10, icon: '<i class="fas fa-sparkles" style="color: #ffd700;"></i>', name: 'Sparkle' },
+        { level: 5, icon: '<i class="fas fa-seedling" style="color: #2ecc71;"></i>', name: 'Sprout' },
+        { level: 1, icon: '<i class="fas fa-leaf" style="color: #2ecc71;"></i>', name: 'Seedling' }
       ];
 
       // Helper function to check if a score has a specific clear type
@@ -813,7 +813,7 @@
           icon: '<i class="fas fa-eye"></i>',
           title: 'Race Mode Blink Master',
           description: 'Clear Race Mode with 0.5s vanish timer',
-          unlockedMessage: '👁️ Blink and you\'ll miss it! Your memory is legendary!',
+          unlockedMessage: '<i class="fas fa-eye" style="color: #a29bfe;"></i> Blink and you\'ll miss it! Your memory is legendary!',
           checkUnlocked: (data) => data.raceScores?.some(has05sVanishTimer) || false
         }
       ];
@@ -946,6 +946,24 @@
         return themeColors['default'];
       }
       
+      // Convert icon to FontAwesome format (handles both HTML icons and emojis)
+      function getFontAwesomeIcon(icon) {
+        if (!icon) return '';
+        // If icon is already HTML (contains <i class=), return as-is
+        if (typeof icon === 'string' && icon.includes('<i class=')) {
+          return icon;
+        }
+        // If icon is an emoji or plain text, return as-is
+        return icon;
+      }
+      
+      // Convert message to display icons properly (handles HTML icons in messages)
+      function convertMessageToIcons(message) {
+        if (!message) return '';
+        // Messages may already contain HTML icons, so return as-is
+        return message;
+      }
+      
       // Render a single achievement card
       function renderAchievementCard(achievement, unlocked, progressText = null) {
         let progress;
@@ -1061,32 +1079,32 @@
           if (unlocked) {
             // Custom message for level badges
             const levelMessages = {
-              1000: '🌠 Cosmic legend! You\'ve transcended all limits!',
-              900: '🌙 Lunar mastery! You shine in the darkness!',
-              800: '☀️ Solar brilliance! You\'re a beacon of excellence!',
-              700: '🌍 Earthly dominance! You rule this realm!',
-              600: '🪐 Planetary prestige! You\'ve reached new worlds!',
-              500: '⭐ Stellar achievement! You\'re among the stars!',
-              400: '🌟 Glowing greatness! Your light never fades!',
-              300: '💫 Dizzying heights! You\'re spinning with success!',
-              250: '🌌 Galactic wonder! You\'ve explored the cosmos!',
-              200: '🌠 Shooting star! You streak across the sky!',
-              150: '⚛️ Atomic power! You\'ve split the atom of achievement!',
-              120: '🔮 Crystal clarity! Your vision is perfect!',
-              100: '✨ Sparkling success! You\'ve reached the century!',
-              80: '🏆 Champion status! You\'re a true winner!',
-              70: '👑 Royal excellence! You wear the crown!',
-              60: '💎 Diamond quality! You\'re a rare gem!',
-              50: '⭐ Star status! You\'re shining bright!',
-              40: '🔥 Fire of determination! You\'re burning with skill!',
-              35: '⚡ Lightning fast! You strike with precision!',
-              30: '🌟 Shining star! You\'re glowing with achievement!',
-              25: '💫 Dizzying progress! You\'re spinning upward!',
-              20: '⭐ Star quality! You\'re on the rise!',
-              15: '🌟 Glowing progress! You\'re getting brighter!',
-              10: '✨ Sparkling start! You\'re on your way!',
-              5: '🌱 Growing strong! You\'re sprouting success!',
-              1: '🌿 Seedling start! Your journey begins!'
+              1000: '<i class="fas fa-meteor" style="color: #ff6b35;"></i> Cosmic legend! You\'ve transcended all limits!',
+              900: '<i class="fas fa-moon" style="color: #c0c0c0;"></i> Lunar mastery! You shine in the darkness!',
+              800: '<i class="fas fa-sun" style="color: #ffd700;"></i> Solar brilliance! You\'re a beacon of excellence!',
+              700: '<i class="fas fa-globe" style="color: #4a90e2;"></i> Earthly dominance! You rule this realm!',
+              600: '<i class="fas fa-planet-ringed" style="color: #9b59b6;"></i> Planetary prestige! You\'ve reached new worlds!',
+              500: '<i class="fas fa-star" style="color: #ffd700;"></i> Stellar achievement! You\'re among the stars!',
+              400: '<i class="fas fa-star" style="color: #ffed4e;"></i> Glowing greatness! Your light never fades!',
+              300: '<i class="fas fa-star-shooting" style="color: #ffd700;"></i> Dizzying heights! You\'re spinning with success!',
+              250: '<i class="fas fa-galaxy" style="color: #6c5ce7;"></i> Galactic wonder! You\'ve explored the cosmos!',
+              200: '<i class="fas fa-meteor" style="color: #ff6b35;"></i> Shooting star! You streak across the sky!',
+              150: '<i class="fas fa-atom" style="color: #00d4ff;"></i> Atomic power! You\'ve split the atom of achievement!',
+              120: '<i class="fas fa-crystal-ball" style="color: #a29bfe;"></i> Crystal clarity! Your vision is perfect!',
+              100: '<i class="fas fa-sparkles" style="color: #ffd700;"></i> Sparkling success! You\'ve reached the century!',
+              80: '<i class="fas fa-trophy" style="color: #ffd700;"></i> Champion status! You\'re a true winner!',
+              70: '<i class="fas fa-crown" style="color: #ffd700;"></i> Royal excellence! You wear the crown!',
+              60: '<i class="fas fa-gem" style="color: #00d4ff;"></i> Diamond quality! You\'re a rare gem!',
+              50: '<i class="fas fa-star" style="color: #ffd700;"></i> Star status! You\'re shining bright!',
+              40: '<i class="fas fa-fire" style="color: #ff6b35;"></i> Fire of determination! You\'re burning with skill!',
+              35: '<i class="fas fa-bolt" style="color: #ffff00;"></i> Lightning fast! You strike with precision!',
+              30: '<i class="fas fa-star" style="color: #ffd700;"></i> Shining star! You\'re glowing with achievement!',
+              25: '<i class="fas fa-star-shooting" style="color: #ffd700;"></i> Dizzying progress! You\'re spinning upward!',
+              20: '<i class="fas fa-star" style="color: #ffd700;"></i> Star quality! You\'re on the rise!',
+              15: '<i class="fas fa-star" style="color: #ffd700;"></i> Glowing progress! You\'re getting brighter!',
+              10: '<i class="fas fa-sparkles" style="color: #ffd700;"></i> Sparkling start! You\'re on your way!',
+              5: '<i class="fas fa-seedling" style="color: #2ecc71;"></i> Growing strong! You\'re sprouting success!',
+              1: '<i class="fas fa-leaf" style="color: #2ecc71;"></i> Seedling start! Your journey begins!'
             };
             progressText = levelMessages[badge.level] || `✓ Unlocked at Level ${currentLevel}`;
           } else {
