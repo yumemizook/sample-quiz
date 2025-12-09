@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="favicon.ico">
+    <title>Achievements</title>
+    <link rel="stylesheet" href="index.css" />
+    <script type="module" src="firebase.js"></script>
+    <script type="module" src="stats.js"></script>
+    <style>
+      .achievements-container {
+        max-width: 1200px;
+        width: 90%;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: rgba(0, 0, 0, 0.85);
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+      }
+
+      .achievements-header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .achievements-header h1 {
+        font-size: 3em;
+        color: #dbffff;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 10px rgba(219, 255, 255, 0.3);
+      }
+
+      .achievements-header p {
+        font-size: 1.2em;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .achievements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .achievement-card {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 25px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .achievement-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+      }
+
+      .achievement-card.unlocked {
+        border-color: rgba(255, 215, 0, 0.5);
+        background: linear-gradient(
+          135deg,
+          rgba(255, 215, 0, 0.15) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+      }
+
+      .achievement-card.unlocked::before {
+        content: '✓';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.5em;
+        color: #ffd700;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+      }
+
+      .achievement-icon {
+        font-size: 4em;
+        text-align: center;
+        margin-bottom: 15px;
+        filter: grayscale(100%);
+        opacity: 0.5;
+        transition: all 0.3s ease;
+      }
+
+      .achievement-card.unlocked .achievement-icon {
+        filter: grayscale(0%);
+        opacity: 1;
+        transform: scale(1.1);
+      }
+
+      .achievement-title {
+        font-size: 1.5em;
+        color: #dbffff;
+        font-weight: bold;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+
+      .achievement-card.unlocked .achievement-title {
+        color: #ffd700;
+      }
+
+      .achievement-description {
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.6;
+        text-align: center;
+        font-size: 1em;
+        margin-bottom: 10px;
+      }
+
+      .achievement-progress {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9em;
+        text-align: center;
+        font-style: italic;
+      }
+
+      .achievement-section {
+        margin-bottom: 50px;
+      }
+
+      .achievement-section h2 {
+        font-size: 2em;
+        color: #dbffff;
+        margin-bottom: 25px;
+        border-bottom: 2px solid rgba(219, 255, 255, 0.3);
+        padding-bottom: 10px;
+      }
+
+      .back-button {
+        display: inline-block;
+        margin-top: 30px;
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #dbffff 0%, #b8f0e0 100%);
+        color: #000;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1.1em;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(219, 255, 255, 0.3);
+      }
+
+      .back-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(219, 255, 255, 0.5);
+      }
+
+      .stats-summary {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 40px;
+        text-align: center;
+      }
+
+      .stats-summary h3 {
+        font-size: 1.5em;
+        color: #dbffff;
+        margin-bottom: 15px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .stat-item {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .stat-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9em;
+        margin-bottom: 5px;
+      }
+
+      .stat-value {
+        color: #dbffff;
+        font-size: 1.5em;
+        font-weight: bold;
+      }
+
+      @media (max-width: 768px) {
+        .achievements-container {
+          padding: 20px;
+          margin: 20px auto;
+        }
+
+        .achievements-header h1 {
+          font-size: 2em;
+        }
+
+        .achievements-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .achievement-section h2 {
+          font-size: 1.5em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="status">
+      <a login href="signin.html">Login</a>
+      <a signup href="signup.html">Signup</a>
+      <a logout class="hide" href="index.html">Log out</a>
+      <a href="index.html">Home</a>
+      <div class="player-info hide" id="playerInfo">
+        <div class="player-info-left">
+          <span class="name"></span>
+          <span class="player-level" id="playerLevel"></span>
+        </div>
+        <div class="player-avatar hide" id="playerAvatar">
+          <img id="playerAvatarImg" src="" alt="Avatar" />
+          <div class="player-avatar-placeholder">👤</div>
+        </div>
+      </div>
+    </div>
+    <div class="achievements-container">
+      <div class="achievements-header">
+        <h1>🏆 Achievements</h1>
+        <p>Track your progress and unlock achievements</p>
+      </div>
+
+      <div class="stats-summary" id="statsSummary" style="display: none;">
+        <h3>Your Progress</h3>
+        <div class="stats-grid" id="statsGrid"></div>
+      </div>
+
+      <div class="achievement-section">
+        <h2>🎮 Mode Completion Achievements</h2>
+        <div class="achievements-grid" id="completionAchievements"></div>
+      </div>
+
+      <div class="achievement-section">
+        <h2>⭐ Level Badges</h2>
+        <div class="achievements-grid" id="levelBadges"></div>
+      </div>
+
+      <div class="achievement-section">
+        <h2>🎯 Special Achievements</h2>
+        <div class="achievements-grid" id="specialAchievements"></div>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="index.html" class="back-button">← Back to Main Menu</a>
+      </div>
+    </div>
+
+    <script type="module">
+      import { getAuth, onAuthStateChanged } from "./firebase.js";
+      import { getFirestore, collection, getDocs, doc, getDoc } from "./firebase.js";
+      import { calculatePlayerLevel } from "./stats.js";
+
+      const auth = getAuth();
+      const db = getFirestore();
+
+      // Get badge emoji for level
+      function getBadgeForLevel(level) {
+        if (level >= 1000) return "🌠";
+        if (level >= 900) return "🌙";
+        if (level >= 800) return "☀️";
+        if (level >= 700) return "🌍";
+        if (level >= 600) return "🪐";
+        if (level >= 500) return "⭐";
+        if (level >= 400) return "🌟";
+        if (level >= 300) return "💫";
+        if (level >= 250) return "🌌";
+        if (level >= 200) return "🌠";
+        if (level >= 150) return "⚛️";
+        if (level >= 120) return "🔮";
+        if (level >= 100) return "✨";
+        if (level >= 80) return "🏆";
+        if (level >= 70) return "👑";
+        if (level >= 60) return "💎";
+        if (level >= 50) return "⭐";
+        if (level >= 40) return "🔥";
+        if (level >= 35) return "⚡";
+        if (level >= 30) return "🌟";
+        if (level >= 25) return "💫";
+        if (level >= 20) return "⭐";
+        if (level >= 15) return "🌟";
+        if (level >= 10) return "✨";
+        if (level >= 5) return "🌱";
+        return "🌿";
+      }
+
+      // Get badge name for level
+      function getBadgeName(level) {
+        if (level >= 1000) return "Meteor";
+        if (level >= 900) return "Moon";
+        if (level >= 800) return "Sun";
+        if (level >= 700) return "Earth";
+        if (level >= 600) return "Planet";
+        if (level >= 500) return "Star";
+        if (level >= 400) return "Glowing Star";
+        if (level >= 300) return "Dizzy Star";
+        if (level >= 250) return "Galaxy";
+        if (level >= 200) return "Shooting Star";
+        if (level >= 150) return "Atomic";
+        if (level >= 120) return "Crystal";
+        if (level >= 100) return "Sparkle";
+        if (level >= 80) return "Champion";
+        if (level >= 70) return "Royal";
+        if (level >= 60) return "Diamond";
+        if (level >= 50) return "Star";
+        if (level >= 40) return "Fire";
+        if (level >= 35) return "Lightning";
+        if (level >= 30) return "Shining Star";
+        if (level >= 25) return "Dizzy Star";
+        if (level >= 20) return "Star";
+        if (level >= 15) return "Glowing Star";
+        if (level >= 10) return "Sparkle";
+        if (level >= 5) return "Sprout";
+        return "Seedling";
+      }
+
+      async function loadAchievements() {
+        const user = auth.currentUser;
+        if (!user) {
+          // Show achievements but mark all as locked
+          displayAchievements(null, null, null, null, null, null, null);
+          return;
+        }
+
+        try {
+          // Fetch all scores
+          const [easySnapshot, normalSnapshot, masterSnapshot, raceSnapshot, hellSnapshot] = await Promise.all([
+            getDocs(collection(db, 'scoreseasy')),
+            getDocs(collection(db, 'scoresnormal')),
+            getDocs(collection(db, 'scoresmaster')),
+            getDocs(collection(db, 'scoresrace')),
+            getDocs(collection(db, 'scoresfinal'))
+          ]);
+
+          const allEasyScores = easySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const allNormalScores = normalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const allMasterScores = masterSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const allRaceScores = raceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const allHellScores = hellSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+          // Get user profile to find all usernames
+          const userProfileRef = doc(db, 'userProfiles', user.uid);
+          const userProfileSnap = await getDoc(userProfileRef);
+          let allPlayerNames = new Set();
+          
+          if (userProfileSnap.exists()) {
+            const userData = userProfileSnap.data();
+            if (userData.displayName) allPlayerNames.add(userData.displayName);
+            if (userData.email) allPlayerNames.add(userData.email);
+            if (userData.previousUsernames && Array.isArray(userData.previousUsernames)) {
+              userData.previousUsernames.forEach(name => {
+                if (name) allPlayerNames.add(name);
+              });
+            }
+          }
+
+          // Filter scores for this player
+          const easyScores = allEasyScores.filter(s => allPlayerNames.has(s.name));
+          const normalScores = allNormalScores.filter(s => allPlayerNames.has(s.name));
+          const masterScores = allMasterScores.filter(s => allPlayerNames.has(s.name));
+          const raceScores = allRaceScores.filter(s => allPlayerNames.has(s.name));
+          const hellScores = allHellScores.filter(s => allPlayerNames.has(s.name));
+
+          // Calculate level
+          const secretScores = [];
+          const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
+
+          // Display achievements
+          displayAchievements(easyScores, normalScores, masterScores, raceScores, hellScores, playerData, allPlayerNames);
+        } catch (error) {
+          console.error('Error loading achievements:', error);
+          displayAchievements(null, null, null, null, null, null, null);
+        }
+      }
+
+      // ============================================
+      // ACHIEVEMENTS CONFIGURATION
+      // Easily extensible format for adding/editing achievements
+      // ============================================
+
+      // Mode Completion Achievements
+      const COMPLETION_ACHIEVEMENTS = [
+        {
+          id: 'easy_complete',
+          icon: '✅',
+          title: 'Easy Mode Master',
+          description: 'Complete Easy Mode with a perfect score of 30',
+          checkUnlocked: (data) => data.easyScores?.some(s => s.score === 30) || false
+        },
+        {
+          id: 'master_complete',
+          icon: '👑',
+          title: 'Master Mode Champion',
+          description: 'Complete Master Mode with a perfect score of 90',
+          checkUnlocked: (data) => data.masterScores?.some(s => s.score === 90) || false
+        },
+        {
+          id: 'hell_complete',
+          icon: '🔥',
+          title: 'Hell Mode Conqueror',
+          description: 'Complete Hell Mode with a perfect score of 200',
+          checkUnlocked: (data) => data.hellScores?.some(s => s.score === 200) || false
+        },
+        {
+          id: 'race_complete',
+          icon: '🏁',
+          title: 'Race Mode Grand Master',
+          description: 'Complete Race Mode and achieve GM grade',
+          checkUnlocked: (data) => data.raceScores?.some(s => s.grade === "GM") || false
+        },
+        {
+          id: 'race_high_score',
+          icon: '💎',
+          title: 'Race Mode Excellence',
+          description: 'Achieve a score of 1,264,000 or higher in Race Mode',
+          checkUnlocked: (data) => data.raceScores?.some(s => s.score >= 1264000) || false
+        }
+      ];
+
+      // Level Badge Achievements (automatically generated from badge thresholds)
+      const LEVEL_BADGES = [
+        { level: 1000, icon: '🌠', name: 'Meteor' },
+        { level: 900, icon: '🌙', name: 'Moon' },
+        { level: 800, icon: '☀️', name: 'Sun' },
+        { level: 700, icon: '🌍', name: 'Earth' },
+        { level: 600, icon: '🪐', name: 'Planet' },
+        { level: 500, icon: '⭐', name: 'Star' },
+        { level: 400, icon: '🌟', name: 'Glowing Star' },
+        { level: 300, icon: '💫', name: 'Dizzy Star' },
+        { level: 250, icon: '🌌', name: 'Galaxy' },
+        { level: 200, icon: '🌠', name: 'Shooting Star' },
+        { level: 150, icon: '⚛️', name: 'Atomic' },
+        { level: 120, icon: '🔮', name: 'Crystal' },
+        { level: 100, icon: '✨', name: 'Sparkle' },
+        { level: 80, icon: '🏆', name: 'Champion' },
+        { level: 70, icon: '👑', name: 'Royal' },
+        { level: 60, icon: '💎', name: 'Diamond' },
+        { level: 50, icon: '⭐', name: 'Star' },
+        { level: 40, icon: '🔥', name: 'Fire' },
+        { level: 35, icon: '⚡', name: 'Lightning' },
+        { level: 30, icon: '🌟', name: 'Shining Star' },
+        { level: 25, icon: '💫', name: 'Dizzy Star' },
+        { level: 20, icon: '⭐', name: 'Star' },
+        { level: 15, icon: '🌟', name: 'Glowing Star' },
+        { level: 10, icon: '✨', name: 'Sparkle' },
+        { level: 5, icon: '🌱', name: 'Sprout' },
+        { level: 1, icon: '🌿', name: 'Seedling' }
+      ];
+
+      // Special Achievements
+      const SPECIAL_ACHIEVEMENTS = [
+        {
+          id: 'first_game',
+          icon: '🎮',
+          title: 'First Steps',
+          description: 'Complete your first game in any mode',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames > 0;
+          }
+        },
+        {
+          id: 'all_modes',
+          icon: '🌟',
+          title: 'Mode Explorer',
+          description: 'Play at least one game in all 5 game modes',
+          checkUnlocked: (data) => {
+            return (data.easyScores?.length || 0) > 0 && 
+                   (data.normalScores?.length || 0) > 0 && 
+                   (data.masterScores?.length || 0) > 0 && 
+                   (data.raceScores?.length || 0) > 0 && 
+                   (data.hellScores?.length || 0) > 0;
+          }
+        },
+        {
+          id: 'level_10',
+          icon: '✨',
+          title: 'Rising Star',
+          description: 'Reach Level 10',
+          checkUnlocked: (data) => (data.playerData?.level || 0) >= 10
+        },
+        {
+          id: 'level_50',
+          icon: '⭐',
+          title: 'Star Player',
+          description: 'Reach Level 50',
+          checkUnlocked: (data) => (data.playerData?.level || 0) >= 50
+        },
+        {
+          id: 'level_100',
+          icon: '✨',
+          title: 'Sparkle Master',
+          description: 'Reach Level 100',
+          checkUnlocked: (data) => (data.playerData?.level || 0) >= 100
+        }
+      ];
+
+      // ============================================
+      // END OF ACHIEVEMENTS CONFIGURATION
+      // ============================================
+
+      // Render a single achievement card
+      function renderAchievementCard(achievement, unlocked, progressText = null) {
+        const progress = progressText || (unlocked ? '✓ Unlocked' : 'Locked');
+        const progressColor = unlocked ? '#ffd700' : 'rgba(255, 255, 255, 0.6)';
+        
+        return `
+          <div class="achievement-card ${unlocked ? 'unlocked' : ''}">
+            <div class="achievement-icon">${achievement.icon}</div>
+            <div class="achievement-title">${achievement.title}</div>
+            <div class="achievement-description">${achievement.description}</div>
+            <div class="achievement-progress" style="color: ${progressColor};">${progress}</div>
+          </div>
+        `;
+      }
+
+      function displayAchievements(easyScores, normalScores, masterScores, raceScores, hellScores, playerData, allPlayerNames) {
+        const isLoggedIn = easyScores !== null;
+        const currentLevel = isLoggedIn && playerData ? playerData.level : 0;
+
+        // Prepare data object for achievement checks
+        const achievementData = {
+          easyScores,
+          normalScores,
+          masterScores,
+          raceScores,
+          hellScores,
+          playerData,
+          currentLevel,
+          isLoggedIn
+        };
+
+        // Display stats summary if logged in
+        if (isLoggedIn && playerData) {
+          const statsSummary = document.getElementById('statsSummary');
+          const statsGrid = document.getElementById('statsGrid');
+          statsSummary.style.display = 'block';
+          
+          const totalGames = (easyScores?.length || 0) + (normalScores?.length || 0) + 
+                            (masterScores?.length || 0) + (raceScores?.length || 0) + 
+                            (hellScores?.length || 0);
+          
+          statsGrid.innerHTML = `
+            <div class="stat-item">
+              <div class="stat-label">Current Level</div>
+              <div class="stat-value">${getBadgeForLevel(playerData.level)} Lv. ${playerData.level}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Total Experience</div>
+              <div class="stat-value">${playerData.experience.toLocaleString()} XP</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Total Games</div>
+              <div class="stat-value">${totalGames}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">XP to Next Level</div>
+              <div class="stat-value">${playerData.xpNeededForNextLevel.toLocaleString()}</div>
+            </div>
+          `;
+        }
+
+        // Render Mode Completion Achievements
+        const completionGrid = document.getElementById('completionAchievements');
+        completionGrid.innerHTML = COMPLETION_ACHIEVEMENTS.map(achievement => {
+          const unlocked = isLoggedIn && achievement.checkUnlocked(achievementData);
+          return renderAchievementCard(achievement, unlocked);
+        }).join('');
+
+        // Render Level Badge Achievements
+        const levelBadgesGrid = document.getElementById('levelBadges');
+        levelBadgesGrid.innerHTML = LEVEL_BADGES.map(badge => {
+          const unlocked = currentLevel >= badge.level;
+          const progressText = unlocked ? 
+            `✓ Unlocked at Level ${currentLevel}` : 
+            `Requires Level ${badge.level}`;
+          return renderAchievementCard(
+            { icon: badge.icon, title: badge.name, description: `Reach Level ${badge.level}` },
+            unlocked,
+            progressText
+          );
+        }).join('');
+
+        // Render Special Achievements
+        const specialGrid = document.getElementById('specialAchievements');
+        specialGrid.innerHTML = SPECIAL_ACHIEVEMENTS.map(achievement => {
+          const unlocked = isLoggedIn && achievement.checkUnlocked(achievementData);
+          return renderAchievementCard(achievement, unlocked);
+        }).join('');
+      }
+
+      // Load achievements when page loads
+      onAuthStateChanged(auth, (user) => {
+        loadAchievements();
+      });
+
+      // Also try loading immediately
+      if (auth.currentUser) {
+        loadAchievements();
+      }
+    </script>
+    <script type="module" src="hm.js"></script>
+    <script type="module" src="loadBackground.js"></script>
+    <script type="module" src="loadTheme.js"></script>
+  </body>
+</html>
+
