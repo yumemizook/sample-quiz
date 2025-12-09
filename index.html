@@ -432,9 +432,17 @@
           // Re-initialize arrow selectors after mode change
           setTimeout(() => {
             initializeArrowSelectors();
+            // Update settings items in navigation system
+            if (window.updateSettingsItems) {
+              window.updateSettingsItems();
+            }
           }, 0);
         } else {
           modeSettings.style.display = "none";
+          // Update settings items in navigation system
+          if (window.updateSettingsItems) {
+            window.updateSettingsItems();
+          }
         }
       }
       
@@ -619,6 +627,12 @@
       
       function toggleModeSettings() {
         modeSettings.classList.toggle("collapsed");
+        // Update settings items in navigation system when toggled
+        setTimeout(() => {
+          if (window.updateSettingsItems) {
+            window.updateSettingsItems();
+          }
+        }, 0);
       }
       
       if (modeSettingsToggle) {

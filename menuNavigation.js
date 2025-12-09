@@ -5,13 +5,14 @@
 
 // Navigation state
 let currentFocus = {
-    type: 'mode', // 'mode' or 'button'
+    type: 'mode', // 'mode', 'button', or 'settings'
     index: 1 // Default to normal mode (index 1)
 };
 
 // Navigation items
 let modeCards = [];
 let menuButtons = [];
+let settingsItems = [];
 
 // Gamepad state
 let gamepadConnected = false;
@@ -35,6 +36,9 @@ export function initMenuNavigation() {
         document.querySelector(".settings")
     ].filter(btn => btn !== null);
 
+    // Get settings items
+    updateSettingsItems();
+
     // Find the initially active mode card
     const activeCard = modeCards.find(card => card.classList.contains("active"));
     if (activeCard) {
@@ -50,6 +54,26 @@ export function initMenuNavigation() {
     // Initialize gamepad navigation
     initGamepadNavigation();
 }
+
+/**
+ * Update settings items list (called when settings visibility changes)
+ */
+export function updateSettingsItems() {
+    const modeSettings = document.getElementById("modeSettings");
+    if (modeSettings && modeSettings.style.display !== "none") {
+        settingsItems = [
+            document.querySelector('[data-setting="lives"]'),
+            document.getElementById("timeMultiplier"),
+            document.querySelector('[data-setting="fadingMode"]'),
+            document.querySelector('[data-setting="startQuestion"]')
+        ].filter(item => item !== null);
+    } else {
+        settingsItems = [];
+    }
+}
+
+// Make it available globally for index.html
+window.updateSettingsItems = updateSettingsItems;
 
 // Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
@@ -225,6 +249,9 @@ function navigateLeft() {
         currentFocus.type = 'mode';
         currentFocus.index = 1; // Default to normal
         updateFocus();
+    } else if (currentFocus.type === 'settings') {
+        // Adjust current setting value to the left/previous option
+        adjustSettingValue('left');
     }
 }
 
@@ -242,6 +269,9 @@ function navigateRight() {
         currentFocus.type = 'mode';
         currentFocus.index = 1; // Default to normal
         updateFocus();
+    } else if (currentFocus.type === 'settings') {
+        // Adjust current setting value to the right/next option
+        adjustSettingValue('right');
     }
 }
 
@@ -254,6 +284,17 @@ function navigateUp() {
         currentFocus.type = 'mode';
         currentFocus.index = 1; // Default to normal
         updateFocus();
+    } else if (currentFocus.type === 'settings') {
+        // Move to previous setting
+        if (currentFocus.index > 0) {
+            currentFocus.index--;
+            updateFocus();
+        } else {
+            // Go back to mode selection
+            currentFocus.type = 'mode';
+            currentFocus.index = 1;
+            updateFocus();
+        }
     }
 }
 
@@ -262,13 +303,48 @@ function navigateUp() {
  */
 function navigateDown() {
     if (currentFocus.type === 'mode') {
-        // From modes, go to buttons
-        currentFocus.type = 'button';
-        currentFocus.index = 0; // Start with Play button
-        updateFocus();
+        // From modes, check if settings are available
+        updateSettingsItems();
+        if (settingsItems.length > 0) {
+            // Expand settings section if collapsed
+            const modeSettings = document.getElementById("modeSettings");
+            if (modeSettings && modeSettings.classList.contains("collapsed")) {
+                modeSettings.classList.remove("collapsed");
+                // Re-update settings items after expanding
+                setTimeout(() => {
+                    updateSettingsItems();
+                    if (settingsItems.length > 0) {
+                        currentFocus.type = 'settings';
+                        currentFocus.index = 0;
+                        updateFocus();
+                    }
+                }, 100);
+            } else {
+                // Go to settings
+                currentFocus.type = 'settings';
+                currentFocus.index = 0;
+                updateFocus();
+            }
+        } else {
+            // No settings available, go to buttons
+            currentFocus.type = 'button';
+            currentFocus.index = 0; // Start with Play button
+            updateFocus();
+        }
     } else if (currentFocus.type === 'button') {
         if (currentFocus.index < menuButtons.length - 1) {
             currentFocus.index++;
+            updateFocus();
+        }
+    } else if (currentFocus.type === 'settings') {
+        // Move to next setting
+        if (currentFocus.index < settingsItems.length - 1) {
+            currentFocus.index++;
+            updateFocus();
+        } else {
+            // Go to buttons
+            currentFocus.type = 'button';
+            currentFocus.index = 0;
             updateFocus();
         }
     }
@@ -306,6 +382,16 @@ function updateFocus() {
             button.classList.remove("keyboard-focus");
         }
     });
+    settingsItems.forEach(item => {
+        if (item) {
+            item.classList.remove("keyboard-focus");
+            // Also remove from parent setting-item
+            const settingItem = item.closest('.setting-item');
+            if (settingItem) {
+                settingItem.classList.remove("keyboard-focus");
+            }
+        }
+    });
 
     // Add focus to current item
     if (currentFocus.type === 'mode') {
@@ -322,6 +408,70 @@ function updateFocus() {
             // Scroll into view if needed
             button.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+    } else if (currentFocus.type === 'settings') {
+        const setting = settingsItems[currentFocus.index];
+        if (setting) {
+            setting.classList.add("keyboard-focus");
+            // Also add to parent setting-item for better visibility
+            const settingItem = setting.closest('.setting-item');
+            if (settingItem) {
+                settingItem.classList.add("keyboard-focus");
+            }
+            // Scroll into view if needed
+            setting.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }
+}
+
+/**
+ * Adjust setting value (left/right for arrow selectors and slider)
+ */
+function adjustSettingValue(direction) {
+    const setting = settingsItems[currentFocus.index];
+    if (!setting) return;
+
+    // Check if it's an arrow selector
+    const arrowSelector = setting.closest('[data-setting]');
+    if (arrowSelector) {
+        const settingName = arrowSelector.getAttribute('data-setting');
+        const select = document.getElementById(settingName);
+        const valueElement = document.getElementById(settingName === 'lives' ? 'livesValue' : 
+                                                      settingName === 'fadingMode' ? 'fadingModeValue' : 
+                                                      'startQuestionValue');
+        
+        if (select && valueElement) {
+            const options = Array.from(select.options);
+            const currentIndex = select.selectedIndex;
+            let newIndex;
+            
+            if (direction === 'right') {
+                newIndex = (currentIndex + 1) % options.length;
+            } else {
+                newIndex = (currentIndex - 1 + options.length) % options.length;
+            }
+            
+            select.selectedIndex = newIndex;
+            const selectedOption = select.options[newIndex];
+            valueElement.textContent = selectedOption.textContent;
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+    } else if (setting.id === 'timeMultiplier') {
+        // It's the time multiplier slider
+        const slider = setting;
+        const currentValue = parseFloat(slider.value);
+        const step = parseFloat(slider.step);
+        const min = parseFloat(slider.min);
+        const max = parseFloat(slider.max);
+        
+        let newValue;
+        if (direction === 'right') {
+            newValue = Math.min(max, currentValue + step);
+        } else {
+            newValue = Math.max(min, currentValue - step);
+        }
+        
+        slider.value = newValue;
+        slider.dispatchEvent(new Event('input', { bubbles: true }));
     }
 }
 

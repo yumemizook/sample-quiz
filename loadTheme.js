@@ -8,21 +8,30 @@ const auth = getAuth();
 const db = getFirestore();
 
 // Apply color theme to the page
-function applyColorTheme(theme) {
-    // Only apply to non-gameplay and non-auth pages
-    const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html'];
-    const authPages = ['signin.html', 'signup.html', 'reset.html', 'reset-confirm.html'];
-    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    
-    if (gameplayPages.includes(currentPage) || authPages.includes(currentPage)) {
-        return; // Don't apply to gameplay or auth pages
+// forceApply: if true, bypasses page checks (used by profile.js to apply profile owner's theme)
+function applyColorTheme(theme, forceApply = false) {
+    // Only apply to non-gameplay and non-auth pages (unless forced)
+    if (!forceApply) {
+        const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html'];
+        const authPages = ['signin.html', 'signup.html', 'reset.html', 'reset-confirm.html'];
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        
+        // Don't apply viewer's theme on profile pages - profile owner's theme will be applied by profile.js
+        // But allow if forceApply is true (called from profile.js)
+        if (currentPage === 'profile.html' && window.location.search.includes('player=')) {
+            return; // Profile pages use the profile owner's theme (unless forced)
+        }
+        
+        if (gameplayPages.includes(currentPage) || authPages.includes(currentPage)) {
+            return; // Don't apply to gameplay or auth pages
+        }
     }
     
     // Ensure document.body exists before applying styles
     if (!document.body) {
         console.warn('Cannot apply theme: document.body not available yet');
         // Retry after a short delay
-        setTimeout(() => applyColorTheme(theme), 100);
+        setTimeout(() => applyColorTheme(theme, forceApply), 100);
         return;
     }
     
@@ -41,6 +50,11 @@ async function loadColorTheme(retryCount = 0, maxRetries = 20) {
     const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html'];
     const authPages = ['signin.html', 'signup.html', 'reset.html', 'reset-confirm.html'];
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    
+    // Don't apply viewer's theme on profile pages - profile owner's theme will be applied by profile.js
+    if (currentPage === 'profile.html' && window.location.search.includes('player=')) {
+        return; // Profile pages use the profile owner's theme
+    }
     
     if (gameplayPages.includes(currentPage) || authPages.includes(currentPage)) {
         return; // Don't apply to gameplay or auth pages
@@ -94,11 +108,9 @@ async function loadColorTheme(retryCount = 0, maxRetries = 20) {
         if (userProfileSnap.exists() && userProfileSnap.data().colorTheme) {
             const theme = userProfileSnap.data().colorTheme;
             applyColorTheme(theme);
-            console.log('Color theme applied successfully:', theme);
         } else {
             // Default theme
             applyColorTheme('default');
-            console.log('No custom theme found, using default');
         }
     } catch (error) {
         console.error('Error loading color theme:', error);
@@ -115,8 +127,23 @@ let themeLoaded = false;
 
 // Load theme on page load
 document.addEventListener("DOMContentLoaded", () => {
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const isProfilePage = currentPage === 'profile.html' && window.location.search.includes('player=');
+    
+    // Skip loading viewer's theme on profile pages - profile owner's theme will be applied by profile.js
+    if (isProfilePage) {
+        return;
+    }
+    
     // Set up auth state listener first (fires immediately if user is already logged in)
     onAuthStateChanged(auth, async (user) => {
+        // Skip if we're on a profile page
+        const currentPageCheck = window.location.pathname.split('/').pop() || 'index.html';
+        const isProfilePageCheck = currentPageCheck === 'profile.html' && window.location.search.includes('player=');
+        if (isProfilePageCheck) {
+            return;
+        }
+        
         if (user) {
             // Reset flag when user changes
             themeLoaded = false;
@@ -136,14 +163,18 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Additional fallback: retry after a short delay
     setTimeout(() => {
-        if (!themeLoaded && auth.currentUser) {
+        const currentPageCheck = window.location.pathname.split('/').pop() || 'index.html';
+        const isProfilePageCheck = currentPageCheck === 'profile.html' && window.location.search.includes('player=');
+        if (!isProfilePageCheck && !themeLoaded && auth.currentUser) {
             loadColorTheme();
         }
     }, 500);
     
     // Final fallback: retry after a longer delay
     setTimeout(() => {
-        if (!themeLoaded && auth.currentUser) {
+        const currentPageCheck = window.location.pathname.split('/').pop() || 'index.html';
+        const isProfilePageCheck = currentPageCheck === 'profile.html' && window.location.search.includes('player=');
+        if (!isProfilePageCheck && !themeLoaded && auth.currentUser) {
             loadColorTheme();
         }
     }, 2000);

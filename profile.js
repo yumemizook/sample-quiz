@@ -292,6 +292,137 @@ function formatScoreDetails(scoreData, mode, hideGrade = false) {
     return parts.length > 0 ? parts.join(' • ') : '';
 }
 
+// Load and display recent plays
+function loadRecentPlays(easyScores, normalScores, masterScores, raceScores, hellScores) {
+    const recentPlaysList = document.getElementById('recentPlaysList');
+    if (!recentPlaysList) return;
+    
+    // Combine all scores with mode information
+    const allScores = [];
+    
+    easyScores.forEach(score => {
+        allScores.push({ ...score, mode: 'easy', modeName: 'Easy Mode' });
+    });
+    normalScores.forEach(score => {
+        allScores.push({ ...score, mode: 'normal', modeName: 'Normal Mode' });
+    });
+    masterScores.forEach(score => {
+        allScores.push({ ...score, mode: 'master', modeName: 'Master Mode' });
+    });
+    raceScores.forEach(score => {
+        allScores.push({ ...score, mode: 'race', modeName: 'Race Mode' });
+    });
+    hellScores.forEach(score => {
+        allScores.push({ ...score, mode: 'hell', modeName: 'Hell Mode' });
+    });
+    
+    // Sort by date (most recent first)
+    allScores.sort((a, b) => {
+        let dateA = new Date(0);
+        let dateB = new Date(0);
+        
+        if (a.date) {
+            if (a.date.toDate && typeof a.date.toDate === 'function') {
+                dateA = a.date.toDate();
+            } else if (a.date instanceof Date) {
+                dateA = a.date;
+            } else {
+                dateA = new Date(a.date);
+            }
+        }
+        
+        if (b.date) {
+            if (b.date.toDate && typeof b.date.toDate === 'function') {
+                dateB = b.date.toDate();
+            } else if (b.date instanceof Date) {
+                dateB = b.date;
+            } else {
+                dateB = new Date(b.date);
+            }
+        }
+        
+        return dateB - dateA; // Most recent first
+    });
+    
+    // Get top 10 most recent
+    const recentPlays = allScores.slice(0, 10);
+    
+    if (recentPlays.length === 0) {
+        recentPlaysList.innerHTML = '<div class="recent-plays-empty">No recent plays found.</div>';
+        return;
+    }
+    
+    // Display recent plays
+    recentPlaysList.innerHTML = recentPlays.map((play, index) => {
+        const modeColors = {
+            easy: '#90ee90',
+            normal: '#87ceeb',
+            master: '#fffafa',
+            race: '#ff8c42',
+            hell: '#ffbaba'
+        };
+        
+        const modeColor = modeColors[play.mode] || '#dbffff';
+        const lineColor = getLineColor(play);
+        
+        // Format date
+        let dateStr = 'Unknown';
+        if (play.date) {
+            if (play.date.toDate && typeof play.date.toDate === 'function') {
+                dateStr = formatRelativeTime(play.date.toDate());
+            } else if (play.date instanceof Date) {
+                dateStr = formatRelativeTime(play.date);
+            } else {
+                dateStr = formatRelativeTime(new Date(play.date));
+            }
+        }
+        
+        // Format score display - always show score, grade, and time in recent plays
+        let scoreDisplay = '';
+        if (play.mode === 'race') {
+            // Always show score in recent plays
+            scoreDisplay = play.score ? play.score.toLocaleString() : '-';
+        } else if (play.mode === 'hell') {
+            // Always show the score
+            scoreDisplay = play.score ? play.score.toString() : '-';
+        } else if (play.mode === 'master') {
+            // Always show the score
+            scoreDisplay = play.score ? play.score.toString() : '-';
+        } else {
+            scoreDisplay = play.score ? play.score.toString() : '-';
+        }
+        
+        // Format grade - always show in recent plays
+        const grade = formatGrade(play.grade);
+        const gradeDisplay = grade ? `<span class="recent-play-grade" style="color: ${lineColor};">${grade}</span>` : '';
+        
+        // Format modifiers
+        const modifiers = formatModifiers(play.modifiers);
+        const modifiersDisplay = modifiers ? `<span class="recent-play-modifiers">${modifiers}</span>` : '';
+        
+        // Format time - always show if available
+        const timeDisplay = play.time ? `<span class="recent-play-time">⏱️ ${play.time}</span>` : '';
+        
+        return `
+            <div class="recent-play-item">
+                <div class="recent-play-header">
+                    <span class="recent-play-mode" style="color: ${modeColor};">${play.modeName}</span>
+                    <span class="recent-play-date">${dateStr}</span>
+                </div>
+                <div class="recent-play-body">
+                    <div class="recent-play-score">
+                        <span class="recent-play-score-label">Score:</span>
+                        <span class="recent-play-score-value" style="color: ${lineColor};">${scoreDisplay}</span>
+                        ${gradeDisplay}
+                    </div>
+                    ${timeDisplay ? `<div class="recent-play-meta">${timeDisplay}</div>` : ''}
+                    ${modifiersDisplay ? `<div class="recent-play-meta">${modifiersDisplay}</div>` : ''}
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
 // Load player profile
 async function loadProfile() {
     // Get player name from URL parameter
@@ -328,29 +459,120 @@ async function loadProfile() {
     const allHellScores = hellSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
     // Check if player exists in userProfiles FIRST to get previous usernames
-    const userProfilesRef = collection(db, 'userProfiles');
-    const userProfilesSnapshot = await getDocs(userProfilesRef);
-    
+    // Use retry logic to ensure profile is fetched correctly
     let foundUser = null;
+    let profileFetchAttempts = 0;
+    const maxProfileFetchAttempts = 3;
     const isEmail = playerName.includes('@');
+    const normalizedPlayerName = playerName.trim().toLowerCase();
     
-    userProfilesSnapshot.forEach(doc => {
-        const data = doc.data();
-        if (data.displayName === playerName || 
-            (isEmail && data.email === playerName) ||
-            (isEmail && playerName === data.displayName)) {
-            foundUser = { uid: doc.id, ...data };
-        }
-    });
-    
-    if (!foundUser) {
-        userProfilesSnapshot.forEach(doc => {
-            const data = doc.data();
-            if ((data.email && data.email === playerName) || 
-                (data.displayName && data.displayName === playerName)) {
-                foundUser = { uid: doc.id, ...data };
+    // First, try direct fetch by document ID if playerName looks like a UID (28 characters, alphanumeric)
+    const looksLikeUID = /^[a-zA-Z0-9]{28}$/.test(playerName);
+    if (looksLikeUID) {
+        try {
+            const userProfileRef = doc(db, 'userProfiles', playerName);
+            const userProfileSnap = await getDoc(userProfileRef);
+            if (userProfileSnap.exists()) {
+                foundUser = { uid: userProfileSnap.id, ...userProfileSnap.data() };
             }
-        });
+        } catch (error) {
+            console.error('Error fetching profile by UID:', error);
+        }
+    }
+    
+    // If not found by UID, search through all profiles
+    while (!foundUser && profileFetchAttempts < maxProfileFetchAttempts) {
+        try {
+            const userProfilesRef = collection(db, 'userProfiles');
+            const userProfilesSnapshot = await getDocs(userProfilesRef);
+            
+            // First pass: exact match (case-sensitive)
+            userProfilesSnapshot.forEach(doc => {
+                if (foundUser) return; // Already found, skip
+                
+                const data = doc.data();
+                const displayName = data.displayName ? data.displayName.trim() : '';
+                const email = data.email ? data.email.trim() : '';
+                
+                // Exact match (case-sensitive)
+                if (displayName === playerName || email === playerName) {
+                    foundUser = { uid: doc.id, ...data };
+                }
+                // Case-insensitive match
+                else if (displayName.toLowerCase() === normalizedPlayerName || 
+                         email.toLowerCase() === normalizedPlayerName) {
+                    foundUser = { uid: doc.id, ...data };
+                }
+                // Email matching when playerName is an email
+                else if (isEmail && email.toLowerCase() === normalizedPlayerName) {
+                    foundUser = { uid: doc.id, ...data };
+                }
+            });
+            
+            // Second pass: more lenient matching if still not found
+            if (!foundUser) {
+                userProfilesSnapshot.forEach(doc => {
+                    if (foundUser) return; // Already found, skip
+                    
+                    const data = doc.data();
+                    const displayName = data.displayName ? data.displayName.trim() : '';
+                    const email = data.email ? data.email.trim() : '';
+                    
+                    // Case-insensitive partial match
+                    if (displayName && displayName.toLowerCase().includes(normalizedPlayerName)) {
+                        foundUser = { uid: doc.id, ...data };
+                    } else if (email && email.toLowerCase().includes(normalizedPlayerName)) {
+                        foundUser = { uid: doc.id, ...data };
+                    }
+                });
+            }
+            
+            // If found, break out of retry loop
+            if (foundUser) {
+                break;
+            }
+        } catch (error) {
+            console.error(`Error fetching profile (attempt ${profileFetchAttempts + 1}):`, error);
+            profileFetchAttempts++;
+            if (profileFetchAttempts < maxProfileFetchAttempts) {
+                // Wait before retrying
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+        
+        if (!foundUser) {
+            profileFetchAttempts++;
+        }
+    }
+    
+    // Log if profile was not found after all attempts
+    if (!foundUser) {
+        console.warn(`Profile not found for player: ${playerName} after ${profileFetchAttempts} attempts`);
+    } else {
+        // Verify profile data is complete and valid
+        if (!foundUser.uid) {
+            console.error('Profile found but missing UID');
+            foundUser = null;
+        } else {
+            // Ensure all expected fields exist (set defaults if missing)
+            foundUser.displayName = foundUser.displayName || foundUser.email || 'Unknown';
+            foundUser.email = foundUser.email || '';
+            foundUser.previousUsernames = foundUser.previousUsernames || [];
+            foundUser.photoURL = foundUser.photoURL || foundUser.avatarURL || null;
+            foundUser.avatarURL = foundUser.avatarURL || foundUser.photoURL || null;
+            foundUser.bannerURL = foundUser.bannerURL || null;
+            foundUser.siteBackgroundURL = foundUser.siteBackgroundURL || null;
+            foundUser.colorTheme = foundUser.colorTheme || 'default';
+            foundUser.aboutMe = foundUser.aboutMe || '';
+            foundUser.createdAt = foundUser.createdAt || null;
+            
+            console.log('Profile fetched successfully:', {
+                uid: foundUser.uid,
+                displayName: foundUser.displayName,
+                hasColorTheme: !!foundUser.colorTheme,
+                hasBackground: !!foundUser.siteBackgroundURL
+            });
+        }
     }
     
     // Build list of all names (current + previous usernames) for score filtering
@@ -512,53 +734,408 @@ async function loadProfile() {
     const hellScoreEl = document.getElementById('hellScore');
     const hellScoreTimeEl = document.getElementById('hellScoreTime');
     
-    easyScoreEl.textContent = formatScore(bestEasy, 'easy');
-    normalScoreEl.textContent = formatScore(bestNormal, 'normal');
-    masterScoreEl.textContent = formatScore(bestMaster, 'master');
-    raceScoreEl.textContent = formatScore(bestRace, 'race');
+    // Display scores - for maximum scores in master/hell/race, show only time and grade
+    // Ensure consistent styling across all modes
     
-    // Special handling for hell mode: if score is 200, show time above and hide score
-    if (bestHell && bestHell.score === 200 && bestHell.time) {
-        hellScoreTimeEl.textContent = bestHell.time;
-        hellScoreTimeEl.style.display = 'block';
-        hellScoreEl.textContent = ''; // Hide score
-        hellScoreEl.style.display = 'none';
-        // Apply line color to time
-        hellScoreTimeEl.style.color = getLineColor(bestHell);
-    } else {
-        hellScoreEl.textContent = formatScore(bestHell, 'hell');
-        hellScoreTimeEl.style.display = 'none';
-        hellScoreEl.style.display = 'block';
-    }
-    
-    // Apply line color to score values
+    // Easy mode
     if (bestEasy) {
+        easyScoreEl.textContent = formatScore(bestEasy, 'easy');
         easyScoreEl.style.color = getLineColor(bestEasy);
+    } else {
+        easyScoreEl.textContent = '-';
+        easyScoreEl.style.color = '';
     }
+    
+    // Normal mode
     if (bestNormal) {
+        normalScoreEl.textContent = formatScore(bestNormal, 'normal');
         normalScoreEl.style.color = getLineColor(bestNormal);
+    } else {
+        normalScoreEl.textContent = '-';
+        normalScoreEl.style.color = '';
     }
+    
+    // Master mode: if score is 90 (maximum), show only time and grade
+    const masterScoreTimeEl = document.getElementById('masterScoreTime');
     if (bestMaster) {
-        masterScoreEl.style.color = getLineColor(bestMaster);
+        if (bestMaster.score === 90 && bestMaster.time) {
+            // Maximum score - show time and grade only
+            masterScoreEl.textContent = '';
+            masterScoreEl.style.display = 'none';
+            masterScoreTimeEl.textContent = bestMaster.time;
+            masterScoreTimeEl.style.display = 'flex';
+            masterScoreTimeEl.style.color = getLineColor(bestMaster);
+        } else {
+            // Not maximum - show score
+            masterScoreEl.textContent = formatScore(bestMaster, 'master');
+            masterScoreEl.style.display = 'flex';
+            masterScoreTimeEl.style.display = 'none';
+            masterScoreEl.style.color = getLineColor(bestMaster);
+        }
+    } else {
+        masterScoreEl.textContent = '-';
+        masterScoreEl.style.display = 'flex';
+        masterScoreTimeEl.style.display = 'none';
+        masterScoreEl.style.color = '';
     }
+    
+    // Race mode: if grade is GM (maximum), show only time and grade
+    const raceScoreTimeEl = document.getElementById('raceScoreTime');
     if (bestRace) {
-        raceScoreEl.style.color = getLineColor(bestRace);
+        if (bestRace.grade === "GM" && bestRace.time) {
+            // Maximum score - show time and grade only
+            raceScoreEl.textContent = '';
+            raceScoreEl.style.display = 'none';
+            raceScoreTimeEl.textContent = bestRace.time;
+            raceScoreTimeEl.style.display = 'flex';
+            raceScoreTimeEl.style.color = getLineColor(bestRace);
+        } else {
+            // Not maximum - show score
+            raceScoreEl.textContent = formatScore(bestRace, 'race');
+            raceScoreEl.style.display = 'flex';
+            raceScoreTimeEl.style.display = 'none';
+            raceScoreEl.style.color = getLineColor(bestRace);
+        }
+    } else {
+        raceScoreEl.textContent = '-';
+        raceScoreEl.style.display = 'flex';
+        raceScoreTimeEl.style.display = 'none';
+        raceScoreEl.style.color = '';
     }
-    if (bestHell && bestHell.score !== 200) {
-        // Only apply color to score if it's not hidden (score !== 200)
-        hellScoreEl.style.color = getLineColor(bestHell);
+    
+    // Hell mode: if score is 200 (maximum), show only time and grade
+    if (bestHell) {
+        if (bestHell.score === 200 && bestHell.time) {
+            // Maximum score - show time and grade only
+            hellScoreEl.textContent = '';
+            hellScoreEl.style.display = 'none';
+            hellScoreTimeEl.textContent = bestHell.time;
+            hellScoreTimeEl.style.display = 'flex';
+            hellScoreTimeEl.style.color = getLineColor(bestHell);
+        } else {
+            // Not maximum - show score
+            hellScoreEl.textContent = formatScore(bestHell, 'hell');
+            hellScoreEl.style.display = 'flex';
+            hellScoreTimeEl.style.display = 'none';
+            hellScoreEl.style.color = getLineColor(bestHell);
+        }
+    } else {
+        hellScoreEl.textContent = '-';
+        hellScoreEl.style.display = 'flex';
+        hellScoreTimeEl.style.display = 'none';
+        hellScoreEl.style.color = '';
     }
     
     // Display score details (grade with line color, modifiers)
-    // For hell mode, don't show grade in details since it's already shown in the score value area
+    // For maximum scores in master/hell/race, show only grade (time is shown above)
     document.getElementById('easyScoreDetails').innerHTML = formatScoreDetails(bestEasy, 'easy');
     document.getElementById('normalScoreDetails').innerHTML = formatScoreDetails(bestNormal, 'normal');
-    document.getElementById('masterScoreDetails').innerHTML = formatScoreDetails(bestMaster, 'master');
-    document.getElementById('raceScoreDetails').innerHTML = formatScoreDetails(bestRace, 'race');
-    document.getElementById('hellScoreDetails').innerHTML = formatScoreDetails(bestHell, 'hell');
+    
+    // Master mode details
+    let masterDetails = formatScoreDetails(bestMaster, 'master');
+    if (bestMaster && bestMaster.score === 90 && bestMaster.time) {
+        // Maximum score - show only grade and modifiers (time is shown above)
+        const parts = [];
+        const grade = formatGrade(bestMaster.grade);
+        if (grade) {
+            const lineColor = getLineColor(bestMaster);
+            parts.push(`<span style="color: ${lineColor};">${grade}</span>`);
+        }
+        const modifiers = formatModifiers(bestMaster.modifiers);
+        if (modifiers) {
+            parts.push(`<span style="color: rgba(255, 255, 255, 0.7); font-size: 0.9em;">${modifiers}</span>`);
+        }
+        masterDetails = parts.length > 0 ? parts.join(' • ') : '';
+    }
+    document.getElementById('masterScoreDetails').innerHTML = masterDetails;
+    
+    // Race mode details
+    let raceDetails = formatScoreDetails(bestRace, 'race');
+    if (bestRace && bestRace.grade === "GM" && bestRace.time) {
+        // Maximum score - show only grade and modifiers (time is shown above)
+        const parts = [];
+        const grade = formatGrade(bestRace.grade);
+        if (grade) {
+            const lineColor = getLineColor(bestRace);
+            parts.push(`<span style="color: ${lineColor};">${grade}</span>`);
+        }
+        const modifiers = formatModifiers(bestRace.modifiers);
+        if (modifiers) {
+            parts.push(`<span style="color: rgba(255, 255, 255, 0.7); font-size: 0.9em;">${modifiers}</span>`);
+        }
+        raceDetails = parts.length > 0 ? parts.join(' • ') : '';
+    }
+    document.getElementById('raceScoreDetails').innerHTML = raceDetails;
+    
+    // Hell mode details
+    let hellDetails = formatScoreDetails(bestHell, 'hell');
+    if (bestHell && bestHell.score === 200 && bestHell.time) {
+        // Maximum score - show only grade and modifiers (time is shown above)
+        const parts = [];
+        const grade = formatGrade(bestHell.grade);
+        if (grade) {
+            const lineColor = getLineColor(bestHell);
+            parts.push(`<span style="color: ${lineColor};">${grade}</span>`);
+        }
+        const modifiers = formatModifiers(bestHell.modifiers);
+        if (modifiers) {
+            parts.push(`<span style="color: rgba(255, 255, 255, 0.7); font-size: 0.9em;">${modifiers}</span>`);
+        }
+        hellDetails = parts.length > 0 ? parts.join(' • ') : '';
+    }
+    document.getElementById('hellScoreDetails').innerHTML = hellDetails;
+    
+    // Load and display recent plays
+    loadRecentPlays(easyScores, normalScores, masterScores, raceScores, hellScores);
     
     // Load "About Me" text
     loadAboutMe(foundUser);
+    
+    // Load profile owner's background wallpaper
+    if (foundUser && foundUser.siteBackgroundURL) {
+        applySiteBackground(foundUser.siteBackgroundURL);
+    }
+    
+    // Load profile owner's color theme
+    // Always fetch fresh from Firestore to ensure we have the latest theme
+    async function loadProfileColorTheme() {
+        if (!foundUser || !foundUser.uid) {
+            console.error('Cannot load profile color theme: foundUser or uid is missing');
+            applyColorTheme('default');
+            window.profileOwnerTheme = 'default';
+            return;
+        }
+        
+        // Use colorTheme from foundUser as fallback if fresh fetch fails
+        const fallbackTheme = foundUser.colorTheme || 'default';
+        
+        try {
+            // Ensure document.body exists
+            if (!document.body) {
+                await new Promise(resolve => {
+                    const checkBody = setInterval(() => {
+                        if (document.body) {
+                            clearInterval(checkBody);
+                            resolve();
+                        }
+                    }, 50);
+                    setTimeout(() => {
+                        clearInterval(checkBody);
+                        resolve();
+                    }, 2000);
+                });
+            }
+            
+            const userProfileRef = doc(db, 'userProfiles', foundUser.uid);
+            const userProfileSnap = await getDoc(userProfileRef);
+            
+            let colorTheme = fallbackTheme;
+            
+            if (userProfileSnap.exists()) {
+                const userData = userProfileSnap.data();
+                colorTheme = userData.colorTheme || fallbackTheme;
+            }
+            
+            // Apply the theme multiple times to ensure it takes (force apply on profile pages)
+            applyColorTheme(colorTheme, true); // Force apply to bypass profile page check
+            window.profileOwnerTheme = colorTheme;
+            foundUser.colorTheme = colorTheme;
+            
+            // Force apply again after a tiny delay
+            setTimeout(() => {
+                applyColorTheme(colorTheme, true); // Force apply to bypass profile page check
+                window.profileOwnerTheme = colorTheme;
+            }, 50);
+            
+            // Verify theme was applied correctly after a short delay
+            setTimeout(() => {
+                const themeClass = colorTheme === 'default' ? '' : `theme-${colorTheme}`;
+                const isApplied = themeClass === '' ? 
+                    !document.body.classList.contains('theme-green') && 
+                    !document.body.classList.contains('theme-purple') && 
+                    !document.body.classList.contains('theme-orange') && 
+                    !document.body.classList.contains('theme-red') && 
+                    !document.body.classList.contains('theme-pink') && 
+                    !document.body.classList.contains('theme-yellow') :
+                    document.body.classList.contains(themeClass);
+                
+                if (!isApplied || window.profileOwnerTheme !== colorTheme) {
+                    // Theme not applied correctly, retry
+                    console.warn('Theme not applied correctly, retrying...');
+                    applyColorTheme(colorTheme, true); // Force apply to bypass profile page check
+                    window.profileOwnerTheme = colorTheme;
+                    
+                    // One more retry after another delay
+                    setTimeout(() => {
+                        applyColorTheme(colorTheme, true); // Force apply to bypass profile page check
+                        window.profileOwnerTheme = colorTheme;
+                    }, 100);
+                }
+            }, 200);
+        } catch (error) {
+            console.error('Error loading color theme:', error);
+            // Use fallback theme from foundUser
+            applyColorTheme(fallbackTheme, true); // Force apply to bypass profile page check
+            window.profileOwnerTheme = fallbackTheme;
+            foundUser.colorTheme = fallbackTheme;
+        }
+    }
+    
+    // Load theme immediately
+    if (foundUser && foundUser.uid) {
+        await loadProfileColorTheme();
+    } else {
+        console.error('Cannot load profile color theme: foundUser is null or missing uid');
+        applyColorTheme('default', true); // Force apply to bypass profile page check
+        window.profileOwnerTheme = 'default';
+    }
+    
+    // Retry loading background if it failed
+    let backgroundRetryCount = 0;
+    const maxBackgroundRetries = 5;
+    const backgroundRetryInterval = setInterval(async () => {
+        if (backgroundRetryCount >= maxBackgroundRetries) {
+            clearInterval(backgroundRetryInterval);
+            return;
+        }
+        
+        // Check if background is already applied
+        const currentBg = document.body.style.backgroundImage;
+        const expectedBg = foundUser && foundUser.siteBackgroundURL ? foundUser.siteBackgroundURL : null;
+        
+        if (expectedBg && currentBg && currentBg.includes(expectedBg)) {
+            // Background is already applied, stop retrying
+            clearInterval(backgroundRetryInterval);
+            return;
+        }
+        
+        // Re-fetch user profile to get updated background URL
+        try {
+            const userProfileRef = doc(db, 'userProfiles', foundUser.uid);
+            const userProfileSnap = await getDoc(userProfileRef);
+            if (userProfileSnap.exists()) {
+                const updatedUser = userProfileSnap.data();
+                if (updatedUser.siteBackgroundURL) {
+                    if (updatedUser.siteBackgroundURL !== foundUser.siteBackgroundURL) {
+                        // Background URL changed, update it
+                        foundUser.siteBackgroundURL = updatedUser.siteBackgroundURL;
+                    }
+                    // Retry applying the background
+                    applySiteBackground(updatedUser.siteBackgroundURL);
+                    
+                    // Check if it was applied successfully after a short delay
+                    setTimeout(() => {
+                        const newBg = document.body.style.backgroundImage;
+                        if (newBg && newBg.includes(updatedUser.siteBackgroundURL)) {
+                            clearInterval(backgroundRetryInterval);
+                        }
+                    }, 500);
+                } else if (expectedBg) {
+                    // Background was removed, clear it
+                    removeSiteBackground();
+                    clearInterval(backgroundRetryInterval);
+                }
+            }
+        } catch (error) {
+            console.error('Error retrying background fetch:', error);
+        }
+        
+        backgroundRetryCount++;
+    }, 2000); // Retry every 2 seconds
+    
+    // Retry loading color theme if it failed
+    let themeRetryCount = 0;
+    const maxThemeRetries = 20;
+    const themeRetryInterval = setInterval(async () => {
+        if (themeRetryCount >= maxThemeRetries) {
+            clearInterval(themeRetryInterval);
+            return;
+        }
+        
+        // Re-fetch user profile to get updated color theme
+        try {
+            const userProfileRef = doc(db, 'userProfiles', foundUser.uid);
+            const userProfileSnap = await getDoc(userProfileRef);
+            if (userProfileSnap.exists()) {
+                const updatedUser = userProfileSnap.data();
+                const newTheme = updatedUser.colorTheme || 'default';
+                
+                // Check if theme is already applied correctly
+                const themeClass = newTheme === 'default' ? '' : `theme-${newTheme}`;
+                const isApplied = themeClass === '' ? 
+                    !document.body.classList.contains('theme-green') && 
+                    !document.body.classList.contains('theme-purple') && 
+                    !document.body.classList.contains('theme-orange') && 
+                    !document.body.classList.contains('theme-red') && 
+                    !document.body.classList.contains('theme-pink') && 
+                    !document.body.classList.contains('theme-yellow') :
+                    document.body.classList.contains(themeClass);
+                
+                if (isApplied && window.profileOwnerTheme === newTheme) {
+                    // Theme is already applied correctly, stop retrying
+                    clearInterval(themeRetryInterval);
+                    return;
+                }
+                
+                // Update foundUser with the fetched theme
+                foundUser.colorTheme = updatedUser.colorTheme;
+                
+                // Apply the theme (force re-apply to ensure it takes)
+                applyColorTheme(newTheme, true); // Force apply to bypass profile page check
+                window.profileOwnerTheme = newTheme;
+                
+                // Force apply again after a tiny delay to ensure it overrides any other theme
+                setTimeout(() => {
+                    applyColorTheme(newTheme, true); // Force apply to bypass profile page check
+                    window.profileOwnerTheme = newTheme;
+                }, 50);
+                
+                // Update graph if it exists
+                if (typeof updateGraph === 'function') {
+                    setTimeout(() => {
+                        updateGraph();
+                    }, 100);
+                }
+                
+                // Check if it was applied successfully after a short delay
+                setTimeout(() => {
+                    const checkThemeClass = newTheme === 'default' ? '' : `theme-${newTheme}`;
+                    const checkIsApplied = checkThemeClass === '' ? 
+                        !document.body.classList.contains('theme-green') && 
+                        !document.body.classList.contains('theme-purple') && 
+                        !document.body.classList.contains('theme-orange') && 
+                        !document.body.classList.contains('theme-red') && 
+                        !document.body.classList.contains('theme-pink') && 
+                        !document.body.classList.contains('theme-yellow') :
+                        document.body.classList.contains(checkThemeClass);
+                    
+                    if (checkIsApplied && window.profileOwnerTheme === newTheme) {
+                        clearInterval(themeRetryInterval);
+                    } else {
+                        // Still not applied, force one more time
+                        console.warn('Theme still not applied, forcing one more time...');
+                        applyColorTheme(newTheme, true); // Force apply to bypass profile page check
+                        window.profileOwnerTheme = newTheme;
+                    }
+                }, 500);
+            } else {
+                // Profile doesn't exist, apply default theme
+                if (window.profileOwnerTheme !== 'default') {
+                    applyColorTheme('default', true); // Force apply to bypass profile page check
+                    window.profileOwnerTheme = 'default';
+                    foundUser.colorTheme = 'default';
+                    if (typeof updateGraph === 'function') {
+                        updateGraph();
+                    }
+                }
+                clearInterval(themeRetryInterval);
+            }
+        } catch (error) {
+            console.error('Error retrying theme fetch:', error);
+        }
+        
+        themeRetryCount++;
+    }, 2000); // Retry every 2 seconds
     
     // Retry loading about me if it's missing
     let aboutMeRetryCount = 0;
@@ -1397,19 +1974,19 @@ async function loadGraphData(mode) {
         
         switch(mode) {
             case 'easy':
-                scoresRef = collection(db, 'easyScores');
+                scoresRef = collection(db, 'scoreseasy');
                 break;
             case 'normal':
-                scoresRef = collection(db, 'normalScores');
+                scoresRef = collection(db, 'scoresnormal');
                 break;
             case 'master':
-                scoresRef = collection(db, 'masterScores');
+                scoresRef = collection(db, 'scoresmaster');
                 break;
             case 'race':
-                scoresRef = collection(db, 'raceScores');
+                scoresRef = collection(db, 'scoresrace');
                 break;
             case 'hell':
-                scoresRef = collection(db, 'hellScores');
+                scoresRef = collection(db, 'scoresfinal');
                 break;
             default:
                 return;
@@ -1504,6 +2081,22 @@ async function loadGraphData(mode) {
             return 0;
         });
         
+        // Get profile owner's theme (default to 'default' if not set)
+        const profileTheme = window.profileOwnerTheme || 'default';
+        
+        // Theme colors mapping
+        const themeColors = {
+            default: '#dbffff',
+            green: '#90ee90',
+            purple: '#dda0dd',
+            orange: '#ffa500',
+            red: '#ff6b6b',
+            pink: '#ffb6c1',
+            yellow: '#ffff00'
+        };
+        
+        const themeColor = themeColors[profileTheme] || themeColors.default;
+        
         // Handle empty data case
         if (dates.length === 0 || scores.length === 0 || dates.length !== scores.length) {
             // Destroy existing chart if it exists
@@ -1520,8 +2113,8 @@ async function loadGraphData(mode) {
                     datasets: [{
                         label: 'Score',
                         data: [0],
-                        borderColor: '#dbffff',
-                        backgroundColor: 'rgba(219, 255, 255, 0.1)',
+                        borderColor: themeColor,
+                        backgroundColor: themeColor + '40',
                         borderWidth: 2,
                         fill: true
                     }]
@@ -1537,13 +2130,13 @@ async function loadGraphData(mode) {
                     scales: {
                         x: { 
                             display: true,
-                            ticks: { color: '#dbffff' },
-                            grid: { color: 'rgba(219, 255, 255, 0.1)' }
+                            ticks: { color: themeColor },
+                            grid: { color: themeColor + '33' }
                         },
                         y: { 
                             display: true,
-                            ticks: { color: '#dbffff' },
-                            grid: { color: 'rgba(219, 255, 255, 0.1)' }
+                            ticks: { color: themeColor },
+                            grid: { color: themeColor + '33' }
                         }
                     }
                 }
@@ -1551,7 +2144,7 @@ async function loadGraphData(mode) {
             return;
         }
         
-        // Chart colors based on mode
+        // Chart colors based on mode (keep mode-specific colors but adjust based on theme)
         const modeColors = {
             easy: '#90ee90',
             normal: '#87ceeb',
@@ -1560,7 +2153,8 @@ async function loadGraphData(mode) {
             hell: '#ffbaba'
         };
         
-        const color = modeColors[mode] || '#dbffff';
+        // Use mode color for the line itself
+        const color = modeColors[mode] || themeColor;
         
         // Destroy existing chart if it exists
         if (profileChart) {
@@ -1609,20 +2203,20 @@ async function loadGraphData(mode) {
                 scales: {
                     x: {
                         ticks: {
-                            color: '#dbffff',
+                            color: themeColor,
                             maxRotation: 45,
                             minRotation: 45
                         },
                         grid: {
-                            color: 'rgba(219, 255, 255, 0.1)'
+                            color: themeColor + '33' // Add transparency (33 = ~20% opacity)
                         }
                     },
                     y: {
                         ticks: {
-                            color: '#dbffff'
+                            color: themeColor
                         },
                         grid: {
-                            color: 'rgba(219, 255, 255, 0.1)'
+                            color: themeColor + '33' // Add transparency (33 = ~20% opacity)
                         }
                     }
                 }
@@ -1660,11 +2254,8 @@ async function initMessageBoard() {
                 }
             });
             
-            // Check if viewing own profile
-            const isOwnProfile = currentUserDisplayName === playerName || 
-                                 (playerName.includes('@') && user.email === playerName);
-            
-            if (isOwnProfile && newMessageBtn) {
+            // Show new message button for any logged-in user (allow posting on other players' boards)
+            if (newMessageBtn) {
                 newMessageBtn.style.display = 'block';
             }
         }
@@ -1735,16 +2326,29 @@ async function loadMessages() {
         if (playerMessages.length === 0) {
             messagesContainer.innerHTML = '<p class="message-board-empty">No messages yet. Be the first to post!</p>';
         } else {
-            messagesContainer.innerHTML = playerMessages.map(msg => {
+            // Sort by timestamp (oldest first) to assign message numbers correctly
+            const sortedMessages = [...playerMessages].sort((a, b) => {
+                const timeA = a.timestamp?.toDate ? a.timestamp.toDate() : new Date(a.timestamp || 0);
+                const timeB = b.timestamp?.toDate ? b.timestamp.toDate() : new Date(b.timestamp || 0);
+                return timeA - timeB;
+            });
+            
+            // Display messages (newest first) with message numbers
+            messagesContainer.innerHTML = playerMessages.map((msg, index) => {
                 const timestamp = msg.timestamp?.toDate ? msg.timestamp.toDate() : new Date(msg.timestamp || Date.now());
                 const timeStr = formatRelativeTime(timestamp);
+                // Message number is based on position in sorted list (oldest = 1, newest = highest)
+                const messageNumber = sortedMessages.findIndex(m => m.id === msg.id) + 1;
                 return `
                     <div class="message-board-message">
-                        <div class="message-board-message-header">
-                            <span class="message-board-author">${msg.authorName || 'Anonymous'}</span>
-                            <span class="message-board-time">${timeStr}</span>
+                        <div class="message-board-message-number">#${messageNumber}</div>
+                        <div class="message-board-message-content-wrapper">
+                            <div class="message-board-message-header">
+                                <span class="message-board-author">${msg.authorName || 'Anonymous'}</span>
+                                <span class="message-board-time">${timeStr}</span>
+                            </div>
+                            <div class="message-board-content">${msg.content || ''}</div>
                         </div>
-                        <div class="message-board-content">${msg.content || ''}</div>
                     </div>
                 `;
             }).join('');

@@ -2304,6 +2304,11 @@
                 collection(db, "playerData", user.uid, "hell"),
                 payload
               );
+                        // Player stats entry
+              await addDoc(
+                collection(db, "playerStats", user.uid, "hell"),
+                payload
+              );
                         console.log("Score submitted automatically");
                     } catch (error) {
                         console.error("Error auto-submitting score:", error);
@@ -2543,6 +2548,11 @@
                     // Per‑player data entry
             await addDoc(
               collection(db, "playerData", user.uid, "hell"),
+              payload
+            );
+                    // Player stats entry
+            await addDoc(
+              collection(db, "playerStats", user.uid, "hell"),
               payload
             );
 

@@ -2195,6 +2195,11 @@
           collection(db, "playerData", user.uid, "race"),
           payload
         );
+        // Player stats entry
+        await addDoc(
+          collection(db, "playerStats", user.uid, "race"),
+          payload
+        );
 
         alert("Score submitted successfully!");
         submitBtn.textContent = "Score submitted!";

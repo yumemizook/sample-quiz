@@ -1670,6 +1670,22 @@ body.mode-hell .mode-selection-title {
     z-index: 10;
 }
 
+.setting-item.keyboard-focus {
+    outline: 3px solid #ffff00;
+    outline-offset: 3px;
+    background-color: rgba(255, 255, 0, 0.1);
+    border-radius: 8px;
+    padding: 8px;
+    margin: 4px 0;
+}
+
+.setting-item.keyboard-focus .arrow-selector,
+.setting-item.keyboard-focus .slider-container {
+    outline: 2px solid #ffff00;
+    outline-offset: 2px;
+    border-radius: 4px;
+}
+
 /* Mode-specific active card styling */
 body.mode-easy .mode-card[data-mode="easy"].active {
     border-color: #adffcd;
@@ -3774,50 +3790,83 @@ td:first-child {
 }
 
 .profile-score-card {
-    background: rgba(0, 0, 0, 0.4);
+    background: rgba(0, 0, 0, 0.5);
     border: 2px solid rgba(255, 255, 255, 0.2);
-    border-radius: 12px;
-    padding: 20px;
+    border-radius: 16px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
     text-align: center;
-    transition: all 0.3s;
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-score-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+    opacity: 0;
+    transition: opacity 0.3s ease;
 }
 
 .profile-score-card:hover {
-    background: rgba(0, 0, 0, 0.6);
+    background: rgba(0, 0, 0, 0.7);
     border-color: rgba(255, 255, 255, 0.4);
-    transform: translateY(-5px);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    transform: translateY(-8px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6), 0 0 20px rgba(255, 255, 255, 0.1);
+}
+
+.profile-score-card:hover::before {
+    opacity: 1;
 }
 
 .score-card-mode {
     color: #dbffff;
-    font-size: 1.1em;
+    font-size: 1.2em;
     font-weight: bold;
-    margin-bottom: 15px;
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .score-card-value {
-    color: #4CAF50;
-    font-size: 1.8em;
+    font-size: 2.2em;
     font-weight: bold;
+    line-height: 1.2;
+    margin: 8px 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    min-height: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .score-card-time {
-    font-size: 1.5em;
+    font-size: 2.2em;
     font-weight: bold;
     text-align: center;
-    margin-bottom: 10px;
+    line-height: 1.2;
+    margin: 8px 0;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+    min-height: 1.2em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .score-card-details {
-    font-size: 0.9em;
-    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95em;
+    color: rgba(255, 255, 255, 0.75);
     text-align: center;
-    margin-top: 5px;
-    line-height: 1.4;
+    margin-top: 8px;
+    line-height: 1.5;
+    min-height: 1.5em;
 }
 
 /* About Me section */
@@ -3884,6 +3933,104 @@ td:first-child {
 
 /* Profile Settings section */
 /* Profile Graph Section */
+.profile-recent-plays-section {
+    padding: 0 20px;
+    margin-bottom: 40px;
+}
+
+.profile-recent-plays-section h2 {
+    color: #dbffff;
+    font-size: 2em;
+    margin-bottom: 30px;
+    text-align: center;
+}
+
+.recent-plays-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.recent-play-item {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    padding: 15px;
+    transition: background 0.3s, border-color 0.3s;
+}
+
+.recent-play-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.recent-play-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.recent-play-mode {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.recent-play-date {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.9em;
+}
+
+.recent-play-body {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.recent-play-score {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.recent-play-score-label {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.95em;
+}
+
+.recent-play-score-value {
+    font-weight: bold;
+    font-size: 1.1em;
+}
+
+.recent-play-grade {
+    font-weight: bold;
+    font-size: 1em;
+}
+
+.recent-play-meta {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.recent-play-modifiers {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.9em;
+}
+
+.recent-plays-empty {
+    text-align: center;
+    color: rgba(255, 255, 255, 0.6);
+    padding: 40px 20px;
+    font-style: italic;
+}
+
 .profile-graph-section {
     padding: 0 20px;
     margin-bottom: 40px;
@@ -3967,10 +4114,27 @@ td:first-child {
     border-radius: 8px;
     padding: 15px;
     margin-bottom: 15px;
+    display: flex;
+    gap: 15px;
+    align-items: flex-start;
 }
 
 .message-board-message:last-child {
     margin-bottom: 0;
+}
+
+.message-board-message-number {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.9em;
+    font-weight: bold;
+    min-width: 30px;
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+
+.message-board-message-content-wrapper {
+    flex: 1;
+    min-width: 0;
 }
 
 .message-board-message-header {

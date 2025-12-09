@@ -14,6 +14,10 @@ function applySiteBackground(imageURL) {
     const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html'];
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     
+    // Profile pages will use profile owner's background (applied by profile.js)
+    // This function can still be called from profile.js to apply the profile owner's background
+    // But we don't want loadSiteBackground() to override it
+    
     if (gameplayPages.includes(currentPage)) {
         return; // Don't apply to gameplay pages
     }
@@ -60,6 +64,11 @@ function removeSiteBackground() {
 async function loadSiteBackground(retryCount = 0, maxRetries = 20) {
     const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html'];
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    
+    // Don't apply viewer's background on profile pages - profile owner's background will be applied by profile.js
+    if (currentPage === 'profile.html' && window.location.search.includes('player=')) {
+        return; // Profile pages use the profile owner's background
+    }
     
     if (gameplayPages.includes(currentPage)) {
         return; // Don't apply to gameplay pages

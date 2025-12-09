@@ -700,6 +700,87 @@
       }
     }
 
+    // Function to reset all faded elements (make them visible again)
+    function resetFadedElements() {
+      const questionEl = document.getElementById("ques");
+      if (questionEl) {
+        questionEl.style.opacity = "1";
+      }
+
+      const optionsEl = document.getElementById("opt");
+      if (optionsEl) {
+        const labels = optionsEl.querySelectorAll("label");
+        labels.forEach(label => {
+          label.style.opacity = "1";
+        });
+      }
+
+      const scoreEl = document.getElementById("score");
+      if (scoreEl) {
+        scoreEl.style.opacity = "1";
+      }
+
+      const timeElapsedEl = document.getElementById("timeelapsed");
+      if (timeElapsedEl) {
+        timeElapsedEl.style.opacity = "1";
+      }
+    }
+
+    // Function to get all visible text elements (excludes score, timer)
+    function getVisibleTextElements() {
+      const elements = [];
+
+      const questionEl = document.getElementById("ques");
+      if (questionEl && questionEl.style.opacity !== "0" && questionEl.style.display !== "none") {
+        elements.push(questionEl);
+      }
+
+      const optionsEl = document.getElementById("opt");
+      if (optionsEl) {
+        const labels = optionsEl.querySelectorAll("label");
+        labels.forEach(label => {
+          if (label.style.opacity !== "0" && label.style.display !== "none") {
+            elements.push(label);
+          }
+        });
+      }
+
+      // Note: score and timer (timeelapsed) are excluded from fading
+
+      return elements;
+    }
+
+    // Function to start random text fading (uses fadingMode parameter as interval in seconds)
+    function startRandomFading() {
+      if (randomFadeInterval) {
+        clearInterval(randomFadeInterval);
+        randomFadeInterval = null;
+      }
+
+      function fadeRandomElement() {
+        const visibleElements = getVisibleTextElements();
+        if (visibleElements.length === 0) {
+          return; // All elements are already faded
+        }
+
+        // Randomly select one element
+        const randomIndex = Math.floor(Math.random() * visibleElements.length);
+        const element = visibleElements[randomIndex];
+
+        // Fade it to invisible
+        element.style.opacity = "0";
+        element.style.transition = "opacity 0.5s ease";
+      }
+
+      // Use fadingMode parameter as interval (in seconds, convert to milliseconds)
+      const intervalMs = parseFloat(fadingMode) * 1000;
+
+      // Start the interval
+      randomFadeInterval = setInterval(() => {
+        fadeRandomElement();
+      }, intervalMs);
+    }
+
     // Keyboard support
     function initKeyboard() {
       document.addEventListener("keydown", (e) => {
@@ -2192,6 +2273,11 @@
           // Per‑player data entry
           await addDoc(
             collection(db, "playerData", user.uid, "master"),
+            payload
+          );
+          // Player stats entry
+          await addDoc(
+            collection(db, "playerStats", user.uid, "master"),
             payload
           );
 
