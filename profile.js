@@ -55,32 +55,32 @@ function formatRelativeTime(timestamp) {
 
 // Get badge emoji for level
 function getBadgeForLevel(level) {
-    if (level >= 1000) return "🌠";
-    if (level >= 900) return "🌙";
-    if (level >= 800) return "☀️";
-    if (level >= 700) return "🌍";
-    if (level >= 600) return "🪐";
-    if (level >= 500) return "⭐";
-    if (level >= 400) return "🌟";
-    if (level >= 300) return "💫";
-    if (level >= 250) return "🌌";
-    if (level >= 200) return "🌠";
-    if (level >= 150) return "⚛️";
-    if (level >= 120) return "🔮";
-    if (level >= 100) return "✨";
-    if (level >= 80) return "🏆";
-    if (level >= 70) return "👑";
-    if (level >= 60) return "💎";
-    if (level >= 50) return "⭐";
-    if (level >= 40) return "🔥";
-    if (level >= 35) return "⚡";
-    if (level >= 30) return "🌟";
-    if (level >= 25) return "💫";
-    if (level >= 20) return "⭐";
-    if (level >= 15) return "🌟";
-    if (level >= 10) return "✨";
-    if (level >= 5) return "🌱";
-    return "🌿";
+    if (level >= 1000) return '<i class="fas fa-meteor"></i>';
+    if (level >= 900) return '<i class="fas fa-moon"></i>';
+    if (level >= 800) return '<i class="fas fa-sun"></i>';
+    if (level >= 700) return '<i class="fas fa-globe"></i>';
+    if (level >= 600) return '<i class="fas fa-planet-ringed"></i>';
+    if (level >= 500) return '<i class="fas fa-star"></i>';
+    if (level >= 400) return '<i class="fas fa-star"></i>';
+    if (level >= 300) return '<i class="fas fa-star-shooting"></i>';
+    if (level >= 250) return '<i class="fas fa-galaxy"></i>';
+    if (level >= 200) return '<i class="fas fa-meteor"></i>';
+    if (level >= 150) return '<i class="fas fa-atom"></i>';
+    if (level >= 120) return '<i class="fas fa-crystal-ball"></i>';
+    if (level >= 100) return '<i class="fas fa-sparkles"></i>';
+    if (level >= 80) return '<i class="fas fa-trophy"></i>';
+    if (level >= 70) return '<i class="fas fa-crown"></i>';
+    if (level >= 60) return '<i class="fas fa-gem"></i>';
+    if (level >= 50) return '<i class="fas fa-star"></i>';
+    if (level >= 40) return '<i class="fas fa-fire"></i>';
+    if (level >= 35) return '<i class="fas fa-bolt"></i>';
+    if (level >= 30) return '<i class="fas fa-star"></i>';
+    if (level >= 25) return '<i class="fas fa-star-shooting"></i>';
+    if (level >= 20) return '<i class="fas fa-star"></i>';
+    if (level >= 15) return '<i class="fas fa-star"></i>';
+    if (level >= 10) return '<i class="fas fa-sparkles"></i>';
+    if (level >= 5) return '<i class="fas fa-seedling"></i>';
+    return '<i class="fas fa-leaf"></i>';
 }
 
 // Get badge name for level
@@ -229,13 +229,13 @@ function formatModifiers(modifiers) {
     if (!modifiers || Object.keys(modifiers).length === 0) return "";
     const parts = [];
     if (modifiers.lives) {
-        parts.push(`❤️ ${modifiers.lives}`);
+        parts.push(`<i class="fas fa-heart"></i> ${modifiers.lives}`);
     }
     if (modifiers.timeMultiplier && modifiers.timeMultiplier !== 1) {
-        parts.push(`⏱️ ${modifiers.timeMultiplier.toFixed(2)}x`);
+        parts.push(`<i class="fas fa-stopwatch"></i> ${modifiers.timeMultiplier.toFixed(2)}x`);
     }
     if (modifiers.fadingMode) {
-        parts.push(`👁️ ${modifiers.fadingMode}s`);
+        parts.push(`<i class="fas fa-eye"></i> ${modifiers.fadingMode}s`);
     }
     if (modifiers.startQuestion) {
         parts.push(`🎯 ${modifiers.startQuestion + 1}`);
@@ -401,7 +401,7 @@ function loadRecentPlays(easyScores, normalScores, masterScores, raceScores, hel
         const modifiersDisplay = modifiers ? `<span class="recent-play-modifiers">${modifiers}</span>` : '';
         
         // Format time - always show if available
-        const timeDisplay = play.time ? `<span class="recent-play-time">⏱️ ${play.time}</span>` : '';
+        const timeDisplay = play.time ? `<span class="recent-play-time"><i class="fas fa-stopwatch"></i> ${play.time}</span>` : '';
         
         return `
             <div class="recent-play-item">

@@ -6,6 +6,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <title>Player Profile</title>
     <link rel="stylesheet" href="index.css">
+    <script src="https://kit.fontawesome.com/ced4c4a7f8.js" crossorigin="anonymous"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>
 <body>
@@ -22,7 +23,7 @@
             </div>
             <div class="player-avatar hide" id="playerAvatar">
                 <img id="playerAvatarImg" src="" alt="Avatar" />
-                <div class="player-avatar-placeholder">👤</div>
+                <div class="player-avatar-placeholder"><i class="fas fa-user"></i></div>
             </div>
         </div>
     </div>
@@ -38,7 +39,7 @@
                 <div class="profile-header">
                     <div class="profile-avatar-container">
                         <img class="profile-avatar" id="profileAvatar" src="" alt="Avatar">
-                        <div class="profile-avatar-placeholder" id="profileAvatarPlaceholder">👤</div>
+                        <div class="profile-avatar-placeholder" id="profileAvatarPlaceholder"><i class="fas fa-user"></i></div>
                     </div>
                     <div class="profile-header-info">
                         <h1 class="profile-name" id="profileName"></h1>
@@ -149,7 +150,7 @@
                 <div class="profile-settings-header">
                     <h2>Profile Settings</h2>
                     <button id="toggleSettingsBtn" class="profile-settings-toggle" aria-label="Toggle settings">
-                        <span class="toggle-icon">▼</span>
+                        <span class="toggle-icon"><i class="fas fa-chevron-down"></i></span>
                     </button>
                 </div>
                 <div id="profileSettingsContent" class="profile-settings-content">
@@ -160,7 +161,7 @@
                     <p class="profile-setting-description">Upload a profile picture (JPG, PNG, max 2MB)</p>
                     <div class="profile-upload-container">
                         <img id="avatarPreview" src="" alt="Avatar" class="profile-upload-preview" style="display: none;">
-                        <div id="avatarPlaceholder" class="profile-upload-placeholder">👤</div>
+                        <div id="avatarPlaceholder" class="profile-upload-placeholder"><i class="fas fa-user"></i></div>
                         <input type="file" id="avatarInput" accept="image/jpeg,image/png,image/jpg" style="display: none;">
                         <div class="profile-upload-buttons">
                             <button class="profile-button" id="avatarUploadBtn">Upload Avatar</button>

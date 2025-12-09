@@ -7,6 +7,7 @@
     <link rel="icon" type="image/x-icon" href="favicon.ico">
     <title>Questions</title>
     <link rel="stylesheet" href="index.css">
+    <script src="https://kit.fontawesome.com/ced4c4a7f8.js" crossorigin="anonymous"></script>
      <style>
         body {
             background: url("easy.jpg") no-repeat center center fixed;
@@ -46,7 +47,7 @@
             </div>
             <div class="player-avatar hide" id="playerAvatar">
                 <img id="playerAvatarImg" src="" alt="Avatar" />
-                <div class="player-avatar-placeholder">👤</div>
+                <div class="player-avatar-placeholder"><i class="fas fa-user"></i></div>
             </div>
         </div>
     </div>
@@ -58,7 +59,7 @@
         <div class="jum" style="display: flex; justify-content: space-between;">
             <div id="score"></div>
             <div id="currentgrade" style="font-size: x-large; color: #adffcd; font-weight: bold;"></div>
-            <div id="livesDisplay" style="font-size: x-large; color: #ff6b6b; font-weight: bold;">❤️ <span id="livesCount"></span></div>
+            <div id="livesDisplay" style="font-size: x-large; color: #ff6b6b; font-weight: bold;"><i class="fas fa-heart"></i> <span id="livesCount"></span></div>
             <div id="timeelapsed"></div>
         </div>
         <div class="timerifinvalid"></div>
@@ -254,7 +255,7 @@
         const livesIcon = document.createElement("div");
         livesIcon.className = "modifier-icon";
         livesIcon.title = `${currentLives} Lives`;
-        livesIcon.innerHTML = `<span style="font-size: 2.2em;">❤️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${currentLives === 100 ? "100" : currentLives.toString()}</span>`;
+        livesIcon.innerHTML = `<span style="font-size: 2.2em;"><i class="fas fa-heart"></i></span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${currentLives === 100 ? "100" : currentLives.toString()}</span>`;
         livesIcon.style.width = `${iconSize}px`;
         livesIcon.style.height = `${iconSize}px`;
         livesIcon.style.display = "flex";
@@ -269,7 +270,7 @@
         const startIcon = document.createElement("div");
         startIcon.className = "modifier-icon";
         startIcon.title = `Start at Question ${startQuestionParam + 1}`;
-        startIcon.innerHTML = `<span style="font-size: 2.2em;">🎯</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${startQuestionParam + 1}</span>`;
+        startIcon.innerHTML = `<span style="font-size: 2.2em;"><i class="fas fa-bullseye"></i></span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${startQuestionParam + 1}</span>`;
         startIcon.style.width = `${iconSize}px`;
         startIcon.style.height = `${iconSize}px`;
         startIcon.style.display = "flex";
@@ -284,7 +285,7 @@
         const timeIcon = document.createElement("div");
         timeIcon.className = "modifier-icon";
         timeIcon.title = `Time Multiplier: ${timeMultiplier.toFixed(2)}x`;
-        timeIcon.innerHTML = `<span style="font-size: 2.2em;">⏱️</span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${timeMultiplier.toFixed(2)}x</span>`;
+        timeIcon.innerHTML = `<span style="font-size: 2.2em;"><i class="fas fa-stopwatch"></i></span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${timeMultiplier.toFixed(2)}x</span>`;
         timeIcon.style.width = `${iconSize}px`;
         timeIcon.style.height = `${iconSize}px`;
         timeIcon.style.display = "flex";
