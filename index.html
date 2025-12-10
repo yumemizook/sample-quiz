@@ -494,26 +494,33 @@
       }
       
       // Race variants toggle (inside race mode card)
-      const raceVariants = [
-        {
-          id: "easy-race",
-          name: "Race (Easy)",
-          description: "30 minute timer. 100 questions. May speed be in your hands.",
-          difficulty: "Timed Challenge"
-        },
-        {
-          id: "master130",
-          name: "Race",
-          description: "Race against time! 130 questions with a 7 minute time limit. Text elements fade randomly after question 100.",
-          difficulty: "Extreme Challenge"
-        },
-        {
-          id: "hard-race",
-          name: "Race (Hard)",
-          description: "4:30 total time. Are you up to the ultimate challenge?",
-          difficulty: "Extreme Challenge"
+      const buildRaceVariants = () => {
+        const variants = [
+          {
+            id: "easy-race",
+            name: "Race (Easy)",
+            description: "30 minute timer. 100 questions. May speed be in your hands.",
+            difficulty: "Timed Challenge"
+          },
+          {
+            id: "master130",
+            name: "Race",
+            description: "Race against time! 130 questions with a 7 minute time limit. Text elements fade randomly after question 100.",
+            difficulty: "Extreme Challenge"
+          }
+        ];
+        // Only include hard race if player has completed race at least once
+        if (window.hasCompletedRace) {
+          variants.push({
+            id: "hard-race",
+            name: "Race (Hard)",
+            description: "4:30 total time. Are you up to the ultimate challenge?",
+            difficulty: "Extreme Challenge"
+          });
         }
-      ];
+        return variants;
+      };
+      let raceVariants = buildRaceVariants();
       let raceVariantIndex = 1; // start at standard race
       const raceModeCard = document.getElementById("raceModeCard");
       const raceModeName = document.getElementById("raceModeName");
@@ -544,6 +551,8 @@
       if (hardRaceModeCard) hardRaceModeCard.classList.add("hide");
       
       function applyRaceVariant(index) {
+        // Rebuild variants in case eligibility changed
+        raceVariants = buildRaceVariants();
         raceVariantIndex = ((index % raceVariants.length) + raceVariants.length) % raceVariants.length;
         const variant = raceVariants[raceVariantIndex];
         if (!raceModeCard || !variant) return;
@@ -575,6 +584,18 @@
       
       // Initialize race variant
       applyRaceVariant(raceVariantIndex);
+
+      // Listen for race eligibility updates (from hm.js after score fetch)
+      window.addEventListener("race-eligibility", (e) => {
+        const unlocked = !!(e.detail && e.detail.hasCompletedRace);
+        window.hasCompletedRace = unlocked;
+        // Re-apply variant to respect new eligibility (clamp index)
+        raceVariants = buildRaceVariants();
+        if (raceVariantIndex >= raceVariants.length) {
+          raceVariantIndex = raceVariants.length - 1;
+        }
+        applyRaceVariant(raceVariantIndex);
+      });
       
       // 5-click toggle for master/race mode cards
       let masterCardClickCount = 0;

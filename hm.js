@@ -14,6 +14,10 @@ let hasCompletedMaster = false; // Track if user has completed master mode
 let masterClickCount = 0; // Track clicks on master mode card
 let masterClickTimeout = null; // Timeout to reset click counter
 let isRaceModeVisible = false; // Track if race mode is currently visible
+let hasCompletedRace = false; // Track if user has completed race mode at least once
+
+// Expose race completion flag early for scripts that need it
+window.hasCompletedRace = false;
 
 // Calculate main input method based on play counts
 function calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores = []) {
@@ -124,6 +128,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Master mode completion check removed - race mode is now always accessible
                 // Keep the variable for toggle functionality
                 hasCompletedMaster = true; // Always allow toggle between master and race mode
+
+                // Mark race completion (GM or full clear) for unlocking hard race variant
+                hasCompletedRace = raceScores.some(score =>
+                    score?.grade === "GM" ||
+                    (typeof score?.score === "number" && score.score >= 130) ||
+                    Boolean(score?.time)
+                );
+                window.hasCompletedRace = hasCompletedRace;
+                window.dispatchEvent(new CustomEvent("race-eligibility", { detail: { hasCompletedRace } }));
                 
                 // Calculate total plays
                 const totalPlays = easyScores.length + normalScores.length + masterScores.length + hellScores.length + secretScores.length + raceScores.length;
