@@ -5,7 +5,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" type="image/x-icon" href="favicon.ico">
-  <title>Race Mode</title>
+  <title>Hard Race Mode</title>
   <link rel="stylesheet" href="index.css" />
   <script src="https://kit.fontawesome.com/ced4c4a7f8.js" crossorigin="anonymous"></script>
   <style>
@@ -1660,7 +1660,7 @@
     timerStartTime = Date.now();
     const timeDisplay = document.getElementById("timeelapsed");
     let lastMinute = -1; // Track last minute to detect changes
-    const totalTimeLimit = 7 * 60 * 1000; // 7 minutes in milliseconds
+    const totalTimeLimit = 4.5 * 60 * 1000; // 4 minutes 30 seconds in milliseconds
     timer = setInterval(() => {
       // Don't update if paused
       if (isPaused) {
@@ -1731,14 +1731,37 @@
   }
 
 
-  // Update grade display in real-time based on current totalGradePoints
+  // Calculate grade for hard race mode: increases by 1 for every 10 questions passed successfully
+  function calculateHardRaceGrade() {
+    if (!allQuestions || allQuestions.length === 0) {
+      return "";
+    }
+    
+    // Check if all questions are completed
+    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1 && allQuestions.length === 130;
+    
+    if (allQuestionsCompleted) {
+      return "GM"; // Grant GM for completion
+    }
+    
+    // Calculate grade based on questions passed (every 10 questions = +1 grade)
+    // Grade increases by 1 for every 10 questions successfully completed
+    // Questions are 0-indexed, so we use currQuestion + 1 to get the actual question number
+    const questionsPassed = currQuestion + 1;
+    const gradeLevel = Math.floor(questionsPassed / 10);
+    
+    if (gradeLevel > 0) {
+      return "S" + gradeLevel; // S1, S2, S3, etc.
+    }
+    
+    return ""; // No grade until 10 questions are passed
+  }
+
+  // Update grade display in real-time based on hard race grading
   function updateGradeDisplay() {
     const gradeDisplayLeft = document.getElementById("gradeDisplayLeft");
     const gradePointsDisplay = document.getElementById("currentgrade");
     if (!gradeDisplayLeft || !gradePointsDisplay) return;
-
-    // Keep grade display container hidden
-    gradeDisplayLeft.style.display = "none";
 
     // Check if all questions are completed (must have exactly 130 questions and be on/completed the last one)
     const allQuestionsCompleted = currQuestion >= allQuestions.length - 1 && allQuestions.length === 130;
@@ -1778,24 +1801,21 @@
       }
     }
 
-    // Only show GM grade when all questions are completed
+    // Calculate grade for hard race mode
+    const grade = calculateHardRaceGrade();
+    
+    // Update previous grade
+    if (grade) {
+      previousGrade = grade;
+    }
+    
+    // Show grade display
     const gradeText = document.getElementById("gradeText");
-    // Always use white line color in race mode
     const line = "white";
     
     if (gradeText) {
-      if (allQuestionsCompleted) {
-        // Check if player qualifies for GM (only grade in race mode)
-        gradeText.textContent = "GM";
-      }
-
-      else {
-        // All questions completed but not GM - hide grade display
-        gradeText.textContent = "";
-        gradeText.style.display = "none";
-      }
-
-      if (gradeText.textContent === "GM") {
+      if (grade) {
+        gradeText.textContent = grade;
         gradeText.style.color = textColor;
         gradeText.style.backgroundColor = "rgba(255, 255, 255, 0.2)"; // White background
         gradeText.style.borderColor = "#ffffff"; // White border
@@ -1807,11 +1827,10 @@
         gradeText.style.width = height + "px";
         gradeText.style.minWidth = height + "px";
         gradeText.style.maxWidth = height + "px";
+      } else {
+        gradeText.textContent = "";
+        gradeText.style.display = "none";
       }
-    } else {
-      // Hide grade display during gameplay
-      gradeText.textContent = "";
-      gradeText.style.display = "none";
     }
 
     // Hide next threshold display (no grades to show)
@@ -2115,15 +2134,15 @@
       try {
         const db = getFirestore();
         
-        // Calculate elapsed time (7 minutes - time remaining)
+        // Calculate elapsed time (4:30 - time remaining)
         // Use the same calculation as in stopWatch()
-        const totalTimeLimit = 7 * 60 * 1000; // 7 minutes in milliseconds
+        const totalTimeLimit = 4.5 * 60 * 1000; // 4 minutes 30 seconds in milliseconds
         let elapsedTimeMs = 0;
         
         if (timerStartTime > 0) {
           // Calculate from timer variables (most accurate)
           elapsedTimeMs = Date.now() - timerStartTime - totalPausedTime;
-          // Clamp to 0-7 minutes
+          // Clamp to 0-4:30
           elapsedTimeMs = Math.max(0, Math.min(elapsedTimeMs, totalTimeLimit));
         } else {
           // Fallback: calculate from displayed time remaining
@@ -2199,15 +2218,15 @@
         };
 
         // Global leaderboard entry
-        await addDoc(collection(db, "scoresrace"), payload);
+        await addDoc(collection(db, "scoreshardrace"), payload);
         // Per‑player data entry
         await addDoc(
-          collection(db, "playerData", user.uid, "race"),
+          collection(db, "playerData", user.uid, "hardrace"),
           payload
         );
         // Player stats entry
         await addDoc(
-          collection(db, "playerStats", user.uid, "race"),
+          collection(db, "playerStats", user.uid, "hardrace"),
           payload
         );
 
@@ -2259,15 +2278,17 @@
       currQuestion++;
       
       // Check segment validation at milestones (10, 20, 30, etc.)
+      // Hard mode: increasing required correct answers (segment 1 needs 1, segment 2 needs 2, etc.)
       if (currQuestion % 10 === 0) {
         const segment = currQuestion / 10;
         
-        // Check if there's at least 1 correct answer in this segment
+        // Required correct answers increases by 1 for each segment
+        const requiredCorrect = segment;
         const segmentCorrectCount = segmentCorrectAnswers[segment] || 0;
         
-        if (segmentCorrectCount === 0) {
+        if (segmentCorrectCount < requiredCorrect) {
           // Segment failed - fetch new question without incrementing score
-          showNotification(`Segment ${segment} failed! No correct answers. Fetching new question...`, false);
+          showNotification(`Segment ${segment} failed! Need ${requiredCorrect} correct answers, got ${segmentCorrectCount}. Fetching new question...`, false);
           
           // Fetch a new question
           try {

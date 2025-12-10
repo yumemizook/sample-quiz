@@ -27,6 +27,7 @@
     <div id="profileBanner" class="profile-banner" style="display: none">
       <img id="bannerImage" src="" alt="Profile Banner" />
     </div>
+    <div id="achievementNotification" class="notification hide"></div>
     <div class="container menu-container">
       <div class="menu-header">
         <h1 class="menu-title">Icy's Quiz Challenge</h1>
@@ -36,18 +37,42 @@
       </div>
 
       <div class="mode-selection">
-        <h2 class="mode-selection-title">Select Difficulty</h2>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+          <h2 class="mode-selection-title" style="margin: 0;">Select Difficulty</h2>
+        </div>
         <div class="mode-cards">
-          <div class="mode-card" data-mode="easy">
+          <div class="mode-card" data-mode="easy" id="easyModeCard">
             <div class="mode-card-header">
               <span class="mode-icon"><i class="fas fa-seedling" style="color: #2ecc71;"></i></span>
               <h3 class="mode-name">Easy</h3>
             </div>
-            <p class="mode-description">
+            <p class="mode-description" id="easyModeDescription">
               Perfect for beginners. Answer 30 easy questions as fast as you
               can!
             </p>
             <div class="mode-difficulty easy-diff">Beginner Friendly</div>
+          </div>
+
+          <div class="mode-card hide" data-mode="easy-race" id="easyRaceModeCard">
+            <div class="mode-card-header">
+              <span class="mode-icon"><i class="fas fa-seedling" style="color: #2ecc71;"></i></span>
+              <h3 class="mode-name">Easy Race</h3>
+            </div>
+            <p class="mode-description">
+              30 minute timer. 100 questions. No question timer until question 31, then follows master mode time limits.
+            </p>
+            <div class="mode-difficulty easy-diff">Timed Challenge</div>
+          </div>
+
+          <div class="mode-card hide" data-mode="hard-race" id="hardRaceModeCard">
+            <div class="mode-card-header">
+              <span class="mode-icon"><i class="fas fa-skull" style="color: #ff0000;"></i></span>
+              <h3 class="mode-name">Hard Race</h3>
+            </div>
+            <p class="mode-description">
+              4:30 total time limit. Increasing required correct answers in recent 10 questions every 10 questions.
+            </p>
+            <div class="mode-difficulty hell-diff">Extreme Challenge</div>
           </div>
 
           <div class="mode-card active" data-mode="normal">
@@ -75,14 +100,24 @@
           </div>
 
           <div class="mode-card hide" data-mode="master130" id="raceModeCard">
-            <div class="mode-card-header">
-              <span class="mode-icon"><i class="fas fa-bolt" style="color: #ffff00;"></i></span>
-              <h3 class="mode-name">Race</h3>
+            <div class="mode-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="mode-icon"><i class="fas fa-bolt" style="color: #ffff00;"></i></span>
+                <h3 class="mode-name" id="raceModeName">Race</h3>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="raceToggleMinus" class="mode-toggle-btn" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 1.2em; cursor: pointer; transition: all 0.3s ease;" title="Previous race variant">
+                  <i class="fas fa-minus"></i>
+                </button>
+                <button id="raceTogglePlus" class="mode-toggle-btn" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 1.2em; cursor: pointer; transition: all 0.3s ease;" title="Next race variant">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
             </div>
-            <p class="mode-description">
+            <p class="mode-description" id="raceModeDescription">
               Race against time! 130 questions with a 7 minute time limit. Text elements fade randomly after question 100.<br><small style="opacity: 0.7;"><i class="fas fa-lightbulb"></i> Click 5 times to toggle Master mode</small>
             </p>
-            <div class="mode-difficulty master-diff">Extreme Challenge</div>
+            <div class="mode-difficulty master-diff" id="raceModeDifficulty">Extreme Challenge</div>
           </div>
 
           <div class="mode-card" data-mode="hell">
@@ -447,6 +482,75 @@
           }
         }
       }
+      
+      // Race variants toggle (inside race mode card)
+      const raceVariants = [
+        {
+          id: "easy-race",
+          name: "Race (Easy)",
+          description: "30 minute timer. 100 questions. No question timer until question 31, then follows master mode time limits.",
+          difficulty: "Timed Challenge"
+        },
+        {
+          id: "master130",
+          name: "Race",
+          description: "Race against time! 130 questions with a 7 minute time limit. Text elements fade randomly after question 100.",
+          difficulty: "Extreme Challenge"
+        },
+        {
+          id: "hard-race",
+          name: "Race (Hard)",
+          description: "4:30 total time. Increasing required recent correct answers every 10 questions.",
+          difficulty: "Extreme Challenge"
+        }
+      ];
+      let raceVariantIndex = 1; // start at standard race
+      const raceModeCard = document.getElementById("raceModeCard");
+      const raceModeName = document.getElementById("raceModeName");
+      const raceModeDescription = document.getElementById("raceModeDescription");
+      const raceModeDifficulty = document.getElementById("raceModeDifficulty");
+      const raceToggleMinus = document.getElementById("raceToggleMinus");
+      const raceTogglePlus = document.getElementById("raceTogglePlus");
+      const easyRaceModeCard = document.getElementById("easyRaceModeCard");
+      const hardRaceModeCard = document.getElementById("hardRaceModeCard");
+      const easyModeCard = document.getElementById("easyModeCard");
+      
+      // Always hide separate easy/hard race cards; race card handles variants
+      if (easyRaceModeCard) easyRaceModeCard.classList.add("hide");
+      if (hardRaceModeCard) hardRaceModeCard.classList.add("hide");
+      
+      function applyRaceVariant(index) {
+        raceVariantIndex = ((index % raceVariants.length) + raceVariants.length) % raceVariants.length;
+        const variant = raceVariants[raceVariantIndex];
+        if (!raceModeCard || !variant) return;
+        raceModeCard.setAttribute("data-mode", variant.id);
+        if (raceModeName) raceModeName.textContent = variant.name;
+        if (raceModeDescription) raceModeDescription.innerHTML = `${variant.description}<br><small style="opacity: 0.7;"><i class="fas fa-lightbulb"></i> Click 5 times to toggle Master mode</small>`;
+        if (raceModeDifficulty) raceModeDifficulty.textContent = variant.difficulty;
+        
+        // If race card is active, update selected mode and styling
+        if (raceModeCard.classList.contains("active")) {
+          selectedMode = variant.id;
+          updateModeStyling(selectedMode);
+          handleModeSelection(selectedMode);
+        }
+      }
+      
+      if (raceToggleMinus) {
+        raceToggleMinus.addEventListener("click", (e) => {
+          e.stopPropagation();
+          applyRaceVariant(raceVariantIndex - 1);
+        });
+      }
+      if (raceTogglePlus) {
+        raceTogglePlus.addEventListener("click", (e) => {
+          e.stopPropagation();
+          applyRaceVariant(raceVariantIndex + 1);
+        });
+      }
+      
+      // Initialize race variant
+      applyRaceVariant(raceVariantIndex);
       
       // 5-click toggle for master/race mode cards
       let masterCardClickCount = 0;

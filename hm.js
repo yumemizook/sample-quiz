@@ -212,16 +212,64 @@ document.addEventListener("DOMContentLoaded", () => {
                 // Sync photoURL, displayName, email, and role from Firebase Auth
                 const userProfileSnap = await getDoc(userProfileRef);
                 const existingData = userProfileSnap.exists() ? userProfileSnap.data() : {};
+                
+                // Store previous login timestamp before updating
+                const previousLoginTimestamp = existingData.lastLoginTimestamp || null;
+                const currentLoginTimestamp = new Date().toISOString();
+                
                 const updateData = {
                     displayName: user.displayName || user.email,
                     email: user.email,
-                    photoURL: user.photoURL || null
+                    photoURL: user.photoURL || null,
+                    lastLoginTimestamp: currentLoginTimestamp, // Track current login time
+                    previousLoginTimestamp: previousLoginTimestamp // Store previous login for achievement check
                 };
                 // Initialize role if missing
                 if (!existingData.role) {
                     updateData.role = 'user';
                 }
                 await setDoc(userProfileRef, updateData, { merge: true });
+                
+                // Check for return achievement (21+ days since last login)
+                if (previousLoginTimestamp) {
+                    const lastLogin = new Date(previousLoginTimestamp);
+                    const currentLogin = new Date(currentLoginTimestamp);
+                    const daysDiff = (currentLogin - lastLogin) / (1000 * 60 * 60 * 24);
+                    
+                    if (daysDiff >= 21) {
+                        // Show achievement notification on index.html
+                        showReturnAchievementNotification(daysDiff);
+                    }
+                }
+            }
+            
+            // Function to show return achievement notification
+            function showReturnAchievementNotification(daysDiff) {
+                const notification = document.getElementById('achievementNotification');
+                if (!notification) return;
+                
+                const days = Math.floor(daysDiff);
+                notification.innerHTML = `
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <i class="fas fa-calendar-check" style="font-size: 2em; color: #ffd700;"></i>
+                        <div>
+                            <div style="font-weight: bold; font-size: 1.2em; margin-bottom: 5px;">
+                                <i class="fas fa-trophy" style="color: #ffd700;"></i> Achievement Unlocked!
+                            </div>
+                            <div style="font-size: 1em;">
+                                <strong>Welcome Back!</strong> - You returned after ${days} days!
+                            </div>
+                        </div>
+                    </div>
+                `;
+                notification.classList.remove('hide');
+                notification.classList.add('success');
+                
+                // Hide notification after 8 seconds
+                setTimeout(() => {
+                    notification.classList.add('hide');
+                    notification.classList.remove('success');
+                }, 8000);
             } catch (error) {
                 console.error('Error syncing user profile:', error);
             }
@@ -609,6 +657,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location.href = "hell.html" + urlSuffix;
             } else if (selectedMode === "easy") {
                 window.location.href = "easy.html" + urlSuffix;
+            } else if (selectedMode === "easy-race") {
+                window.location.href = "easy-race.html" + urlSuffix;
+            } else if (selectedMode === "hard-race") {
+                window.location.href = "hard-race.html" + urlSuffix;
             } else if (selectedMode === "secret") {
                 window.location.href = "secret.html" + urlSuffix;
             } else if (selectedMode === "master130") {

@@ -333,6 +333,8 @@
           const userProfileRef = doc(db, 'userProfiles', user.uid);
           const userProfileSnap = await getDoc(userProfileRef);
           let allPlayerNames = new Set();
+          let lastLoginTimestamp = null;
+          let previousLoginTimestamp = null;
           
           if (userProfileSnap.exists()) {
             const userData = userProfileSnap.data();
@@ -343,6 +345,8 @@
                 if (name) allPlayerNames.add(name);
               });
             }
+            lastLoginTimestamp = userData.lastLoginTimestamp || null;
+            previousLoginTimestamp = userData.previousLoginTimestamp || null;
           }
 
           // Filter scores for this player
@@ -369,7 +373,7 @@
           const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
 
           // Display achievements
-          displayAchievements(easyScores, normalScores, masterScores, raceScores, hellScores, playerData, allPlayerNames, secretScores, hasUnlockedSecretMode);
+          displayAchievements(easyScores, normalScores, masterScores, raceScores, hellScores, playerData, allPlayerNames, secretScores, hasUnlockedSecretMode, lastLoginTimestamp, previousLoginTimestamp);
         } catch (error) {
           console.error('Error loading achievements:', error);
           displayAchievements(null, null, null, null, null, null, null, [], false);
@@ -762,6 +766,151 @@
           description: 'Clear Race Mode with 0.5s vanish timer',
           unlockedMessage: '<i class="fas fa-eye" style="color: #a29bfe;"></i> Blink and you\'ll miss it! Your memory is legendary!',
           checkUnlocked: (data) => data.raceScores?.some(has05sVanishTimer) || false
+        },
+        // Total Play Count Achievements
+        {
+          id: 'plays_10',
+          icon: '<i class="fas fa-gamepad"></i>',
+          title: 'Getting Started',
+          description: 'Complete 10 games across all modes',
+          unlockedMessage: '<i class="fas fa-gamepad"></i> You\'re getting the hang of it! Keep playing!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 10;
+          }
+        },
+        {
+          id: 'plays_25',
+          icon: '<i class="fas fa-gamepad"></i>',
+          title: 'Regular Player',
+          description: 'Complete 25 games across all modes',
+          unlockedMessage: '<i class="fas fa-gamepad"></i> Consistency is key! You\'re becoming a regular!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 25;
+          }
+        },
+        {
+          id: 'plays_50',
+          icon: '<i class="fas fa-trophy"></i>',
+          title: 'Dedicated Player',
+          description: 'Complete 50 games across all modes',
+          unlockedMessage: '<i class="fas fa-trophy"></i> Dedication pays off! You\'re truly committed!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 50;
+          }
+        },
+        {
+          id: 'plays_100',
+          icon: '<i class="fas fa-medal"></i>',
+          title: 'Century Club',
+          description: 'Complete 100 games across all modes',
+          unlockedMessage: '<i class="fas fa-medal"></i> Century achieved! You\'ve reached the first milestone!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 100;
+          }
+        },
+        {
+          id: 'plays_250',
+          icon: '<i class="fas fa-star"></i>',
+          title: 'Veteran Player',
+          description: 'Complete 250 games across all modes',
+          unlockedMessage: '<i class="fas fa-star"></i> Veteran status! Your experience shows!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 250;
+          }
+        },
+        {
+          id: 'plays_500',
+          icon: '<i class="fas fa-crown"></i>',
+          title: 'Elite Player',
+          description: 'Complete 500 games across all modes',
+          unlockedMessage: '<i class="fas fa-crown"></i> Elite status! You\'re among the best!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 500;
+          }
+        },
+        {
+          id: 'plays_1000',
+          icon: '<i class="fas fa-gem"></i>',
+          title: 'Master Gamer',
+          description: 'Complete 1,000 games across all modes',
+          unlockedMessage: '<i class="fas fa-gem"></i> Master gamer! You\'ve reached legendary status!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 1000;
+          }
+        },
+        {
+          id: 'plays_2500',
+          icon: '<i class="fas fa-fire"></i>',
+          title: 'Legendary Player',
+          description: 'Complete 2,500 games across all modes',
+          unlockedMessage: '<i class="fas fa-fire"></i> Legendary! Your dedication is unmatched!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 2500;
+          }
+        },
+        {
+          id: 'plays_5000',
+          icon: '<i class="fas fa-skull"></i>',
+          title: 'Immortal Player',
+          description: 'Complete 5,000 games across all modes',
+          unlockedMessage: '<i class="fas fa-skull"></i> Immortal dedication! You\'ve transcended all limits!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 5000;
+          }
+        },
+        {
+          id: 'plays_10000',
+          icon: '<i class="fas fa-award"></i>',
+          title: 'Ultimate Dedication',
+          description: 'Complete 10,000 games across all modes',
+          unlockedMessage: '<i class="fas fa-award"></i> Ultimate dedication! You are the supreme player!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 10000;
+          }
+        },
+        {
+          id: 'return_after_21_days',
+          icon: '<i class="fas fa-calendar-check"></i>',
+          title: 'Welcome Back!',
+          description: 'Return to the game after 21 or more days since your last login',
+          unlockedMessage: '<i class="fas fa-calendar-check"></i> Welcome back! We missed you!',
+          checkUnlocked: (data) => {
+            if (!data.lastLoginTimestamp || !data.previousLoginTimestamp) return false;
+            const lastLogin = new Date(data.lastLoginTimestamp);
+            const previousLogin = new Date(data.previousLoginTimestamp);
+            const daysDiff = (lastLogin - previousLogin) / (1000 * 60 * 60 * 24);
+            return daysDiff >= 21;
+          }
         }
       ];
       

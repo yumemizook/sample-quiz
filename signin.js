@@ -23,10 +23,16 @@ await signInWithEmailAndPassword(auth, email, password)
     const existingData = userProfileSnap.exists() ? userProfileSnap.data() : {};
     
     // Backfill createdAt and role if they don't exist
+    // Store previous login timestamp before updating
+    const previousLoginTimestamp = existingData.lastLoginTimestamp || null;
+    const currentLoginTimestamp = new Date().toISOString();
+    
     const updateData = {
         displayName: user.displayName || user.email,
         email: user.email,
-        photoURL: user.photoURL || null
+        photoURL: user.photoURL || null,
+        lastLoginTimestamp: currentLoginTimestamp, // Track current login time
+        previousLoginTimestamp: previousLoginTimestamp // Store previous login for achievement check
     };
     if (!existingData.createdAt) {
         updateData.createdAt = new Date().toISOString();
@@ -82,10 +88,16 @@ googleButton.addEventListener("click", async () => {
         const existingData = userProfileSnap.exists() ? userProfileSnap.data() : {};
         
         // Backfill createdAt and role if they don't exist
+        // Store previous login timestamp before updating
+        const previousLoginTimestamp = existingData.lastLoginTimestamp || null;
+        const currentLoginTimestamp = new Date().toISOString();
+        
         const updateData = {
             displayName: user.displayName || user.email,
             email: user.email,
-            photoURL: user.photoURL || null
+            photoURL: user.photoURL || null,
+            lastLoginTimestamp: currentLoginTimestamp, // Track current login time
+            previousLoginTimestamp: previousLoginTimestamp // Store previous login for achievement check
         };
         if (!existingData.createdAt) {
             updateData.createdAt = new Date().toISOString();
