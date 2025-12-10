@@ -1751,7 +1751,7 @@
     const gradeLevel = Math.floor(questionsPassed / 10);
     
     if (gradeLevel > 0) {
-      return "S" + gradeLevel; // S1, S2, S3, etc.
+      return "m" + gradeLevel; // m1, m2, m3, etc.
     }
     
     return ""; // No grade until 10 questions are passed
@@ -1820,6 +1820,7 @@
         gradeText.style.backgroundColor = "rgba(255, 255, 255, 0.2)"; // White background
         gradeText.style.borderColor = "#ffffff"; // White border
         gradeText.style.display = "block";
+        gradeDisplayLeft.style.display = "flex";
 
         // Make grade display box square (width = height)
         void gradeText.offsetHeight;
@@ -1830,6 +1831,7 @@
       } else {
         gradeText.textContent = "";
         gradeText.style.display = "none";
+        gradeDisplayLeft.style.display = "none";
       }
     }
 
@@ -1842,6 +1844,7 @@
     // Display grade points in the old position
     gradePointsDisplay.innerHTML = totalGradePoints.toLocaleString() || "0";
     gradePointsDisplay.style.color = currQuestion >= 50 ? textColor : "cyan";
+    gradePointsDisplay.style.display = "block";
     
     // Update lives display (hide if disabled)
     const livesDisplay = document.getElementById("livesDisplay");
@@ -2013,17 +2016,12 @@
       creditsBGM.play();
     }
     const evalDiv = document.querySelector(".evalscreen");
-    let grade = "";
-    let line = "white";
-    // Only assign GM grade if all 130 questions were completed
-    // In race mode, you can only progress if you answer correctly, so if we've reached the end with exactly 130 questions,
-    // all questions have been answered correctly (score should equal 130)
-    if (allQuestionsCompleted && allQuestions.length === 130) {
-      // Double-check: score should equal 130 if all questions were answered correctly
-      if (score === 130) {
-        grade = "GM";
-      }
-      // If all questions completed but not GM, grade remains empty (no grade system)
+    // Use hard-race grade progression (S1, S2, ...) and promote to GM on perfect clear
+    let grade = calculateHardRaceGrade() || "";
+    let line = "#ffffff";
+    if (allQuestionsCompleted && allQuestions.length === 130 && score === 130) {
+      grade = "GM";
+      line = "#ffd700";
     }
 
     clearInterval(timer);
@@ -2059,9 +2057,9 @@
       inputTypeIcon = '<i class="fas fa-question-circle" style="color: #dbffff;"></i>';
     }
 
-    // Only show GM grade if all questions completed, otherwise show nothing
+    // Show final grade (GM for perfect clear, otherwise current S-grade progression)
     let gradeDisplay = "";
-    if (allQuestionsCompleted && grade === "GM") {
+    if (grade) {
       gradeDisplay = `<div id=grade>
                     <span class="grade" style="font-size:6em; color: ${line}">${grade}</span>
                     </div>`;

@@ -1342,6 +1342,7 @@
     // No question timer until question 31
     if (currQuestion < 30) {
       // No timer for questions 0-29
+      initialTimeToAnswer = 30;
       timerDiv.style.display = "none";
     } else if (currQuestion < 40) {
       // Questions 31-39: Use Master Q1 timer (30 seconds, since Q1 is < 10)
@@ -1741,7 +1742,7 @@
     timerStartTime = Date.now();
     const timeDisplay = document.getElementById("timeelapsed");
     let lastMinute = -1; // Track last minute to detect changes
-    const totalTimeLimit = 7 * 60 * 1000; // 7 minutes in milliseconds
+    const totalTimeLimit = 30 * 60 * 1000; // 30 minutes in milliseconds
     timer = setInterval(() => {
       // Don't update if paused
       if (isPaused) {
@@ -1833,19 +1834,10 @@
     const timeFactor = timeRemaining / totalTimeLimit; // 0 to 1, higher is better
     
     // Calculate grade: (current score + recent correct answers) * time factor
-    const gradeValue = Math.floor((score + recentCorrectCount) * timeFactor);
+    const gradeValue = Math.floor((score ** 1.2 + recentCorrectCount ** 1.4) * timeFactor ** 0.66);
     
-    // Map to grade letters (similar to other modes)
-    if (gradeValue >= 90) return "S";
-    if (gradeValue >= 80) return "A";
-    if (gradeValue >= 70) return "B";
-    if (gradeValue >= 60) return "C";
-    if (gradeValue >= 50) return "D";
-    if (gradeValue >= 40) return "E";
-    if (gradeValue >= 30) return "F";
-    if (gradeValue >= 20) return "G";
-    if (gradeValue >= 10) return "H";
-    return "";
+    return "e" + gradeValue;
+
   }
 
   // Update grade display in real-time based on easy race grading
@@ -1919,6 +1911,7 @@
         gradeText.style.backgroundColor = "rgba(255, 255, 255, 0.2)"; // White background
         gradeText.style.borderColor = "#ffffff"; // White border
         gradeText.style.display = "block";
+        gradeDisplayLeft.style.display = "flex";
 
         // Make grade display box square (width = height)
         void gradeText.offsetHeight;
@@ -1926,6 +1919,8 @@
         gradeText.style.width = height + "px";
         gradeText.style.minWidth = height + "px";
         gradeText.style.maxWidth = height + "px";
+      } else {
+        gradeDisplayLeft.style.display = "none";
       }
     }
 
@@ -1938,6 +1933,7 @@
     // Display grade points in the old position
     gradePointsDisplay.innerHTML = totalGradePoints.toLocaleString() || "0";
     gradePointsDisplay.style.color = currQuestion >= 50 ? textColor : "cyan";
+    gradePointsDisplay.style.display = "block";
     
     // Update lives display (hide if disabled)
     const livesDisplay = document.getElementById("livesDisplay");
@@ -2030,8 +2026,13 @@
       return 0;
     }
 
-    // Get remaining time (clamp to 0 if negative)
-    const remainingTime = Math.max(0, timeToAnswer || 0);
+    // Get remaining time (clamp to 0 if negative). For untimed sections where
+    // timeToAnswer isn't running yet, fall back to full initial time so early
+    // questions still award points.
+    const remainingTime = Math.max(
+      0,
+      typeof timeToAnswer === "number" ? timeToAnswer : initialTimeToAnswer
+    );
 
     // Calculate remaining time ratio (0.0 to 1.0)
     // More remaining time = higher ratio = better grade
@@ -2040,7 +2041,7 @@
     // Base score for each question
     const quesScore = 500;
 
-    // Difficulty multiplier based on question number
+    // Difficulty multiplier based on question number (easy race has 100 questions max)
     let multiplier;
     if (currQuestion < 25) {
       multiplier = 1;
@@ -2048,10 +2049,8 @@
       multiplier = 2;
     } else if (currQuestion < 75) {
       multiplier = 3;
-    } else if (currQuestion < 100) {
-      multiplier = 4;
     } else {
-      multiplier = 5; // Questions 100-130
+      multiplier = 4; // Questions 75-99
     }
 
     // Calculate grade points with remaining time as a factor
@@ -2386,6 +2385,9 @@
 
       // Update BGM based on current question
       playBGM();
+
+      // Refresh grade display on every new question
+      updateGradeDisplay();
     } else {
       evalScreen();
     }
@@ -2549,7 +2551,9 @@
               livesDisplay.classList.add("lives-red");
             }
           }
-          
+          // Keep grade UI in sync after wrong attempts
+          updateGradeDisplay();
+
           if (currentLives <= 0) {
             // Out of lives - show FAILED screen
             if (window.answerTimerId) {
