@@ -7,57 +7,7 @@
     <title>Death Mode</title>
     <link rel="stylesheet" href="index.css" />
     <script src="https://kit.fontawesome.com/ced4c4a7f8.js" crossorigin="anonymous"></script>
-    <style>
-        /* Embed ModernDOS font */
-        @font-face {
-        font-family: "ModernDOS";
-        src: url("ModernDOS8x16.ttf") format("truetype");
-            font-weight: normal;
-            font-style: normal;
-        }
-        
-        /* Use ModernDOS font */
-        .modern-dos-font {
-        font-family: "ModernDOS", "Courier New", Courier, monospace !important;
-        }
-        
-        /* Apply ModernDOS to questions 100+ */
-        .question-modern-dos {
-        font-family: "ModernDOS", "Courier New", Courier, monospace !important;
-        }
-        
-        /* Green text for questions 110+ */
-        .question-green {
-            color: #00ff00 !important;
-        }
-        
-        /* Remove background for questions 120+ */
-        .no-background {
-            background: none !important;
-            background-color: #000000 !important;
-        }
-        
-        /* Simplistic theme for questions 130+ */
-        .simplistic-theme {
-            background: #000000 !important;
-            color: #00ff00 !important;
-        }
-        
-        .simplistic-theme .container {
-            background: transparent !important;
-            border: 1px solid #00ff00 !important;
-        }
-        
-        .simplistic-theme .container button {
-            background: #000000 !important;
-            color: #00ff00 !important;
-            border: 1px solid #00ff00 !important;
-        }
-        
-        .simplistic-theme a {
-            color: #00ff00 !important;
-        }
-        
+    <style>    
         body {
             background: url("hell1.jpg") no-repeat center center fixed;
             background-size: cover;
@@ -1017,9 +967,9 @@
 
         if (!bgm2) {
             const volume = getAudioVolume();
-            bgm2 = new Audio("bgm/stage3.mp3");
-            bgm3 = new Audio("bgm/stage4.mp3");
-            bgm4 = new Audio("bgm/stage5.mp3");
+            bgm2 = new Audio("bgm/stage2.mp3");
+            bgm3 = new Audio("bgm/stage3.mp3");
+            bgm4 = new Audio("bgm/stage4.mp3");
             bgm2.loop = true; bgm2.volume = volume;
             bgm3.loop = true; bgm3.volume = volume;
             bgm4.loop = true; bgm4.volume = volume;
@@ -1138,18 +1088,7 @@
             choice.name = "answer";
             choice.value = decodedOption;
             choiceLabel.textContent = decodedOption;
-            
-            // Apply ModernDOS font to options for questions 100+
-            if (currQuestion >= 100) {
-          choiceLabel.style.fontFamily =
-            "'ModernDOS', 'Courier New', Courier, monospace";
-            }
-            
-            // Apply green color to options for questions 110+
-            if (currQuestion >= 110) {
-                choiceLabel.style.color = "#00ff00";
-            }
-            
+  
             // Add controller button indicator (hide on mobile)
             const controllerIndicator = document.createElement("img");
             controllerIndicator.className = "controller-indicator";
@@ -1235,300 +1174,32 @@
         // Align grade display after question loads (container content may have changed)
         setTimeout(() => alignGradeDisplay(), 0);
 
-        let answerTimerId; // Store interval ID for answer timer
-        // Clear any previous interval to prevent multiple timers
+        // Death mode timer: 25s until Q50, then linearly down to 5s by Q100
         if (window.answerTimerId) {
             clearInterval(window.answerTimerId);
         }
         const timerDiv = document.querySelector(".timerifinvalid");
-        if (quizMinutes >= 15) {
-            // Add 1s countdown timer for each question when stopwatch hits 15 minutes (hell mode)
-            timeToAnswer = 1; // 1 second for hell mode
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "red";
-      } else if (currQuestion < 10) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 12;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 20) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 11.5;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 30) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 11;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 40) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 10;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 50) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 9;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 60) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 8.5;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 110) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 7.5;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 120) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 6;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 130) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 4;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 140) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 3.5;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 150) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 3;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 160) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 2.5;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 180) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 2;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion < 190) {
-        // This will converge to a very strict time curve over the span of the quiz, trust me (scaled for 200 questions)
-            timeToAnswer = 1.75;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
-      } else if (currQuestion <= allQuestions.length) {
-            timeToAnswer = 1.5;
-            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
-            window.answerTimerId = setInterval(() => {
-                if (timeToAnswer > 0) {
-            timeToAnswer -= 0.01 * timeMultiplier;
-                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
-                } else {
-                    clearInterval(window.answerTimerId);
-                    questionTimedOut = true; // Mark that player ran out of time on this question
-                    evalScreen();
-                }
-            }, 10);
-            timerDiv.style.display = "block";
-            timerDiv.style.textAlign = "center";
-            timerDiv.style.fontSize = "xx-large";
-            timerDiv.style.color = "white";
+        if (currQuestion < 50) {
+            timeToAnswer = 25;
+        } else {
+            const decay = (currQuestion - 50) * 0.4;
+            timeToAnswer = Math.max(5, 25 - decay);
         }
+        initialTimeToAnswer = timeToAnswer;
+        window.answerTimerId = setInterval(() => {
+            if (timeToAnswer > 0) {
+                timeToAnswer -= 0.01 * timeMultiplier;
+                timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+            } else {
+                clearInterval(window.answerTimerId);
+                questionTimedOut = true;
+                evalScreen();
+            }
+        }, 10);
+        timerDiv.style.display = "block";
+        timerDiv.style.textAlign = "center";
+        timerDiv.style.fontSize = "xx-large";
+        timerDiv.style.color = "white";
         document.querySelector(".correctanswer").innerHTML = "";
         
         // Track question start time for grade points calculation
@@ -1539,40 +1210,15 @@
         // Update indicator visibility after loading question
         updateIndicatorVisibility();
         
-        // Check threshold times only when reaching specific questions (51, 101, 131)
-        // Question 51 (currQuestion === 50): Check if time >= 3 minutes
+        // Death mode torikan: check 2-minute threshold at question 51
         if (currQuestion === 50 && !thresholdChecked.q51) {
             thresholdChecked.q51 = true;
-            if (quizMinutes >= 3) {
+            if (quizMinutes >= 2) {
                 stopBGM();
                 if (timer) {
                     clearInterval(timer);
                 }
-                showThresholdScreen(); // TGM3 Lv.500 torikan
-                return;
-            }
-        }
-        // Question 101 (currQuestion === 100): Check if time >= 5 minutes
-        if (currQuestion === 100 && !thresholdChecked.q101) {
-            thresholdChecked.q101 = true;
-            if (quizMinutes >= 5) {
-                stopBGM();
-                if (timer) {
-                    clearInterval(timer);
-                }
-                showThresholdScreen(); // TGM3 Lv.1000 torikan
-                return;
-            }
-        }
-        // Question 131 (currQuestion === 130): Check if time >= 6 minutes
-        if (currQuestion === 130 && !thresholdChecked.q131) {
-            thresholdChecked.q131 = true;
-            if (quizMinutes >= 6) {
-                stopBGM();
-                if (timer) {
-                    clearInterval(timer);
-                }
-                showThresholdScreen(); // TGM3 Lv.1300 torikan (not quite, it's TGM4's Normal 3.1)
+                showThresholdScreen();
                 return;
             }
         }
@@ -1789,12 +1435,7 @@
           .toString()
           .padStart(2, "0")}:${miliseconds.toString().padStart(2, "0")}`;
             
-            // Apply ModernDOS font after question 100
-            if (currQuestion >= 100) {
-          timeDisplay.style.fontFamily =
-            "'ModernDOS', 'Courier New', Courier, monospace";
-            }
-            
+ 
             updateGradeDisplay(); // Update grade display in real-time
             
             if (quizMinutes >= 10) {
@@ -1941,12 +1582,7 @@
         totalScore.style.fontSize = "xx-large";
         totalScore.style.color = "pink";
         
-        // Apply ModernDOS font after question 100
-        if (currQuestion >= 100) {
-        totalScore.style.fontFamily =
-          "'ModernDOS', 'Courier New', Courier, monospace";
-      }
-      
+ 
       // Update lives display (hide if disabled)
       const livesDisplay = document.getElementById("livesDisplay");
       const livesCount = document.getElementById("livesCount");
@@ -2021,13 +1657,11 @@
       evalDiv.style.display = "block";
       evalDiv.style.visibility = "visible";
         
-        // Check if player completed hell mode (all 200 questions answered, not abandoned)
-        // We've completed if we answered all 200 questions correctly
+        // Check if player completed death mode (all 100 questions answered, not abandoned)
       const isCompleted =
         !quizAbandoned &&
-        elapsedQuestions === 200 &&
-        score === 200 &&
-        quizMinutes < 15;
+        elapsedQuestions === 100 &&
+        score === 100;
         
         // Play completion sound only if quiz was not abandoned AND all questions were completed
       if (!quizAbandoned && isCompleted && localStorage.getItem("musicEnabled") !== "false") {
@@ -2076,19 +1710,14 @@
         // Calculate grade for submission (needed for both screens)
         let grade = "";
       let evalPercent =
-        allQuestions.length > 0 ? (score / allQuestions.length) * 200 : 0;
+        allQuestions.length > 0 ? (score / allQuestions.length) * 100 : 0;
         let line = "white";
-        if (quizMinutes >= 15) {
-            grade = "Invalid";
-      } else if (evalPercent == 200 && quizMinutes < 5) {
-            grade = "Grand Master - Infinity";
+        if (isCompleted) {
+            grade = "Gm";
             line = "orange";
-      } else if (allQuestions.length > 0) {
-            // Floor division by 10 to get grade number (0-20)
-            let ngrade = Math.floor(evalPercent / 10);
-            // Grade format: S1, S2, S3, ..., S20 (or empty string if 0)
-            grade = ngrade > 0 ? "S" + ngrade : "";
-            line = ngrade === 20 ? "green" : "white";
+      } else if (elapsedQuestions >= 50 && thresholdChecked.q51) {
+            grade = "m";
+            line = "white";
         } else {
             grade = "";
         }
@@ -2159,15 +1788,15 @@
                         };
 
                         // Global leaderboard entry
-              await addDoc(collection(db, "scoresfinal"), payload);
+              await addDoc(collection(db, "scoresdeath"), payload);
                         // Per‑player data entry
               await addDoc(
-                collection(db, "playerData", user.uid, "hell"),
+                collection(db, "playerData", user.uid, "death"),
                 payload
               );
                         // Player stats entry
               await addDoc(
-                collection(db, "playerStats", user.uid, "hell"),
+                collection(db, "playerStats", user.uid, "death"),
                 payload
               );
                         console.log("Score submitted automatically");
@@ -2178,101 +1807,51 @@
             }
         }
         
-      // Check if player answered 100+ questions to apply ModernDOS font
-      const answered100Plus = elapsedQuestions >= 100 || currQuestion >= 100;
-      const modernDosFont = answered100Plus
-        ? "'ModernDOS', 'Courier New', Courier, monospace"
-        : "inherit";
 
-        // Show credits screen only if completed AND grade is Grand Master - Infinity, otherwise show evaluation screen
-        if (isCompleted && grade === "Grand Master - Infinity") {
-            // Credits screen (responsive for mobile devices)
-            evalDiv.innerHTML = `
-                <div style="color: #00ff00; font-family: ${modernDosFont}; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
-                    <h1 style="font-family: ${modernDosFont}; font-size: clamp(1.5em, 5vw, 3em); margin-bottom: 20px; text-align: center; word-wrap: break-word;">CREDITS</h1>
-                    <div style="font-family: ${modernDosFont}; font-size: clamp(0.9em, 2.5vw, 1.5em); line-height: 1.8; text-align: center; max-width: 90%; width: 100%; box-sizing: border-box;">
-                        <p style="font-family: ${modernDosFont}; margin: 15px 0;">Congratulations on completing HELL MODE</p>
-                        <p style="font-family: ${modernDosFont}; margin: 15px 0;">You have proven yourself worthy</p>
-                        <br>
-                        <br>
-                        <p style="font-family: ${modernDosFont}; margin: 15px 0; font-size: clamp(0.7em, 2vw, 1em); word-break: break-all;">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-                        <br>
-                        <p style="font-family: ${modernDosFont}; margin: 15px 0;">DEVELOPED BY</p>
-                        <p style="font-family: ${modernDosFont}; margin: 15px 0;">Neneko</p>
-                        <br>
-                        <p style="font-family: ${modernDosFont}; margin: 15px 0;">SPECIAL THANKS</p>
-                        <p style="font-family: ${modernDosFont}; margin: 15px 0;">To all the players who dared to enter HELL (how many again?)</p>
-                        <br>
-                        <p style="font-family: ${modernDosFont}; margin: 15px 0; font-size: clamp(0.7em, 2vw, 1em); word-break: break-all;">━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━</p>
-                        <br>
-
-                    </div>
-                </div>
-            `;
-            
-            // After 10 seconds, show grade screen (responsive for mobile devices)
-            setTimeout(() => {
-                evalDiv.innerHTML = `
-                    <div style="color: #00ff00; font-family: ${modernDosFont}; background: #000000; padding: 20px; min-height: 100vh; display: flex; flex-direction: column; justify-content: center; align-items: center; box-sizing: border-box;">
-                        <h1 style="font-family: ${modernDosFont}; font-size: clamp(2em, 6vw, 4em); margin-bottom: 30px; text-align: center; word-wrap: break-word;">YOU ARE</h1>
-                        <div style="font-family: ${modernDosFont}; font-size: clamp(3em, 10vw, 6em); margin: 30px 0; text-align: center; font-weight: bold; word-wrap: break-word;">
-                            ${grade || ""}
-                        </div>
-                        <p style="font-family: ${modernDosFont}; margin: 20px 0; font-size: clamp(0.8em, 2vw, 0.9em);">Thank you for playing.</p>
-                    </div>
-                `;
-                
-                // After 10 more seconds (20 total), redirect to home
-                setTimeout(() => {
-            location.href = "index.html";
-                }, 10000); // 10 seconds
-            }, 10000); // 10 seconds
-        } else {
-        // Regular evaluation screen - reformatted with better layout
         const timeText = timeElapsedDiv ? timeElapsedDiv.textContent : "N/A";
         evalDiv.innerHTML = `
-                <div style="font-family: ${modernDosFont}; background: rgba(0, 0, 0, 0.9); padding: 40px 20px; border-radius: 10px; max-width: 800px; width: 90%; box-sizing: border-box;">
-                    <h3 style="font-family: ${modernDosFont}; font-size: clamp(1.8em, 4vw, 2.5em); margin-bottom: 30px; text-align: center; color: #ffffff;">Game Over.</h3>
+                <div style="background: rgba(0, 0, 0, 0.9); padding: 40px 20px; border-radius: 10px; max-width: 800px; width: 90%; box-sizing: border-box;">
+                    <h3 style="font-size: clamp(1.8em, 4vw, 2.5em); margin-bottom: 30px; text-align: center; color: #ffffff;">Game Over.</h3>
                     
-                    <div style="font-family: ${modernDosFont}; margin-bottom: 30px; text-align: center;">
-                        <p style="font-family: ${modernDosFont}; font-size: clamp(1.1em, 2.5vw, 1.5em); margin-bottom: 20px; color: #ffffff;">Your score is:</p>
+                    <div style="margin-bottom: 30px; text-align: center;">
+                        <p style="font-size: clamp(1.1em, 2.5vw, 1.5em); margin-bottom: 20px; color: #ffffff;">Your score is:</p>
                         <div style="display: flex; justify-content: space-around; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 20px;">
-                            <div style="font-family: ${modernDosFont}; text-align: center;">
-                                <div style="font-family: ${modernDosFont}; font-size: clamp(2.5em, 6vw, 4em); font-weight: bold; color: #ffb9b9;">
+                            <div style="text-align: center;">
+                                <div style="font-size: clamp(2.5em, 6vw, 4em); font-weight: bold; color: #ffb9b9;">
                                     ${score}
                     </div>
-                                <div style="font-family: ${modernDosFont}; font-size: clamp(1em, 2.5vw, 1.5em); color: #cccccc;">
+                                <div style="font-size: clamp(1em, 2.5vw, 1.5em); color: #cccccc;">
                                     / ${allQuestions.length}
                     </div>
                     </div>
-                            <div style="font-family: ${modernDosFont}; text-align: center;">
-                                <div style="font-family: ${modernDosFont}; font-size: clamp(2.5em, 6vw, 4.5em); font-weight: bold; color: ${line};">
+                            <div style="text-align: center;">
+                                <div style="font-size: clamp(2.5em, 6vw, 4.5em); font-weight: bold; color: ${line};">
                                     ${grade || ""}
                                 </div>
                             </div>
                         </div>
                     </div>
                     
-                    <div style="font-family: ${modernDosFont}; margin-bottom: 25px; text-align: center;">
-                        <p style="font-family: ${modernDosFont}; font-size: clamp(1em, 2vw, 1.2em); margin: 10px 0; color: #ffffff;">
+                    <div style="margin-bottom: 25px; text-align: center;">
+                        <p style="font-size: clamp(1em, 2vw, 1.2em); margin: 10px 0; color: #ffffff;">
                             Grade Points: <span style="color: #00ff00; font-weight: bold;">${totalGradePoints.toLocaleString()}</span>
                         </p>
-                        <p style="font-family: ${modernDosFont}; font-size: clamp(0.9em, 1.8vw, 1em); margin: 10px 0; color: #cccccc;">
+                        <p style="font-size: clamp(0.9em, 1.8vw, 1em); margin: 10px 0; color: #cccccc;">
                             Time: <span style="color: #ffb9b9;">${timeText}</span>
                         </p>
                     </div>
                     
-                    <div style="font-family: ${modernDosFont}; margin-top: 30px; text-align: center;">
-                        <p style="font-family: ${modernDosFont}; font-size: clamp(1em, 2vw, 1.2em); margin-bottom: 25px; color: #ffffff;">Thank you for playing!</p>
+                    <div style="margin-top: 30px; text-align: center;">
+                        <p style="font-size: clamp(1em, 2vw, 1.2em); margin-bottom: 25px; color: #ffffff;">Thank you for playing!</p>
                         <div style="display: flex; flex-direction: column; gap: 15px; align-items: center;">
-                            <button onclick="location.reload()" style="font-family: ${modernDosFont}; width: 100%; max-width: 300px; padding: 15px; background-color: #ffb9b9; color: rgb(104, 104, 104); border: none; border-radius: 5px; font-size: clamp(1em, 2vw, 1.2em); cursor: pointer; font-weight: bold;">Play Again</button>
-                            <button class="submitsuffering" style="font-family: ${modernDosFont}; width: 100%; max-width: 300px; padding: 15px; background-color: #ffb9b9; color: rgb(104, 104, 104); border: none; border-radius: 5px; font-size: clamp(1em, 2vw, 1.2em); cursor: pointer; font-weight: bold;">Submit your suffe- I mean score</button>
-                            <button class="home" onclick="location.href='index.html'" style="font-family: ${modernDosFont}; width: 100%; max-width: 300px; padding: 15px; background-color: #ffb9b9; color: rgb(104, 104, 104); border: none; border-radius: 5px; font-size: clamp(1em, 2vw, 1.2em); cursor: pointer; font-weight: bold;">Home</button>
+                            <button onclick="location.reload()" style="width: 100%; max-width: 300px; padding: 15px; background-color: #ffb9b9; color: rgb(104, 104, 104); border: none; border-radius: 5px; font-size: clamp(1em, 2vw, 1.2em); cursor: pointer; font-weight: bold;">Play Again</button>
+                            <button class="submitsuffering" style="width
+                            <button class="home" onclick="location.href='index.html'" style="width: 100%; max-width: 300px; padding: 15px; background-color: #ffb9b9; color: rgb(104, 104, 104); border: none; border-radius: 5px; font-size: clamp(1em, 2vw, 1.2em); cursor: pointer; font-weight: bold;">Home</button>
                         </div>
                     </div>
                 </div>
             `;
-        }
+        
         
       // Ensure eval screen is visible and not hidden, and centered on screen
       evalDiv.style.display = "flex";
@@ -2311,7 +1890,7 @@
 
             let isSubmitting = false;
 
-            async function submitHellScore() {
+            async function submitDeathScore() {
                 if (isSubmitting || submitBtn.disabled) return;
                 
                 // Prevent abandoned scores from being submitted
@@ -2320,14 +1899,6 @@
                     submitBtn.disabled = true;
                     submitBtn.textContent = "Abandoned runs cannot be submitted";
                     submitBtn.style.cursor = "not-allowed";
-                    return;
-                }
-                
-                // Prevent invalid scores from being submitted
-                if (quizMinutes >= 15) {
-            alert(
-              "Invalid run! Scores cannot be submitted for runs that took 15 minutes or longer."
-            );
                     return;
                 }
                 
@@ -2405,15 +1976,15 @@
                     };
 
                     // Global leaderboard entry
-            await addDoc(collection(db, "scoresfinal"), payload);
+            await addDoc(collection(db, "scoresdeath"), payload);
                     // Per‑player data entry
             await addDoc(
-              collection(db, "playerData", user.uid, "hell"),
+              collection(db, "playerData", user.uid, "death"),
               payload
             );
                     // Player stats entry
             await addDoc(
-              collection(db, "playerStats", user.uid, "hell"),
+              collection(db, "playerStats", user.uid, "death"),
               payload
             );
 
@@ -2432,7 +2003,7 @@
             }
 
             // Manual click (kept for UX)
-            submitBtn.addEventListener("click", submitHellScore);
+            submitBtn.addEventListener("click", submitDeathScore);
 
             // Check for invalidating modifiers and disable submit button
             const hasInvalidModifiers = startQuestionParam !== 0 || timeMultiplier < 1.0;
@@ -2447,7 +2018,7 @@
                 submitBtn.style.cursor = "not-allowed";
             } else {
                 // Automatic upload for logged‑in users
-                submitHellScore();
+                submitDeathScore();
             }
         }
     }

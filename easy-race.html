@@ -1127,13 +1127,10 @@
     if (!bgm4) {
       const volume = getAudioVolume();
       bgm4 = new Audio("bgm/stage4.mp3");
-      bgm5 = new Audio("bgm/stage5.mp3");
 
       // Set BGM to loop and apply volume
       bgm4.loop = true;
       bgm4.volume = volume;
-      bgm5.loop = true;
-      bgm5.volume = volume;
     }
 
     // Check if we're on the final question (stop BGM)

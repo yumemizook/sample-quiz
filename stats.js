@@ -28,7 +28,7 @@ function formatRelativeTime(timestamp) {
 }
 
 // Calculate main input method based on play counts
-function calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores = []) {
+function calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores = [], raceEasyScores = [], raceHardScores = [], deathScores = []) {
     const inputCounts = {
         keyboard: 0,
         controller: 0,
@@ -38,7 +38,7 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
     };
     
     // Count input types across all modes
-    const allScores = [...easyScores, ...normalScores, ...masterScores, ...hellScores, ...secretScores, ...raceScores];
+    const allScores = [...easyScores, ...normalScores, ...masterScores, ...hellScores, ...secretScores, ...raceScores, ...raceEasyScores, ...raceHardScores, ...deathScores];
     allScores.forEach(score => {
         const inputType = (score.inputType || "unknown").toLowerCase();
         if (inputType === "keyboard" || inputType === "⌨️") {
@@ -102,7 +102,7 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
 }
 
 // Calculate player level and XP based on achievements and grade points
-function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores = []) {
+function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores = [], raceEasyScores = [], raceHardScores = [], deathScores = []) {
     let experience = 0;
     
     // Base XP from scores earned (scaled appropriately for each mode)
@@ -217,6 +217,33 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
             else if (score.clearType === "All Correct!") experience += 150;
         }
     });
+
+    // Easy race mode
+    raceEasyScores.forEach(score => {
+        const gradePoints = score.gradePoints || score.score || 0;
+        experience += Math.floor(gradePoints / 150);
+        if (score.grade === "GM") {
+            experience += 150;
+        }
+    });
+
+    // Hard race mode
+    raceHardScores.forEach(score => {
+        const gradePoints = score.gradePoints || score.score || 0;
+        experience += Math.floor(gradePoints / 100);
+        if (score.grade === "GM") {
+            experience += 275;
+        }
+    });
+
+    // Death mode (hell variant)
+    deathScores.forEach(score => {
+        const correctAnswers = score.score || 0;
+        experience += Math.floor(correctAnswers * 9);
+        if (score.grade && score.grade.toLowerCase().includes("gm")) {
+            experience += 180;
+        }
+    });
     
     // Achievement bonuses (one-time)
     const easyCompleted = easyScores.some(s => s.score === 30);
@@ -230,6 +257,12 @@ function calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores
     
     const raceCompleted = raceScores.some(s => s.grade === "GM"); // Completed all 130 questions (GM grade)
     if (raceCompleted) experience += 80;
+    const raceEasyCompleted = raceEasyScores.some(s => s.grade === "GM");
+    if (raceEasyCompleted) experience += 60;
+    const raceHardCompleted = raceHardScores.some(s => s.grade === "GM");
+    if (raceHardCompleted) experience += 90;
+    const deathCompleted = deathScores.some(s => s.score >= 100);
+    if (deathCompleted) experience += 120;
     
     // Extra XP bonus for high grade points in race mode (gradePoints >= 1246000)
     const raceHighScore = raceScores.some(s => (s.gradePoints || s.score || 0) >= 1246000);
@@ -511,6 +544,9 @@ let allNormalList = [];
 let allMasterList = [];
 let allHellList = [];
 let allRaceList = [];
+let allRaceEasyList = [];
+let allRaceHardList = [];
+let allDeathList = [];
 
 // Get badge for level (uses thresholds from getBadgeNameStats)
 // Use shared function
@@ -651,6 +687,10 @@ const currentFilter = {
     race: { input: 'all', time: 'all', clear: 'all', vanish: 'all' },
     hell: { input: 'all', time: 'all', clear: 'all', vanish: 'all' }
 };
+
+// Toggle state for sub-modes
+let activeRaceMode = 'normal'; // normal | easy | hard
+let activeFinalMode = 'hell'; // hell | death
 
 // Tab switching functionality
 function initTabs() {
@@ -864,6 +904,30 @@ function filterScores(scores, filterState) {
     });
 }
 
+function getActiveRaceList() {
+    if (activeRaceMode === 'easy') return allRaceEasyList;
+    if (activeRaceMode === 'hard') return allRaceHardList;
+    return allRaceList;
+}
+
+function getActiveFinalList() {
+    return activeFinalMode === 'death' ? allDeathList : allHellList;
+}
+
+function updateRaceModeLabel() {
+    const label = document.getElementById('raceModeLabel');
+    if (label) {
+        label.textContent = activeRaceMode === 'easy' ? 'Easy Race' : activeRaceMode === 'hard' ? 'Hard Race' : 'Race';
+    }
+}
+
+function updateFinalModeLabel() {
+    const label = document.getElementById('hellModeLabel');
+    if (label) {
+        label.textContent = activeFinalMode === 'death' ? 'Death Mode' : 'Hell Mode';
+    }
+}
+
 document.addEventListener("DOMContentLoaded", () => {
     // Initialize tabs
     initTabs();
@@ -919,12 +983,15 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
             // Read per‑player data from Firestore subcollections
             const uid = user.uid;
-        const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap, secretSnap, userProfileSnap] = await Promise.all([
+        const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap, raceEasySnap, raceHardSnap, deathSnap, secretSnap, userProfileSnap] = await Promise.all([
                 getDocs(collection(db, "playerData", uid, "easy")),
                 getDocs(collection(db, "playerData", uid, "normal")),
                 getDocs(collection(db, "playerData", uid, "master")),
                 getDocs(collection(db, "playerData", uid, "hell")),
                 getDocs(collection(db, "playerData", uid, "race")),
+                getDocs(collection(db, "playerData", uid, "easyrace")).catch(() => ({ empty: true, docs: [] })),
+                getDocs(collection(db, "playerData", uid, "hardrace")).catch(() => ({ empty: true, docs: [] })),
+                getDocs(collection(db, "playerData", uid, "death")).catch(() => ({ empty: true, docs: [] })),
                 getDocs(collection(db, "playerData", uid, "secret")).catch(() => ({ empty: true, docs: [] })),
                 getDoc(doc(db, "userProfiles", uid)).catch(() => null),
             ]);
@@ -947,20 +1014,23 @@ document.addEventListener("DOMContentLoaded", () => {
             allMasterList = listFromSnap(masterSnap);
             allHellList = listFromSnap(hellSnap);
             allRaceList = listFromSnap(raceSnap);
+            allRaceEasyList = listFromSnap(raceEasySnap);
+            allRaceHardList = listFromSnap(raceHardSnap);
+            allDeathList = listFromSnap(deathSnap);
             const secretList = listFromSnap(secretSnap);
 
             // Calculate and display player level and XP
-            const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList);
-            const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + allRaceList.length + (secretList ? secretList.length : 0);
-            const mainInput = calculateMainInputMethod(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList);
+            const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList, allRaceEasyList, allRaceHardList, allDeathList);
+            const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + allRaceList.length + allRaceEasyList.length + allRaceHardList.length + allDeathList.length + (secretList ? secretList.length : 0);
+            const mainInput = calculateMainInputMethod(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList, allRaceEasyList, allRaceHardList, allDeathList);
             updateLevelProgression(playerData, totalPlays, mainInput, createdAt);
 
             // Populate filter dropdowns with unique values from database
             populateFilterDropdowns('easy', allEasyList);
             populateFilterDropdowns('normal', allNormalList);
             populateFilterDropdowns('master', allMasterList);
-            populateFilterDropdowns('race', allRaceList);
-            populateFilterDropdowns('hell', allHellList);
+            populateFilterDropdowns('race', getActiveRaceList());
+            populateFilterDropdowns('hell', getActiveFinalList());
 
             // Render all modes
             renderModeStats('easy');
@@ -998,12 +1068,12 @@ function renderModeStats(mode) {
             isMaster = true;
             break;
         case 'race':
-            dataList = filterScores(allRaceList, currentFilter.race);
+            dataList = filterScores(getActiveRaceList(), currentFilter.race);
             hasGrade = false; // No grades in race mode
             isMaster = false;
             break;
         case 'hell':
-            dataList = filterScores(allHellList, currentFilter.hell);
+            dataList = filterScores(getActiveFinalList(), currentFilter.hell);
             hasGrade = true;
             isHell = true;
             break;
@@ -1257,15 +1327,24 @@ function renderModeStats(mode) {
         easy: "#adffcd",
         normal: "#dbffff",
         master: "#dbffff",
-        hell: "#ffbaba"
+        hell: "#ffbaba",
+        race: "#9fd3ff"
     };
     const chartLabels = {
         easy: "Easy Mode",
         normal: "Normal Mode",
         master: "Master Mode",
-        hell: "Hell Mode"
+        hell: "Hell Mode",
+        race: "Race Mode"
     };
-    createChart(chartId, dataList, chartLabels[mode], chartColors[mode]);
+    let label = chartLabels[mode];
+    if (mode === 'race') {
+        label = `${label} (${activeRaceMode === 'easy' ? 'Easy' : activeRaceMode === 'hard' ? 'Hard' : 'Normal'})`;
+    }
+    if (mode === 'hell') {
+        label = activeFinalMode === 'death' ? 'Death Mode' : 'Hell Mode';
+    }
+    createChart(chartId, dataList, label, chartColors[mode]);
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -1274,6 +1353,40 @@ document.addEventListener("DOMContentLoaded", () => {
     
     // Initialize input filters
     initInputFilters();
+
+    // Toggle arrows for race/death
+    const racePrev = document.getElementById('raceModePrev');
+    const raceNext = document.getElementById('raceModeNext');
+    const hellPrev = document.getElementById('hellModePrev');
+    const hellNext = document.getElementById('hellModeNext');
+
+    const cycleRaceMode = (direction) => {
+        const order = ['easy', 'normal', 'hard'];
+        let idx = order.indexOf(activeRaceMode);
+        idx = (idx + direction + order.length) % order.length;
+        activeRaceMode = order[idx];
+        updateRaceModeLabel();
+        populateFilterDropdowns('race', getActiveRaceList());
+        renderModeStats('race');
+    };
+
+    const cycleFinalMode = (direction) => {
+        const order = ['hell', 'death'];
+        let idx = order.indexOf(activeFinalMode);
+        idx = (idx + direction + order.length) % order.length;
+        activeFinalMode = order[idx];
+        updateFinalModeLabel();
+        populateFilterDropdowns('hell', getActiveFinalList());
+        renderModeStats('hell');
+    };
+
+    racePrev?.addEventListener('click', () => cycleRaceMode(-1));
+    raceNext?.addEventListener('click', () => cycleRaceMode(1));
+    hellPrev?.addEventListener('click', () => cycleFinalMode(-1));
+    hellNext?.addEventListener('click', () => cycleFinalMode(1));
+
+    updateRaceModeLabel();
+    updateFinalModeLabel();
     
     const nameSpan = document.querySelector(".name");
     const statsContainer = document.querySelector(".container2");
@@ -1331,12 +1444,15 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
             // Read per‑player data from Firestore subcollections
             const uid = user.uid;
-            const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap, secretSnap, userProfileSnap] = await Promise.all([
+            const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap, raceEasySnap, raceHardSnap, deathSnap, secretSnap, userProfileSnap] = await Promise.all([
                 getDocs(collection(db, "playerData", uid, "easy")),
                 getDocs(collection(db, "playerData", uid, "normal")),
                 getDocs(collection(db, "playerData", uid, "master")),
                 getDocs(collection(db, "playerData", uid, "hell")),
                 getDocs(collection(db, "playerData", uid, "race")),
+                getDocs(collection(db, "playerData", uid, "easyrace")).catch(() => ({ empty: true, docs: [] })),
+                getDocs(collection(db, "playerData", uid, "hardrace")).catch(() => ({ empty: true, docs: [] })),
+                getDocs(collection(db, "playerData", uid, "death")).catch(() => ({ empty: true, docs: [] })),
                 getDocs(collection(db, "playerData", uid, "secret")).catch(() => ({ empty: true, docs: [] })),
                 getDoc(doc(db, "userProfiles", uid)).catch(() => null),
             ]);
@@ -1359,12 +1475,15 @@ document.addEventListener("DOMContentLoaded", () => {
             allMasterList = listFromSnap(masterSnap);
             allHellList = listFromSnap(hellSnap);
             allRaceList = listFromSnap(raceSnap);
+            allRaceEasyList = listFromSnap(raceEasySnap);
+            allRaceHardList = listFromSnap(raceHardSnap);
+            allDeathList = listFromSnap(deathSnap);
             const secretList = listFromSnap(secretSnap);
 
             // Calculate and display player level and XP
-            const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList);
-            const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + allRaceList.length + (secretList ? secretList.length : 0);
-            const mainInput = calculateMainInputMethod(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList);
+            const playerData = calculatePlayerLevel(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList, allRaceEasyList, allRaceHardList, allDeathList);
+            const totalPlays = allEasyList.length + allNormalList.length + allMasterList.length + allHellList.length + allRaceList.length + allRaceEasyList.length + allRaceHardList.length + allDeathList.length + (secretList ? secretList.length : 0);
+            const mainInput = calculateMainInputMethod(allEasyList, allNormalList, allMasterList, allHellList, secretList, allRaceList, allRaceEasyList, allRaceHardList, allDeathList);
             updateLevelProgression(playerData, totalPlays, mainInput, createdAt);
 
             // Render all modes

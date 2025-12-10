@@ -384,21 +384,30 @@ async function loadProfile() {
     const normalModeRef = collection(db, 'scoresnormal');
     const masterModeRef = collection(db, 'scoresmaster');
     const raceModeRef = collection(db, 'scoresrace');
+    const raceEasyModeRef = collection(db, 'scoreseasyrace');
+    const raceHardModeRef = collection(db, 'scoreshardrace');
     const hellModeRef = collection(db, 'scoresfinal');
+    const deathModeRef = collection(db, 'scoresdeath');
     
-    const [easySnapshot, normalSnapshot, masterSnapshot, raceSnapshot, hellSnapshot] = await Promise.all([
+    const [easySnapshot, normalSnapshot, masterSnapshot, raceSnapshot, raceEasySnapshot, raceHardSnapshot, hellSnapshot, deathSnapshot] = await Promise.all([
         getDocs(easyModeRef),
         getDocs(normalModeRef),
         getDocs(masterModeRef),
         getDocs(raceModeRef),
-        getDocs(hellModeRef)
+        getDocs(raceEasyModeRef),
+        getDocs(raceHardModeRef),
+        getDocs(hellModeRef),
+        getDocs(deathModeRef)
     ]);
     
     const allEasyScores = easySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const allNormalScores = normalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const allMasterScores = masterSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const allRaceScores = raceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const allRaceEasyScores = raceEasySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const allRaceHardScores = raceHardSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     const allHellScores = hellSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const allDeathScores = deathSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     
     // Check if player exists in userProfiles FIRST to get previous usernames
     // Use retry logic to ensure profile is fetched correctly
@@ -552,6 +561,9 @@ async function loadProfile() {
     const masterScores = allMasterScores.filter(s => allPlayerNames.has(s.name));
     const raceScores = allRaceScores.filter(s => allPlayerNames.has(s.name));
     const hellScores = allHellScores.filter(s => allPlayerNames.has(s.name));
+    const raceEasyScores = allRaceEasyScores.filter(s => allPlayerNames.has(s.name));
+    const raceHardScores = allRaceHardScores.filter(s => allPlayerNames.has(s.name));
+    const deathScores = allDeathScores.filter(s => allPlayerNames.has(s.name));
     
     // If player not found, show not found message
     if (!foundUser) {
@@ -592,7 +604,7 @@ async function loadProfile() {
     
     // Calculate level
     const secretScores = [];
-    const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
+    const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores, raceEasyScores, raceHardScores, deathScores);
     const badge = getBadgeForLevel(playerData.level);
     const badgeName = getBadgeName(playerData.level);
     
@@ -684,7 +696,10 @@ async function loadProfile() {
     const bestNormal = findBestScore(normalScores, 'normal');
     const bestMaster = findBestScore(masterScores, 'master');
     const bestRace = findBestScore(raceScores, 'race');
+    const bestRaceEasy = findBestScore(raceEasyScores, 'race');
+    const bestRaceHard = findBestScore(raceHardScores, 'race');
     const bestHell = findBestScore(hellScores, 'hell');
+    const bestDeath = findBestScore(deathScores, 'hell');
     
     // Display scores with line color
     const easyScoreEl = document.getElementById('easyScore');
@@ -739,52 +754,88 @@ async function loadProfile() {
         masterScoreEl.style.color = '';
     }
     
-    // Race mode: if grade is GM (maximum), show only time and grade
+    // Race mode: toggles between easy/normal/hard
     const raceScoreTimeEl = document.getElementById('raceScoreTime');
-    if (bestRace) {
-        if (bestRace.grade === "GM" && bestRace.time) {
-            // Maximum score - show time and grade only
-            raceScoreEl.textContent = '';
-            raceScoreEl.style.display = 'none';
-            raceScoreTimeEl.textContent = bestRace.time;
-            raceScoreTimeEl.style.display = 'flex';
-            raceScoreTimeEl.style.color = getLineColor(bestRace);
+    let profileRaceMode = 'normal';
+    const updateRaceCard = () => {
+        const label = document.getElementById('profileRaceLabel');
+        const selected = profileRaceMode === 'easy' ? bestRaceEasy : profileRaceMode === 'hard' ? bestRaceHard : bestRace;
+        if (label) {
+            label.textContent = profileRaceMode === 'easy' ? 'Race (Easy)' : profileRaceMode === 'hard' ? 'Race (Hard)' : 'Race (Normal)';
+        }
+        if (selected) {
+            if (selected.grade === "GM" && selected.time) {
+                raceScoreEl.textContent = '';
+                raceScoreEl.style.display = 'none';
+                raceScoreTimeEl.textContent = selected.time;
+                raceScoreTimeEl.style.display = 'flex';
+                raceScoreTimeEl.style.color = getLineColor(selected);
+            } else {
+                raceScoreEl.textContent = formatScore(selected, 'race');
+                raceScoreEl.style.display = 'flex';
+                raceScoreTimeEl.style.display = 'none';
+                raceScoreEl.style.color = getLineColor(selected);
+            }
         } else {
-            // Not maximum - show score
-            raceScoreEl.textContent = formatScore(bestRace, 'race');
+            raceScoreEl.textContent = '-';
             raceScoreEl.style.display = 'flex';
             raceScoreTimeEl.style.display = 'none';
-            raceScoreEl.style.color = getLineColor(bestRace);
+            raceScoreEl.style.color = '';
         }
-    } else {
-        raceScoreEl.textContent = '-';
-        raceScoreEl.style.display = 'flex';
-        raceScoreTimeEl.style.display = 'none';
-        raceScoreEl.style.color = '';
-    }
+    };
+    document.getElementById('profileRacePrev')?.addEventListener('click', () => {
+        const order = ['easy', 'normal', 'hard'];
+        let idx = order.indexOf(profileRaceMode);
+        idx = (idx - 1 + order.length) % order.length;
+        profileRaceMode = order[idx];
+        updateRaceCard();
+    });
+    document.getElementById('profileRaceNext')?.addEventListener('click', () => {
+        const order = ['easy', 'normal', 'hard'];
+        let idx = order.indexOf(profileRaceMode);
+        idx = (idx + 1) % order.length;
+        profileRaceMode = order[idx];
+        updateRaceCard();
+    });
+    updateRaceCard();
     
-    // Hell mode: if score is 200 (maximum), show only time and grade
-    if (bestHell) {
-        if (bestHell.score === 200 && bestHell.time) {
-            // Maximum score - show time and grade only
-            hellScoreEl.textContent = '';
-            hellScoreEl.style.display = 'none';
-            hellScoreTimeEl.textContent = bestHell.time;
-            hellScoreTimeEl.style.display = 'flex';
-            hellScoreTimeEl.style.color = getLineColor(bestHell);
+    // Hell/Death mode toggle
+    let profileHellMode = 'hell';
+    const updateHellCard = () => {
+        const selected = profileHellMode === 'death' ? bestDeath : bestHell;
+        const label = document.getElementById('profileHellLabel');
+        if (label) {
+            label.textContent = profileHellMode === 'death' ? 'Death Mode' : 'Hell Mode';
+        }
+        if (selected) {
+            if (selected.score >= 200 && selected.time) {
+                hellScoreEl.textContent = '';
+                hellScoreEl.style.display = 'none';
+                hellScoreTimeEl.textContent = selected.time;
+                hellScoreTimeEl.style.display = 'flex';
+                hellScoreTimeEl.style.color = getLineColor(selected);
+            } else {
+                hellScoreEl.textContent = formatScore(selected, 'hell');
+                hellScoreEl.style.display = 'flex';
+                hellScoreTimeEl.style.display = 'none';
+                hellScoreEl.style.color = getLineColor(selected);
+            }
         } else {
-            // Not maximum - show score
-            hellScoreEl.textContent = formatScore(bestHell, 'hell');
+            hellScoreEl.textContent = '-';
             hellScoreEl.style.display = 'flex';
             hellScoreTimeEl.style.display = 'none';
-            hellScoreEl.style.color = getLineColor(bestHell);
+            hellScoreEl.style.color = '';
         }
-    } else {
-        hellScoreEl.textContent = '-';
-        hellScoreEl.style.display = 'flex';
-        hellScoreTimeEl.style.display = 'none';
-        hellScoreEl.style.color = '';
-    }
+    };
+    document.getElementById('profileHellPrev')?.addEventListener('click', () => {
+        profileHellMode = profileHellMode === 'hell' ? 'death' : 'hell';
+        updateHellCard();
+    });
+    document.getElementById('profileHellNext')?.addEventListener('click', () => {
+        profileHellMode = profileHellMode === 'hell' ? 'death' : 'hell';
+        updateHellCard();
+    });
+    updateHellCard();
     
     // Display score details (grade with line color, modifiers)
     // For maximum scores in master/hell/race, show only grade (time is shown above)
@@ -1945,8 +1996,17 @@ async function loadGraphData(mode) {
             case 'race':
                 scoresRef = collection(db, 'scoresrace');
                 break;
+            case 'race-easy':
+                scoresRef = collection(db, 'scoreseasyrace');
+                break;
+            case 'race-hard':
+                scoresRef = collection(db, 'scoreshardrace');
+                break;
             case 'hell':
                 scoresRef = collection(db, 'scoresfinal');
+                break;
+            case 'death':
+                scoresRef = collection(db, 'scoresdeath');
                 break;
             default:
                 return;

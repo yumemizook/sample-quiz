@@ -97,13 +97,21 @@
                         <div class="score-card-details" id="masterScoreDetails"></div>
                     </div>
                     <div class="profile-score-card">
-                        <div class="score-card-mode">Race Mode</div>
+                        <div class="score-card-mode">
+                            <button id="profileRacePrev" class="mode-toggle-btn" aria-label="Previous race mode">◀</button>
+                            <span id="profileRaceLabel">Race (Normal)</span>
+                            <button id="profileRaceNext" class="mode-toggle-btn" aria-label="Next race mode">▶</button>
+                        </div>
                         <div class="score-card-time" id="raceScoreTime" style="display: none;"></div>
                         <div class="score-card-value" id="raceScore">-</div>
                         <div class="score-card-details" id="raceScoreDetails"></div>
                     </div>
                     <div class="profile-score-card">
-                        <div class="score-card-mode">Hell Mode</div>
+                        <div class="score-card-mode">
+                            <button id="profileHellPrev" class="mode-toggle-btn" aria-label="Previous final mode">◀</button>
+                            <span id="profileHellLabel">Hell Mode</span>
+                            <button id="profileHellNext" class="mode-toggle-btn" aria-label="Next final mode">▶</button>
+                        </div>
                         <div class="score-card-time" id="hellScoreTime" style="display: none;"></div>
                         <div class="score-card-value" id="hellScore">-</div>
                         <div class="score-card-details" id="hellScoreDetails"></div>
@@ -129,7 +137,10 @@
                         <option value="normal">Normal Mode</option>
                         <option value="master">Master Mode</option>
                         <option value="race">Race Mode</option>
+                        <option value="race-easy">Race (Easy)</option>
+                        <option value="race-hard">Race (Hard)</option>
                         <option value="hell">Hell Mode</option>
+                        <option value="death">Death Mode</option>
                     </select>
                 </div>
                 <div class="profile-graph-container">

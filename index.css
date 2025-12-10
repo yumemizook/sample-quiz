@@ -1,3 +1,16 @@
+/* Mode toggle buttons */
+.mode-toggle-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-weight: bold;
+}
+.mode-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.2);
+}
 /* Embed Gill Sans MT font */
 @font-face {
     font-family: 'Gill Sans MT';
@@ -50,8 +63,20 @@ body.mode-master130 {
     background-image: url('race.jpg');
 }
 
+body.mode-easy-race {
+    background-image: url('race.jpg');
+}
+
+body.mode-hard-race {
+    background-image: url('race.jpg');
+}
+
 body.mode-hell {
     background-image: url('hell1.jpg');
+}
+
+body.mode-death {
+    background-image: url('hell3.jpg');
 }
 
 body.mode-secret {
@@ -1731,6 +1756,40 @@ body.mode-master130 .mode-card[data-mode="master130"] .mode-name {
     color: #ff8c42;
 }
 
+body.mode-easy-race .mode-card[data-mode="easy-race"].active,
+body.mode-easy-race .mode-card[data-mode="master130"].active {
+    border-color: #8fffd1;
+    background: linear-gradient(135deg, rgba(143, 255, 209, 0.18) 0%, rgba(110, 230, 185, 0.12) 100%);
+    box-shadow: 0 0 20px rgba(143, 255, 209, 0.35);
+}
+
+body.mode-easy-race .mode-card[data-mode="easy-race"].active::before,
+body.mode-easy-race .mode-card[data-mode="master130"].active::before {
+    background: linear-gradient(90deg, #8fffd1, #5ee3b3);
+}
+
+body.mode-easy-race .mode-card[data-mode="easy-race"] .mode-name,
+body.mode-easy-race .mode-card[data-mode="master130"] .mode-name {
+    color: #8fffd1;
+}
+
+body.mode-hard-race .mode-card[data-mode="hard-race"].active,
+body.mode-hard-race .mode-card[data-mode="master130"].active {
+    border-color: #ff9f43;
+    background: linear-gradient(135deg, rgba(255, 159, 67, 0.18) 0%, rgba(255, 120, 40, 0.12) 100%);
+    box-shadow: 0 0 20px rgba(255, 159, 67, 0.35);
+}
+
+body.mode-hard-race .mode-card[data-mode="hard-race"].active::before,
+body.mode-hard-race .mode-card[data-mode="master130"].active::before {
+    background: linear-gradient(90deg, #ff9f43, #ff7a1f);
+}
+
+body.mode-hard-race .mode-card[data-mode="hard-race"] .mode-name,
+body.mode-hard-race .mode-card[data-mode="master130"] .mode-name {
+    color: #ff9f43;
+}
+
 body.mode-hell .mode-card[data-mode="hell"].active {
     border-color: #ff6b6b;
     background: linear-gradient(135deg, rgba(255, 107, 107, 0.15) 0%, rgba(255, 68, 68, 0.1) 100%);
@@ -1739,6 +1798,20 @@ body.mode-hell .mode-card[data-mode="hell"].active {
 
 body.mode-hell .mode-card[data-mode="hell"].active::before {
     background: linear-gradient(90deg, #ff6b6b, #ff4444);
+}
+
+body.mode-death .mode-card[data-mode="death"].active {
+    border-color: #ff4d6d;
+    background: linear-gradient(135deg, rgba(255, 77, 109, 0.18) 0%, rgba(180, 32, 60, 0.12) 100%);
+    box-shadow: 0 0 20px rgba(255, 77, 109, 0.35);
+}
+
+body.mode-death .mode-card[data-mode="death"].active::before {
+    background: linear-gradient(90deg, #ff4d6d, #b4203c);
+}
+
+body.mode-death .mode-card[data-mode="death"] .mode-name {
+    color: #ff4d6d;
 }
 
 /* ModernDOS font for secret mode */
@@ -3582,6 +3655,35 @@ td:first-child {
 .profile-popup-score-item .score-mode {
     color: #dbffff;
     font-weight: 500;
+}
+
+.profile-popup-score-item .score-mode-controls {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: #dbffff;
+    font-weight: 500;
+}
+
+.profile-popup-toggle-btn {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 4px;
+    padding: 2px 8px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: background 0.2s, transform 0.2s;
+}
+
+.profile-popup-toggle-btn:hover {
+    background: rgba(255, 255, 255, 0.18);
+    transform: translateY(-1px);
+}
+
+.profile-popup-score-item .score-mode-label {
+    min-width: 110px;
+    text-align: center;
 }
 
 .profile-popup-score-item .score-value {

@@ -2278,16 +2278,27 @@
       currQuestion++;
       
       // Check segment validation at milestones (10, 20, 30, etc.)
-      // Hard mode: increasing required correct answers (segment 1 needs 1, segment 2 needs 2, etc.)
+      // Hard mode: required correct answers per 10-question segment (tuned ramp)
       if (currQuestion % 10 === 0) {
         const segment = currQuestion / 10;
-        
-        // Required correct answers increases by 1 for each segment
-        const requiredCorrect = segment;
+        const segmentCorrectArray = {
+          1: 2,
+          2: 2,
+          3: 3,
+          4: 3,
+          5: 4,
+          6: 4,
+          7: 5,
+          8: 5,
+          9: 6,
+          10: 6,
+          11: 7,
+          12: 8,
+        }
+        const requiredCorrect = segmentCorrectArray[segment] || 0;
         const segmentCorrectCount = segmentCorrectAnswers[segment] || 0;
         
         if (segmentCorrectCount < requiredCorrect) {
-          // Segment failed - fetch new question without incrementing score
           showNotification(`Segment ${segment} failed! Need ${requiredCorrect} correct answers, got ${segmentCorrectCount}. Fetching new question...`, false);
           
           // Fetch a new question

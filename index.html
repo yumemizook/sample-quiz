@@ -59,9 +59,9 @@
               <h3 class="mode-name">Easy Race</h3>
             </div>
             <p class="mode-description">
-              30 minute timer. 100 questions. No question timer until question 31, then follows master mode time limits.
+              30 minute timer. 100 questions. Perfect for beginners.
             </p>
-            <div class="mode-difficulty easy-diff">Timed Challenge</div>
+            <div class="mode-difficulty easy-diff">Medium Challenge</div>
           </div>
 
           <div class="mode-card hide" data-mode="hard-race" id="hardRaceModeCard">
@@ -70,9 +70,9 @@
               <h3 class="mode-name">Hard Race</h3>
             </div>
             <p class="mode-description">
-              4:30 total time limit. Increasing required correct answers in recent 10 questions every 10 questions.
+              4:30 total time limit. Are you up to the challenge?
             </p>
-            <div class="mode-difficulty hell-diff">Extreme Challenge</div>
+            <div class="mode-difficulty hell-diff">Difficult Challenge</div>
           </div>
 
           <div class="mode-card active" data-mode="normal">
@@ -106,10 +106,10 @@
                 <h3 class="mode-name" id="raceModeName">Race</h3>
               </div>
               <div style="display: flex; gap: 8px; align-items: center;">
-                <button id="raceToggleMinus" class="mode-toggle-btn" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 1.2em; cursor: pointer; transition: all 0.3s ease;" title="Previous race variant">
+                <button id="raceToggleMinus" class="mode-toggle-btn" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 0.9em; cursor: pointer; transition: all 0.3s ease;" title="Previous race variant">
                   <i class="fas fa-minus"></i>
                 </button>
-                <button id="raceTogglePlus" class="mode-toggle-btn" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 1.2em; cursor: pointer; transition: all 0.3s ease;" title="Next race variant">
+                <button id="raceTogglePlus" class="mode-toggle-btn" style="width: 36px; height: 36px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 0.9em; cursor: pointer; transition: all 0.3s ease;" title="Next race variant">
                   <i class="fas fa-plus"></i>
                 </button>
               </div>
@@ -127,10 +127,10 @@
                 <h3 class="mode-name" id="hellModeName">Hell</h3>
               </div>
               <div style="display: flex; gap: 8px; align-items: center;">
-                <button id="hellToggleMinus" class="mode-toggle-btn" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 1.1em; cursor: pointer; transition: all 0.3s ease;" title="Previous hell variant">
+                <button id="hellToggleMinus" class="mode-toggle-btn" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 0.9em; cursor: pointer; transition: all 0.3s ease;" title="Previous hell variant">
                   <i class="fas fa-minus"></i>
                 </button>
-                <button id="hellTogglePlus" class="mode-toggle-btn" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 1.1em; cursor: pointer; transition: all 0.3s ease;" title="Next hell variant">
+                <button id="hellTogglePlus" class="mode-toggle-btn" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 0.9em; cursor: pointer; transition: all 0.3s ease;" title="Next hell variant">
                   <i class="fas fa-plus"></i>
                 </button>
               </div>
@@ -498,7 +498,7 @@
         {
           id: "easy-race",
           name: "Race (Easy)",
-          description: "30 minute timer. 100 questions. No question timer until question 31, then follows master mode time limits.",
+          description: "30 minute timer. 100 questions. May speed be in your hands.",
           difficulty: "Timed Challenge"
         },
         {
@@ -510,7 +510,7 @@
         {
           id: "hard-race",
           name: "Race (Hard)",
-          description: "4:30 total time. Increasing required recent correct answers every 10 questions.",
+          description: "4:30 total time. Are you up to the ultimate challenge?",
           difficulty: "Extreme Challenge"
         }
       ];
@@ -530,6 +530,14 @@
       const hellModeDifficulty = document.getElementById("hellModeDifficulty");
       const hellToggleMinus = document.getElementById("hellToggleMinus");
       const hellTogglePlus = document.getElementById("hellTogglePlus");
+      let selectedMode = "normal";
+
+      function updateModeStyling(mode) {
+        document.querySelectorAll(".mode-card").forEach(card => {
+          const isSelected = card.getAttribute("data-mode") === mode;
+          card.classList.toggle("active", isSelected);
+        });
+      }
       
       // Always hide separate easy/hard race cards; race card handles variants
       if (easyRaceModeCard) easyRaceModeCard.classList.add("hide");
@@ -574,7 +582,6 @@
       let masterCardClickTimer = null;
       let raceCardClickTimer = null;
       const masterModeCard = document.getElementById("masterModeCard");
-      const raceModeCard = document.getElementById("raceModeCard");
       
       // Master card 5-click toggle
       if (masterModeCard) {
@@ -638,6 +645,8 @@
       document.querySelectorAll(".mode-card").forEach(card => {
         card.addEventListener("click", () => {
           const mode = card.getAttribute("data-mode");
+          selectedMode = mode;
+          updateModeStyling(selectedMode);
           handleModeSelection(mode);
         });
       });
@@ -653,8 +662,8 @@
         {
           id: "death",
           name: "Death",
-          description: "100-question gauntlet. Two grades: m at Q51 with the 2-minute check, Gm on clear.",
-          difficulty: "Severe Challenge"
+          description: "100-question gauntlet. Easier than Hell mode.",
+          difficulty: "Step-up Challenge"
         }
       ];
       let hellVariantIndex = 0;
@@ -743,6 +752,7 @@
       
       // Initialize with default mode (normal)
       handleModeSelection("normal");
+      updateModeStyling("normal");
       
       // Initialize arrow selectors
       initializeArrowSelectors();

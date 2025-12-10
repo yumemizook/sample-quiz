@@ -38,14 +38,20 @@ function compareLineColors(line1, line2) {
 const highScoresRef = collection(db, 'scoresnormal');
 const masterModeRef = collection(db, 'scoresmaster');
 const raceModeRef = collection(db, 'scoresrace');
+const raceEasyModeRef = collection(db, 'scoreseasyrace');
+const raceHardModeRef = collection(db, 'scoreshardrace');
 const easyModeRef = collection(db, 'scoreseasy');
 const finalModeRef = collection(db, 'scoresfinal');
+const deathModeRef = collection(db, 'scoresdeath');
 
 // Store raw scores data for filtering
 let allEasyScores = [];
 let allNormalScores = [];
 let allMasterScores = [];
 let allRaceScores = [];
+let allRaceEasyScores = [];
+let allRaceHardScores = [];
+let allDeathScores = [];
 let allHellScores = [];
 let allSecretScores = [];
 
@@ -57,6 +63,10 @@ const currentFilter = {
     race: { input: 'all', time: 'all', clear: 'all', vanish: 'all' },
     hell: { input: 'all', time: 'all', clear: 'all', vanish: 'all' }
 };
+
+// Toggle state
+let activeRaceMode = 'normal'; // normal | easy | hard
+let activeFinalMode = 'hell'; // hell | death
 
 // Tab switching functionality
 function initTabs() {
@@ -270,6 +280,31 @@ function filterScores(scores, filterState) {
     });
 }
 
+// Helpers to access currently selected datasets
+function getActiveRaceScores() {
+    if (activeRaceMode === 'easy') return allRaceEasyScores;
+    if (activeRaceMode === 'hard') return allRaceHardScores;
+    return allRaceScores;
+}
+
+function getActiveFinalScores() {
+    return activeFinalMode === 'death' ? allDeathScores : allHellScores;
+}
+
+function updateRaceModeLabel() {
+    const label = document.getElementById('raceModeLabel');
+    if (!label) return;
+    const text = activeRaceMode === 'easy' ? 'Easy Race' : activeRaceMode === 'hard' ? 'Hard Race' : 'Race';
+    label.textContent = text;
+}
+
+function updateFinalModeLabel() {
+    const label = document.getElementById('hellModeLabel');
+    if (!label) return;
+    const text = activeFinalMode === 'death' ? 'Death Mode' : 'Hell Mode';
+    label.textContent = text;
+}
+
 // Render table for a specific mode
 function renderTable(mode) {
     const filterState = currentFilter[mode];
@@ -334,7 +369,7 @@ function renderTable(mode) {
             };
             break;
         case 'hell':
-            scores = filterScores(allHellScores, filterState);
+            scores = filterScores(getActiveFinalScores(), filterState);
             tableId = 'scoreTable4';
             hasGrade = true;
             sortFunction = (a, b) => {
@@ -362,7 +397,7 @@ function renderTable(mode) {
             };
             break;
         case 'race':
-            scores = filterScores(allRaceScores, filterState);
+            scores = filterScores(getActiveRaceScores(), filterState);
             tableId = 'scoreTable5';
             hasGrade = false; // No grades in race mode
             sortFunction = (a, b) => {
@@ -525,26 +560,34 @@ function createProfilePopup() {
             </div>
             <div class="profile-popup-scores">
                 <h4>Best Scores</h4>
-                <div class="profile-popup-score-item">
-                    <span class="score-mode">Easy:</span>
-                    <span class="score-value">-</span>
+            <div class="profile-popup-score-item" data-mode="easy">
+                <span class="score-mode">Easy:</span>
+                <span class="score-value">-</span>
+            </div>
+            <div class="profile-popup-score-item" data-mode="normal">
+                <span class="score-mode">Normal:</span>
+                <span class="score-value">-</span>
+            </div>
+            <div class="profile-popup-score-item" data-mode="master">
+                <span class="score-mode">Master:</span>
+                <span class="score-value">-</span>
+            </div>
+            <div class="profile-popup-score-item" data-mode="raceCombined">
+                <div class="score-mode-controls">
+                    <button class="profile-popup-toggle-btn" data-action="race-prev" aria-label="Previous race mode">◀</button>
+                    <span class="score-mode-label" data-label="race">Race (Normal)</span>
+                    <button class="profile-popup-toggle-btn" data-action="race-next" aria-label="Next race mode">▶</button>
                 </div>
-                <div class="profile-popup-score-item">
-                    <span class="score-mode">Normal:</span>
-                    <span class="score-value">-</span>
+                <span class="score-value">-</span>
+            </div>
+            <div class="profile-popup-score-item" data-mode="finalCombined">
+                <div class="score-mode-controls">
+                    <button class="profile-popup-toggle-btn" data-action="final-prev" aria-label="Previous final mode">◀</button>
+                    <span class="score-mode-label" data-label="final">Hell</span>
+                    <button class="profile-popup-toggle-btn" data-action="final-next" aria-label="Next final mode">▶</button>
                 </div>
-                <div class="profile-popup-score-item">
-                    <span class="score-mode">Master:</span>
-                    <span class="score-value">-</span>
-                </div>
-                <div class="profile-popup-score-item">
-                    <span class="score-mode">Race:</span>
-                    <span class="score-value">-</span>
-                </div>
-                <div class="profile-popup-score-item">
-                    <span class="score-mode">Hell:</span>
-                    <span class="score-value">-</span>
-                </div>
+                <span class="score-value">-</span>
+            </div>
             </div>
         </div>
     `;
@@ -567,7 +610,10 @@ function findBestScores(playerNames) {
         normal: null,
         master: null,
         race: null,
-        hell: null
+        raceEasy: null,
+        raceHard: null,
+        hell: null,
+        death: null
     };
     
     // Find best easy score
@@ -621,6 +667,26 @@ function findBestScores(playerNames) {
         });
         bestScores.race = racePlayerScores[0];
     }
+
+    // Find best easy race score
+    const raceEasyPlayerScores = allRaceEasyScores.filter(s => nameSet.has(s.name));
+    if (raceEasyPlayerScores.length > 0) {
+        raceEasyPlayerScores.sort((a, b) => {
+            if (a.score !== b.score) return b.score - a.score;
+            return parseTime(a.time) - parseTime(b.time);
+        });
+        bestScores.raceEasy = raceEasyPlayerScores[0];
+    }
+
+    // Find best hard race score
+    const raceHardPlayerScores = allRaceHardScores.filter(s => nameSet.has(s.name));
+    if (raceHardPlayerScores.length > 0) {
+        raceHardPlayerScores.sort((a, b) => {
+            if (a.score !== b.score) return b.score - a.score;
+            return parseTime(a.time) - parseTime(b.time);
+        });
+        bestScores.raceHard = raceHardPlayerScores[0];
+    }
     
     // Find best hell score
     const hellPlayerScores = allHellScores.filter(s => nameSet.has(s.name));
@@ -640,6 +706,19 @@ function findBestScores(playerNames) {
             return parseTime(a.time) - parseTime(b.time);
         });
         bestScores.hell = hellPlayerScores[0];
+    }
+
+    // Find best death score
+    const deathPlayerScores = allDeathScores.filter(s => nameSet.has(s.name));
+    if (deathPlayerScores.length > 0) {
+        deathPlayerScores.sort((a, b) => {
+            if (a.score !== b.score) return b.score - a.score;
+            if (a.grade && b.grade && a.grade !== b.grade) {
+                return b.grade.localeCompare(a.grade);
+            }
+            return parseTime(a.time) - parseTime(b.time);
+        });
+        bestScores.death = deathPlayerScores[0];
     }
     
     return bestScores;
@@ -851,35 +930,38 @@ async function loadPlayerProfile(playerName) {
         const masterScores = allMasterScores.filter(s => allPlayerNames.has(s.name));
         const raceScores = allRaceScores.filter(s => allPlayerNames.has(s.name));
         const hellScores = allHellScores.filter(s => allPlayerNames.has(s.name));
+        const raceEasyScores = allRaceEasyScores.filter(s => allPlayerNames.has(s.name));
+        const raceHardScores = allRaceHardScores.filter(s => allPlayerNames.has(s.name));
+        const deathScores = allDeathScores.filter(s => allPlayerNames.has(s.name));
         
         // Secret scores are not fetched for player profile tooltip
         const secretScores = [];
         
-        const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
+        const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores, raceEasyScores, raceHardScores, deathScores);
         const badge = getBadgeForLevel(playerData.level);
         const badgeName = getBadgeName(playerData.level);
         
         // Update level display
         const badgeEl = popup.querySelector('.profile-popup-badge');
         const levelTextEl = popup.querySelector('.profile-popup-level-text');
-        badgeEl.textContent = badge;
+        badgeEl.innerHTML = badge;
         levelTextEl.textContent = `Lv. ${playerData.level} (${badgeName})`;
         
         // Update best scores
         const updateScore = (mode, scoreData) => {
-            const scoreItem = popup.querySelector(`.profile-popup-score-item:nth-child(${['easy', 'normal', 'master', 'race', 'hell'].indexOf(mode) + 2})`);
+            const scoreItem = popup.querySelector(`.profile-popup-score-item[data-mode="${mode}"]`);
             if (scoreItem) {
                 const scoreValue = scoreItem.querySelector('.score-value');
                 if (scoreData) {
-                    if (mode === 'race') {
-                        // Race mode: show best time if completed (GM grade), otherwise show best score
+                    if (mode === 'race' || mode === 'raceEasy' || mode === 'raceHard') {
+                        // Race variants: show best time if completed (GM grade), otherwise show best score
                         const isCompleted = scoreData.grade === "GM";
                         if (isCompleted && scoreData.time) {
                             scoreValue.textContent = scoreData.time;
                         } else {
                             scoreValue.textContent = scoreData.score.toLocaleString();
                         }
-                    } else if (mode === 'normal' || mode === 'master' || mode === 'hell') {
+                    } else if (mode === 'normal' || mode === 'master' || mode === 'hell' || mode === 'death') {
                         const grade = scoreData.grade ? ` - ${scoreData.grade}` : '';
                         scoreValue.textContent = `${scoreData.score}${grade}`;
                     } else {
@@ -891,11 +973,109 @@ async function loadPlayerProfile(playerName) {
             }
         };
         
+        // Helper to format a value for combined mode display
+        const formatScoreValue = (mode, scoreData) => {
+            if (!scoreData) return 'No score';
+            if (mode === 'race' || mode === 'raceEasy' || mode === 'raceHard') {
+                const isCompleted = scoreData.grade === "GM";
+                return isCompleted && scoreData.time
+                    ? scoreData.time
+                    : scoreData.score.toLocaleString();
+            }
+            if (mode === 'normal' || mode === 'master' || mode === 'hell' || mode === 'death') {
+                const grade = scoreData.grade ? ` - ${scoreData.grade}` : '';
+                return `${scoreData.score}${grade}`;
+            }
+            return scoreData.score?.toString() || '-';
+        };
+        
         updateScore('easy', bestScores.easy);
         updateScore('normal', bestScores.normal);
         updateScore('master', bestScores.master);
-        updateScore('race', bestScores.race);
-        updateScore('hell', bestScores.hell);
+
+        // Combined race mode toggle (Easy / Normal / Hard)
+        const raceModes = ['easy', 'normal', 'hard'];
+        const raceLabels = {
+            easy: 'Race (Easy)',
+            normal: 'Race (Normal)',
+            hard: 'Race (Hard)'
+        };
+        const raceModeScores = {
+            easy: bestScores.raceEasy,
+            normal: bestScores.race,
+            hard: bestScores.raceHard
+        };
+        const raceLabelEl = popup.querySelector('[data-label="race"]');
+        const raceScoreValueEl = popup.querySelector('[data-mode="raceCombined"] .score-value');
+        let currentRaceMode = popup.dataset.raceMode && raceModes.includes(popup.dataset.raceMode)
+            ? popup.dataset.raceMode
+            : 'normal';
+        
+        const setRaceMode = (mode) => {
+            currentRaceMode = mode;
+            popup.dataset.raceMode = mode;
+            if (raceLabelEl) raceLabelEl.textContent = raceLabels[mode] || 'Race';
+            if (raceScoreValueEl) raceScoreValueEl.textContent = formatScoreValue(
+                mode === 'easy' ? 'raceEasy' : mode === 'hard' ? 'raceHard' : 'race',
+                raceModeScores[mode]
+            );
+        };
+        
+        const racePrevBtn = popup.querySelector('[data-action="race-prev"]');
+        const raceNextBtn = popup.querySelector('[data-action="race-next"]');
+        const cycleRace = (direction) => {
+            const currentIdx = raceModes.indexOf(currentRaceMode);
+            const nextIdx = (currentIdx + direction + raceModes.length) % raceModes.length;
+            setRaceMode(raceModes[nextIdx]);
+        };
+        if (racePrevBtn) {
+            racePrevBtn.onclick = (e) => { e.stopPropagation(); cycleRace(-1); };
+        }
+        if (raceNextBtn) {
+            raceNextBtn.onclick = (e) => { e.stopPropagation(); cycleRace(1); };
+        }
+        setRaceMode(currentRaceMode);
+
+        // Combined final mode toggle (Hell / Death)
+        const finalModes = ['hell', 'death'];
+        const finalLabels = {
+            hell: 'Hell',
+            death: 'Death'
+        };
+        const finalScores = {
+            hell: bestScores.hell,
+            death: bestScores.death
+        };
+        const finalLabelEl = popup.querySelector('[data-label="final"]');
+        const finalScoreValueEl = popup.querySelector('[data-mode="finalCombined"] .score-value');
+        let currentFinalMode = popup.dataset.finalMode && finalModes.includes(popup.dataset.finalMode)
+            ? popup.dataset.finalMode
+            : 'hell';
+        
+        const setFinalMode = (mode) => {
+            currentFinalMode = mode;
+            popup.dataset.finalMode = mode;
+            if (finalLabelEl) finalLabelEl.textContent = finalLabels[mode] || 'Final';
+            if (finalScoreValueEl) finalScoreValueEl.textContent = formatScoreValue(
+                mode,
+                finalScores[mode]
+            );
+        };
+        
+        const finalPrevBtn = popup.querySelector('[data-action="final-prev"]');
+        const finalNextBtn = popup.querySelector('[data-action="final-next"]');
+        const cycleFinal = (direction) => {
+            const currentIdx = finalModes.indexOf(currentFinalMode);
+            const nextIdx = (currentIdx + direction + finalModes.length) % finalModes.length;
+            setFinalMode(finalModes[nextIdx]);
+        };
+        if (finalPrevBtn) {
+            finalPrevBtn.onclick = (e) => { e.stopPropagation(); cycleFinal(-1); };
+        }
+        if (finalNextBtn) {
+            finalNextBtn.onclick = (e) => { e.stopPropagation(); cycleFinal(1); };
+        }
+        setFinalMode(currentFinalMode);
         
     } catch (error) {
         console.error('Error loading player profile:', error);
@@ -1126,6 +1306,40 @@ document.addEventListener("DOMContentLoaded", async () => {
     
     // Initialize input filters and set all to "All" filter
     initInputFilters();
+
+    // Hook up race/hell toggle arrows
+    const racePrev = document.getElementById('raceModePrev');
+    const raceNext = document.getElementById('raceModeNext');
+    const hellPrev = document.getElementById('hellModePrev');
+    const hellNext = document.getElementById('hellModeNext');
+
+    const cycleRaceMode = (direction) => {
+        const order = ['easy', 'normal', 'hard'];
+        let idx = order.indexOf(activeRaceMode);
+        idx = (idx + direction + order.length) % order.length;
+        activeRaceMode = order[idx];
+        updateRaceModeLabel();
+        populateFilterDropdowns('race', getActiveRaceScores());
+        renderTable('race');
+    };
+
+    const cycleFinalMode = (direction) => {
+        const order = ['hell', 'death'];
+        let idx = order.indexOf(activeFinalMode);
+        idx = (idx + direction + order.length) % order.length;
+        activeFinalMode = order[idx];
+        updateFinalModeLabel();
+        populateFilterDropdowns('hell', getActiveFinalScores());
+        renderTable('hell');
+    };
+
+    racePrev?.addEventListener('click', () => cycleRaceMode(-1));
+    raceNext?.addEventListener('click', () => cycleRaceMode(1));
+    hellPrev?.addEventListener('click', () => cycleFinalMode(-1));
+    hellNext?.addEventListener('click', () => cycleFinalMode(1));
+
+    updateRaceModeLabel();
+    updateFinalModeLabel();
     
     // Ensure all dropdowns default to "All" on page load (already set in HTML, but ensure consistency)
     const allInputSelects = document.querySelectorAll('.input-filter-select');
@@ -1150,12 +1364,15 @@ document.addEventListener("DOMContentLoaded", async () => {
         console.log("Fetching scores from Firebase...");
         
         // Fetch all score collections in parallel for better performance
-        const [snapshot, masterSnapshot, raceSnapshot, easySnapshot, finalSnapshot] = await Promise.all([
+        const [snapshot, masterSnapshot, raceSnapshot, raceEasySnapshot, raceHardSnapshot, easySnapshot, finalSnapshot, deathSnapshot] = await Promise.all([
             getDocs(highScoresRef),
             getDocs(masterModeRef),
             getDocs(raceModeRef),
+            getDocs(raceEasyModeRef),
+            getDocs(raceHardModeRef),
             getDocs(easyModeRef),
-            getDocs(finalModeRef)
+            getDocs(finalModeRef),
+            getDocs(deathModeRef)
         ]);
         
         // Store raw scores
@@ -1164,6 +1381,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         allMasterScores = masterSnapshot.empty ? [] : masterSnapshot.docs.map((doc) => doc.data());
         allRaceScores = raceSnapshot.empty ? [] : raceSnapshot.docs.map((doc) => doc.data());
         allHellScores = finalSnapshot.empty ? [] : finalSnapshot.docs.map((doc) => doc.data());
+        allRaceEasyScores = raceEasySnapshot.empty ? [] : raceEasySnapshot.docs.map((doc) => doc.data());
+        allRaceHardScores = raceHardSnapshot.empty ? [] : raceHardSnapshot.docs.map((doc) => doc.data());
+        allDeathScores = deathSnapshot.empty ? [] : deathSnapshot.docs.map((doc) => doc.data());
         
         console.log(`Loaded scores: Easy=${allEasyScores.length}, Normal=${allNormalScores.length}, Master=${allMasterScores.length}, Race=${allRaceScores.length}, Hell=${allHellScores.length}`);
         
@@ -1177,8 +1397,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         populateFilterDropdowns('easy', allEasyScores);
         populateFilterDropdowns('normal', allNormalScores);
         populateFilterDropdowns('master', allMasterScores);
-        populateFilterDropdowns('race', allRaceScores);
-        populateFilterDropdowns('hell', allHellScores);
+        populateFilterDropdowns('race', getActiveRaceScores());
+        populateFilterDropdowns('hell', getActiveFinalScores());
         
         // Render all tables automatically
         renderTable('easy');
