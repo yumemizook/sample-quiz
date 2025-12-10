@@ -120,16 +120,26 @@
             <div class="mode-difficulty master-diff" id="raceModeDifficulty">Extreme Challenge</div>
           </div>
 
-          <div class="mode-card" data-mode="hell">
-            <div class="mode-card-header">
-              <span class="mode-icon"><i class="fas fa-fire" style="color: #ff6b35;"></i></span>
-              <h3 class="mode-name">Hell</h3>
+          <div class="mode-card" data-mode="hell" id="hellModeCard">
+            <div class="mode-card-header" style="display: flex; justify-content: space-between; align-items: center;">
+              <div style="display: flex; align-items: center; gap: 10px;">
+                <span class="mode-icon"><i class="fas fa-fire" style="color: #ff6b35;"></i></span>
+                <h3 class="mode-name" id="hellModeName">Hell</h3>
+              </div>
+              <div style="display: flex; gap: 8px; align-items: center;">
+                <button id="hellToggleMinus" class="mode-toggle-btn" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 1.1em; cursor: pointer; transition: all 0.3s ease;" title="Previous hell variant">
+                  <i class="fas fa-minus"></i>
+                </button>
+                <button id="hellTogglePlus" class="mode-toggle-btn" style="width: 32px; height: 32px; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.5); background: rgba(255, 255, 255, 0.1); color: white; font-size: 1.1em; cursor: pointer; transition: all 0.3s ease;" title="Next hell variant">
+                  <i class="fas fa-plus"></i>
+                </button>
+              </div>
             </div>
-            <p class="mode-description">
+            <p class="mode-description" id="hellModeDescription">
               Extremely difficult questions with inhumane time limits. Not for
               the faint of heart.
             </p>
-            <div class="mode-difficulty hell-diff">Ultimate Challenge</div>
+            <div class="mode-difficulty hell-diff" id="hellModeDifficulty">Ultimate Challenge</div>
           </div>
 
           <div class="mode-card hide" data-mode="secret" id="secretModeCard">
@@ -514,6 +524,12 @@
       const easyRaceModeCard = document.getElementById("easyRaceModeCard");
       const hardRaceModeCard = document.getElementById("hardRaceModeCard");
       const easyModeCard = document.getElementById("easyModeCard");
+      const hellModeCard = document.getElementById("hellModeCard");
+      const hellModeName = document.getElementById("hellModeName");
+      const hellModeDescription = document.getElementById("hellModeDescription");
+      const hellModeDifficulty = document.getElementById("hellModeDifficulty");
+      const hellToggleMinus = document.getElementById("hellToggleMinus");
+      const hellTogglePlus = document.getElementById("hellTogglePlus");
       
       // Always hide separate easy/hard race cards; race card handles variants
       if (easyRaceModeCard) easyRaceModeCard.classList.add("hide");
@@ -625,6 +641,50 @@
           handleModeSelection(mode);
         });
       });
+
+      // Hell variants toggle (Hell / Death)
+      const hellVariants = [
+        {
+          id: "hell",
+          name: "Hell",
+          description: "Extremely difficult questions with inhumane time limits. Not for the faint of heart.",
+          difficulty: "Ultimate Challenge"
+        },
+        {
+          id: "death",
+          name: "Death",
+          description: "100-question gauntlet. Two grades: m at Q51 with the 2-minute check, Gm on clear.",
+          difficulty: "Severe Challenge"
+        }
+      ];
+      let hellVariantIndex = 0;
+      function applyHellVariant(index) {
+        hellVariantIndex = ((index % hellVariants.length) + hellVariants.length) % hellVariants.length;
+        const variant = hellVariants[hellVariantIndex];
+        if (!hellModeCard || !variant) return;
+        hellModeCard.setAttribute("data-mode", variant.id);
+        if (hellModeName) hellModeName.textContent = variant.name;
+        if (hellModeDescription) hellModeDescription.textContent = variant.description;
+        if (hellModeDifficulty) hellModeDifficulty.textContent = variant.difficulty;
+        if (hellModeCard.classList.contains("active")) {
+          selectedMode = variant.id;
+          updateModeStyling(selectedMode);
+          handleModeSelection(selectedMode);
+        }
+      }
+      if (hellToggleMinus) {
+        hellToggleMinus.addEventListener("click", (e) => {
+          e.stopPropagation();
+          applyHellVariant(hellVariantIndex - 1);
+        });
+      }
+      if (hellTogglePlus) {
+        hellTogglePlus.addEventListener("click", (e) => {
+          e.stopPropagation();
+          applyHellVariant(hellVariantIndex + 1);
+        });
+      }
+      applyHellVariant(hellVariantIndex);
       
       // Function to update modifier icons on all mode cards
       function updateModifierIcons() {

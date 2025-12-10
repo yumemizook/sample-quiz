@@ -665,6 +665,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.location.href = "secret.html" + urlSuffix;
             } else if (selectedMode === "master130") {
                 window.location.href = "master130.html" + urlSuffix;
+            } else if (selectedMode === "death") {
+                window.location.href = "death.html" + urlSuffix;
             }
         });
     }
