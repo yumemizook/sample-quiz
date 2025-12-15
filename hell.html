@@ -746,6 +746,7 @@
     const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1");
     const fadingMode = urlParams.get("fading");
     const startQuestionParam = parseInt(urlParams.get("start") || "0");
+    const bgmSet = localStorage.getItem("bgmSet") || "default";
     
     let currentLives = lives; // Track current lives (-1 means unlimited)
     const livesEnabled = lives !== -1; // Check if lives system is enabled
@@ -1000,7 +1001,7 @@
     let bgm3, bgm4, bgm5, bgm6;
     let currentBGM = null;
     let currentStage = -1;
-    
+
     function playBGM() {
       // Check if music is disabled
       if (localStorage.getItem("musicEnabled") === "false") {
@@ -1013,12 +1014,21 @@
         return;
       }
 
+        const isAlternative = bgmSet === "alternative";
+
         if (!bgm3) {
             const volume = getAudioVolume();
-            bgm3 = new Audio("bgm/stage4.mp3");
-            bgm4 = new Audio("bgm/stage5.mp3");
-            bgm5 = new Audio("bgm/stage3.mp3");
-            bgm6 = new Audio("bgm/stage6.mp3");
+            if (isAlternative) {
+                bgm3 = new Audio("bgm/TGM/hell1.mp3");
+                bgm4 = new Audio("bgm/TGM/hell2.mp3");
+                bgm5 = new Audio("bgm/TGM/hell3.mp3");
+                bgm6 = new Audio("bgm/TGM/hell4.mp3");
+            } else {
+                bgm3 = new Audio("bgm/stage4.mp3");
+                bgm4 = new Audio("bgm/stage5.mp3");
+                bgm5 = new Audio("bgm/stage3.mp3");
+                bgm6 = new Audio("bgm/stage6.mp3");
+            }
             bgm3.loop = true;
             bgm3.volume = volume;
             bgm4.loop = true;

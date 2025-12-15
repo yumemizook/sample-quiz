@@ -199,8 +199,8 @@
   async function fetchQuestions() {
     try {
       // OpenTDB has a 50 question limit per request, so make multiple requests
-      // Fetch 175 questions (50 + 50 + 50 + 25) to account for segment validation feature
-      const totalQuestions = 175;
+      // Fetch 130 questions to account for segment validation feature
+      const totalQuestions = 130;
       const questionsPerRequest = 50;
       const numRequests = Math.ceil(totalQuestions / questionsPerRequest);
       const maxRetries = 3; // Maximum retry attempts per request
@@ -363,6 +363,7 @@
   const lives = livesParam === "unlimited" ? -1 : parseInt(livesParam || "-1");
   const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1.0");
   const fadingMode = urlParams.get("fading");
+  const bgmSetParam = localStorage.getItem("bgmSet") || "default";
   
   // Lives system variables
   let currentLives = lives; // Track current lives (-1 means unlimited)
@@ -1126,8 +1127,16 @@
     // Initialize BGM if not already done
     if (!bgm4) {
       const volume = getAudioVolume();
-      bgm4 = new Audio("bgm/stage4.mp3");
-      bgm5 = new Audio("bgm/stage5.mp3");
+      const bgmSet = bgmSetParam || "default";
+      const isAlternative = bgmSet === "alternative";
+
+      if (isAlternative) {
+        bgm4 = new Audio("bgm/TGM/race.mp3");
+        bgm5 = new Audio("bgm/TGM/raceura.mp3");
+      } else {
+        bgm4 = new Audio("bgm/stage4.mp3");
+        bgm5 = new Audio("bgm/stage5.mp3");
+      }
 
       // Set BGM to loop and apply volume
       bgm4.loop = true;

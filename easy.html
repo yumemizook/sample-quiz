@@ -146,6 +146,7 @@
     const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1");
     const fadingMode = urlParams.get("fading");
     const startQuestionParam = parseInt(urlParams.get("start") || "0");
+    const bgmSet = localStorage.getItem("bgmSet") || "default";
     
     let currQuestion = startQuestionParam; // Start at specified question
     let currentLives = lives; // Track current lives (-1 means unlimited)
@@ -888,7 +889,8 @@
         }
 
         if (!easyBGM) {
-            easyBGM = new Audio("bgm/stage1.mp3");
+            const isAlternative = bgmSet === "alternative";
+            easyBGM = new Audio(isAlternative ? "bgm/TGM/easy.mp3" : "bgm/stage1.mp3");
             easyBGM.loop = true;
             easyBGM.volume = getAudioVolume();
         }

@@ -164,7 +164,7 @@
     const volume = savedVolume !== null ? parseInt(savedVolume) : 100;
     return volume / 100; // Convert 0-100 to 0-1 range
   }
-  
+      const bgmSet = localStorage.getItem("bgmSet") || "default";
   // Detect mobile device
     function isMobileDevice() {
       return (
@@ -210,6 +210,7 @@
     const giveUpPauseBtn = document.getElementById("giveUpPauseBtn");
     const pauseCountDisplay = document.getElementById("pauseCountDisplay");
     const totalPausedTimeDisplay = document.getElementById("totalPausedTimeDisplay");
+    
     const pauseButtons = [resumeBtn, giveUpPauseBtn];
     
     // Format paused time for display
@@ -964,12 +965,18 @@
         }
         return;
       }
-
+      const isAlternative = bgmSet === "alternative";
         if (!bgm2) {
             const volume = getAudioVolume();
-            bgm2 = new Audio("bgm/stage2.mp3");
-            bgm3 = new Audio("bgm/stage3.mp3");
-            bgm4 = new Audio("bgm/stage4.mp3");
+            if (isAlternative) {
+                bgm2 = new Audio("bgm/TGM/master2.mp3");
+                bgm3 = new Audio("bgm/TGM/master3.mp3");
+                bgm4 = new Audio("bgm/TGM/master4.mp3");
+            } else {
+                bgm2 = new Audio("bgm/stage2.mp3");
+                bgm3 = new Audio("bgm/stage3.mp3");
+                bgm4 = new Audio("bgm/stage4.mp3");
+            }
             bgm2.loop = true; bgm2.volume = volume;
             bgm3.loop = true; bgm3.volume = volume;
             bgm4.loop = true; bgm4.volume = volume;

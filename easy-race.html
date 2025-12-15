@@ -137,6 +137,7 @@
   }
 
   let allQuestions = [];
+  const maxQuestions = 100; // Quiz ends after 100 questions answered, even if more are fetched
   // Add controller indicator to submit button
   const submitBtn = document.querySelector("#btn");
   let controllerIndicator = null;
@@ -199,8 +200,8 @@
   async function fetchQuestions() {
     try {
       // OpenTDB has a 50 question limit per request, so make multiple requests
-      // Fetch 100 questions for easy race mode
-      const totalQuestions = 100;
+      // Fetch 175 questions for easy race mode (but quiz ends after 100 answered)
+      const totalQuestions = 175;
       const questionsPerRequest = 50;
       const numRequests = Math.ceil(totalQuestions / questionsPerRequest);
       const maxRetries = 3; // Maximum retry attempts per request
@@ -363,6 +364,7 @@
   const lives = livesParam === "unlimited" ? -1 : parseInt(livesParam || "-1");
   const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1.0");
   const fadingMode = urlParams.get("fading");
+  const bgmSetParam = localStorage.getItem("bgmSet") || "default";
   
   // Lives system variables
   let currentLives = lives; // Track current lives (-1 means unlimited)
@@ -1126,7 +1128,10 @@
     // Initialize BGM if not already done
     if (!bgm4) {
       const volume = getAudioVolume();
-      bgm4 = new Audio("bgm/stage4.mp3");
+      const bgmSet = bgmSet || "default";
+      const isAlternative = bgmSet === "alternative";
+
+      bgm4 = new Audio(isAlternative ? "bgm/TGM/race.mp3" : "bgm/stage4.mp3");
 
       // Set BGM to loop and apply volume
       bgm4.loop = true;
@@ -1134,7 +1139,7 @@
     }
 
     // Check if we're on the final question (stop BGM)
-    if (currQuestion === 99) {
+    if (currQuestion === maxQuestions - 1) {
       // Stop current BGM if playing
       if (currentBGM) {
         currentBGM.pause();
@@ -1145,7 +1150,7 @@
       return; // Don't play any BGM on final question
     }
 
-    // Easy race mode: only use stage4 (ends at question 100)
+    // Easy race mode: only use stage4 (ends at question 130)
     let targetStage = 4;
     let targetBGM = bgm4;
 
@@ -1203,7 +1208,7 @@
       const opt = document.getElementById("opt");
       let currentQuestion = allQuestions[currQuestion].question;
 
-    // Keep race.jpg background for easy race mode (ends at question 100)
+    // Keep race.jpg background for easy race mode (ends at question 130)
     document.body.style.backgroundImage = 'url("race.jpg")';
 
     // Decode HTML entities in the question and answers
@@ -1459,7 +1464,7 @@
       timerDiv.style.fontSize = "xx-large";
       timerDiv.style.color = "white";
     } else if (currQuestion < 100) {
-      // Questions 91-99: Use Master Q61 timer (need to check master mode for Q61)
+      // Questions 91-129: Use Master Q61 timer (need to check master mode for Q61)
       // Based on master mode structure, Q61 would be > 60, checking master.html shows Q61 uses 20 seconds (<= 60 range)
       timeToAnswer = 20;
       initialTimeToAnswer = timeToAnswer;
@@ -1630,7 +1635,7 @@
 
   }
 
-  // Function to reset all text elements' opacity (for resetting fading after question 100)
+  // Function to reset all text elements' opacity (for resetting fading after question 130)
   function resetAllTextElementsOpacity() {
     const questionEl = document.getElementById("ques");
     if (questionEl) {
@@ -1846,8 +1851,8 @@
     const gradePointsDisplay = document.getElementById("currentgrade");
     if (!gradeDisplayLeft || !gradePointsDisplay) return;
 
-    // Check if all questions are completed (must have exactly 100 questions and be on/completed the last one)
-    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1 && allQuestions.length === 100;
+    // Check if all questions are completed (must have exactly 130 questions answered and be on/completed the last one)
+    const allQuestionsCompleted = currQuestion >= maxQuestions - 1;
 
     // Get text color (white normally, gold after question 50)
     let textColor = "#ffffff"; // White
@@ -2041,7 +2046,7 @@
     // Base score for each question
     const quesScore = 500;
 
-    // Difficulty multiplier based on question number (easy race has 100 questions max)
+    // Difficulty multiplier based on question number (easy race has 130 questions answered max)
     let multiplier;
     if (currQuestion < 25) {
       multiplier = 1;
@@ -2050,7 +2055,7 @@
     } else if (currQuestion < 75) {
       multiplier = 3;
     } else {
-      multiplier = 4; // Questions 75-99
+      multiplier = 4; // Questions 75-129
     }
 
     // Calculate grade points with remaining time as a factor
@@ -2094,9 +2099,9 @@
     document.getElementById("score").remove();
 
     // Check if all questions were completed (in easy race mode, you can only progress if correct, so completion means all correct)
-    // We've completed all questions if: we're on the last question index (99 for 100 questions) AND we've answered it
+    // We've completed all questions if: we're on the last question index (129 for 130 questions) AND we've answered it
     // When evalScreen is called from nextQuestion(), currQuestion is still at the last index, so we check if we've reached the end
-    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1 && allQuestions.length === 100;
+    const allQuestionsCompleted = currQuestion >= maxQuestions - 1;
 
     if (!quizAbandoned && allQuestionsCompleted && localStorage.getItem("musicEnabled") !== "false") {
       let completeSound = new Audio("bgm/complete.wav");
@@ -2105,21 +2110,21 @@
 
     if (localStorage.getItem("musicEnabled") !== "false") {
       let creditsBGM = new Audio("bgm/credits.mp3");
-      creditsBGM.play();
+      let creditsBGMAlt = new Audio("bgm/TGM/credits.mp3");
+      const useTGM = localStorage.getItem("BGMSet");
+      if (useTGM === "alternative") {
+        creditsBGMAlt.play();
+      } else {
+        creditsBGM.play();
+      }
     }
     const evalDiv = document.querySelector(".evalscreen");
     let grade = "";
     let line = "white";
-    // Only assign GM grade if all 100 questions were completed
-    // In easy race mode, you can only progress if you answer correctly, so if we've reached the end with exactly 100 questions,
-    // all questions have been answered correctly (score should equal 100)
-    if (allQuestionsCompleted && allQuestions.length === 100) {
-      // Double-check: score should equal 100 if all questions were answered correctly
-      if (score === 100) {
-        grade = "GM";
-      }
-      // If all questions completed but not GM, grade remains empty (no grade system)
-    }
+    // Only assign GM grade if all 130 questions were completed
+    // In easy race mode, you can only progress if you answer correctly, so if we've reached the end with exactly 130 questions,
+    // all questions have been answered correctly (score should equal 130)
+    grade = calculateEasyRaceGrade();
 
     clearInterval(timer);
     if (window.answerTimerId) {
@@ -2369,7 +2374,7 @@
     wrongAnswersForCurrentQuestion = 0;
     questionTimedOut = false; // Reset timeout flag for new question
     
-    if (currQuestion < allQuestions.length - 1) {
+    if (currQuestion < maxQuestions - 1) {
       currQuestion++;
       
       // Easy race mode: no segment validation

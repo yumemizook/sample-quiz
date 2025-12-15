@@ -477,58 +477,34 @@ export async function checkNewAchievements(mode) {
   try {
     const db = getFirestore();
     
-    // Fetch all scores
-    const [easySnapshot, normalSnapshot, masterSnapshot, raceSnapshot, hellSnapshot] = await Promise.all([
-      getDocs(collection(db, 'scoreseasy')),
-      getDocs(collection(db, 'scoresnormal')),
-      getDocs(collection(db, 'scoresmaster')),
-      getDocs(collection(db, 'scoresrace')),
-      getDocs(collection(db, 'scoresfinal'))
+    // Fetch all scores from personal data for consistency
+    const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap, raceEasySnap, raceHardSnap, deathSnap, secretSnap] = await Promise.all([
+      getDocs(collection(db, "playerData", user.uid, "easy")),
+      getDocs(collection(db, "playerData", user.uid, "normal")),
+      getDocs(collection(db, "playerData", user.uid, "master")),
+      getDocs(collection(db, "playerData", user.uid, "hell")),
+      getDocs(collection(db, "playerData", user.uid, "race")),
+      getDocs(collection(db, "playerData", user.uid, "easyrace")).catch(() => ({ empty: true, docs: [] })),
+      getDocs(collection(db, "playerData", user.uid, "hardrace")).catch(() => ({ empty: true, docs: [] })),
+      getDocs(collection(db, "playerData", user.uid, "death")).catch(() => ({ empty: true, docs: [] })),
+      getDocs(collection(db, "playerData", user.uid, "secret")).catch(() => ({ empty: true, docs: [] }))
     ]);
 
-    const allEasyScores = easySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allNormalScores = normalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allMasterScores = masterSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allRaceScores = raceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allHellScores = hellSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-    // Get user profile to find all usernames
-    const userProfileRef = doc(db, 'userProfiles', user.uid);
-    const userProfileSnap = await getDoc(userProfileRef);
-    let allPlayerNames = new Set();
-    
-    if (userProfileSnap.exists()) {
-      const userData = userProfileSnap.data();
-      if (userData.displayName) allPlayerNames.add(userData.displayName);
-      if (userData.email) allPlayerNames.add(userData.email);
-      if (userData.previousUsernames && Array.isArray(userData.previousUsernames)) {
-        userData.previousUsernames.forEach(name => {
-          if (name) allPlayerNames.add(name);
-        });
-      }
-    }
-
-    // Filter scores for this player
-    const easyScores = allEasyScores.filter(s => allPlayerNames.has(s.name));
-    const normalScores = allNormalScores.filter(s => allPlayerNames.has(s.name));
-    const masterScores = allMasterScores.filter(s => allPlayerNames.has(s.name));
-    const raceScores = allRaceScores.filter(s => allPlayerNames.has(s.name));
-    const hellScores = allHellScores.filter(s => allPlayerNames.has(s.name));
-
-    // Fetch secret scores
-    let secretScores = [];
-    try {
-      const secretSnapshot = await getDocs(collection(db, 'playerData', user.uid, 'secret'));
-      secretScores = secretSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    } catch (error) {
-      secretScores = [];
-    }
+    const easyScores = easySnap.empty ? [] : easySnap.docs.map(doc => doc.data());
+    const normalScores = normalSnap.empty ? [] : normalSnap.docs.map(doc => doc.data());
+    const masterScores = masterSnap.empty ? [] : masterSnap.docs.map(doc => doc.data());
+    const hellScores = hellSnap.empty ? [] : hellSnap.docs.map(doc => doc.data());
+    const raceScores = raceSnap.empty ? [] : raceSnap.docs.map(doc => doc.data());
+    const raceEasyScores = raceEasySnap.empty ? [] : raceEasySnap.docs.map(doc => doc.data());
+    const raceHardScores = raceHardSnap.empty ? [] : raceHardSnap.docs.map(doc => doc.data());
+    const deathScores = deathSnap.empty ? [] : deathSnap.docs.map(doc => doc.data());
+    const secretScores = secretSnap.empty ? [] : secretSnap.docs.map(doc => doc.data());
 
     // Check if player has unlocked secret mode
     const hasUnlockedSecretMode = hellScores.some(s => s.score === 200);
 
     // Calculate level
-    const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
+    const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores, raceEasyScores, raceHardScores, deathScores);
 
     // Prepare data object for achievement checks
     const achievementData = {

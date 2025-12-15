@@ -341,6 +341,7 @@
     const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1");
     const fadingMode = urlParams.get("fading");
     const startQuestionParam = parseInt(urlParams.get("start") || "0");
+    const bgmSet = localStorage.getItem("bgmSet") || "default";
     
     let currQuestion = startQuestionParam; // Start at specified question
     let currentLives = lives; // Track current lives (-1 means unlimited)
@@ -1170,11 +1171,12 @@
       // Initialize BGM if not already done
       if (!bgm1) {
         const volume = getAudioVolume();
-        bgm1 = new Audio("bgm/stage1.mp3");
-        bgm2 = new Audio("bgm/stage2.mp3");
-        bgm3 = new Audio("bgm/stage3.mp3");
-        bgm4 = new Audio("bgm/stage4.mp3");
-        
+        const isAlternative = bgmSet === "alternative";
+        bgm1 = new Audio(isAlternative ? "bgm/TGM/master1.mp3" : "bgm/stage1.mp3");
+        bgm2 = new Audio(isAlternative ? "bgm/TGM/master2.mp3" : "bgm/stage2.mp3");
+        bgm3 = new Audio(isAlternative ? "bgm/TGM/master3.mp3" : "bgm/stage3.mp3");
+        bgm4 = new Audio(isAlternative ? "bgm/TGM/master4.mp3" : "bgm/stage4.mp3");
+
         // Set BGM to loop and apply volume
         bgm1.loop = true;
         bgm1.volume = volume;

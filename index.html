@@ -221,6 +221,21 @@
             </label>
             <span class="setting-description">Start the quiz at a specific question (multiples of 10)</span>
           </div>
+          <div class="setting-item">
+            <label class="setting-label">
+              <span class="setting-text">BGM Set:</span>
+              <div class="arrow-selector" data-setting="bgmSet">
+                <button class="arrow-btn arrow-left" aria-label="Previous option"><i class="fas fa-chevron-left"></i></button>
+                <span class="selector-value" id="bgmSetValue">Default</span>
+                <button class="arrow-btn arrow-right" aria-label="Next option"><i class="fas fa-chevron-right"></i></button>
+                <select id="bgmSet" class="setting-select-hidden" style="display: none;">
+                  <option value="default">Default</option>
+                  <option value="alternative">Alternative</option>
+                </select>
+              </div>
+            </label>
+            <span class="setting-description">Choose which background music set to use for all modes</span>
+          </div>
         </div>
       </div>
 
@@ -280,6 +295,32 @@
   <script type="module" src="hm.js"></script>
   <script type="module" src="loadBackground.js"></script>
   <script type="module" src="loadTheme.js"></script>
+  <script>
+    // Christmas effects for December
+    const currentDate = new Date();
+    const isDecember = currentDate.getMonth() === 11; // December is month 11 (0-indexed)
+
+    if (isDecember) {
+      document.body.classList.add('christmas-mode');
+
+      // Add snowfall effect
+      const snowfallContainer = document.createElement('div');
+      snowfallContainer.className = 'snowfall-container';
+      snowfallContainer.innerHTML = `
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❄</div>
+      `;
+      document.body.appendChild(snowfallContainer);
+    }
+  </script>
   <script>
     // Mode settings handler
     (function() {
@@ -384,6 +425,14 @@
           const selectedOption = startQuestionSelect.options[startQuestionSelect.selectedIndex];
           startQuestionValue.textContent = selectedOption.textContent;
         }
+
+        const bgmSetSelect = document.getElementById("bgmSet");
+        const bgmSetValue = document.getElementById("bgmSetValue");
+
+        if (bgmSetSelect && bgmSetValue) {
+          const selectedOption = bgmSetSelect.options[bgmSetSelect.selectedIndex];
+          bgmSetValue.textContent = selectedOption.textContent;
+        }
       }
       
       // Cycle through select options
@@ -457,7 +506,7 @@
           const rightBtn = startQuestionSelector.querySelector('.arrow-right');
           const startQuestionSelect = document.getElementById("startQuestion");
           const startQuestionValue = document.getElementById("startQuestionValue");
-          
+
           if (leftBtn) {
             leftBtn.addEventListener("click", () => {
               cycleSelectOption(startQuestionSelect, 'left', startQuestionValue);
@@ -466,6 +515,26 @@
           if (rightBtn) {
             rightBtn.addEventListener("click", () => {
               cycleSelectOption(startQuestionSelect, 'right', startQuestionValue);
+            });
+          }
+        }
+
+        // BGM Set selector
+        const bgmSetSelector = document.querySelector('[data-setting="bgmSet"]');
+        if (bgmSetSelector) {
+          const leftBtn = bgmSetSelector.querySelector('.arrow-left');
+          const rightBtn = bgmSetSelector.querySelector('.arrow-right');
+          const bgmSetSelect = document.getElementById("bgmSet");
+          const bgmSetValue = document.getElementById("bgmSetValue");
+
+          if (leftBtn) {
+            leftBtn.addEventListener("click", () => {
+              cycleSelectOption(bgmSetSelect, 'left', bgmSetValue);
+            });
+          }
+          if (rightBtn) {
+            rightBtn.addEventListener("click", () => {
+              cycleSelectOption(bgmSetSelect, 'right', bgmSetValue);
             });
           }
         }
@@ -500,13 +569,17 @@
             id: "easy-race",
             name: "Race (Easy)",
             description: "30 minute timer. 100 questions. May speed be in your hands.",
-            difficulty: "Timed Challenge"
+            difficulty: "Timed Challenge",
+            icon: 'seedling',
+            color: '#2ecc71'
           },
           {
             id: "master130",
             name: "Race",
             description: "Race against time! 130 questions with a 7 minute time limit. Text elements fade randomly after question 100.",
-            difficulty: "Extreme Challenge"
+            difficulty: "Extreme Challenge",
+            icon: 'bolt',
+            color: '#ffff00'
           }
         ];
         // Only include hard race if player has completed race at least once
@@ -515,7 +588,9 @@
             id: "hard-race",
             name: "Race (Hard)",
             description: "4:30 total time. Are you up to the ultimate challenge?",
-            difficulty: "Extreme Challenge"
+            difficulty: "Extreme Challenge",
+            icon: 'skull',
+            color: '#ff0000'
           });
         }
         return variants;
@@ -560,7 +635,14 @@
         if (raceModeName) raceModeName.textContent = variant.name;
         if (raceModeDescription) raceModeDescription.innerHTML = `${variant.description}<br><small style="opacity: 0.7;"><i class="fas fa-lightbulb"></i> Click 5 times to toggle Master mode</small>`;
         if (raceModeDifficulty) raceModeDifficulty.textContent = variant.difficulty;
-        
+
+        // Update mode icon
+        const raceModeIcon = raceModeCard.querySelector('.mode-icon i');
+        if (raceModeIcon && variant.icon) {
+          raceModeIcon.className = `fas fa-${variant.icon}`;
+          raceModeIcon.style.color = variant.color;
+        }
+
         // If race card is active, update selected mode and styling
         if (raceModeCard.classList.contains("active")) {
           selectedMode = variant.id;
@@ -678,13 +760,17 @@
           id: "hell",
           name: "Hell",
           description: "Extremely difficult questions with inhumane time limits. Not for the faint of heart.",
-          difficulty: "Ultimate Challenge"
+          difficulty: "Ultimate Challenge",
+          icon: 'fire',
+          color: '#ff6b35'
         },
         {
           id: "death",
           name: "Death",
           description: "100-question gauntlet. Easier than Hell mode.",
-          difficulty: "Step-up Challenge"
+          difficulty: "Step-up Challenge",
+          icon: 'skull',
+          color: '#666666'
         }
       ];
       let hellVariantIndex = 0;
@@ -966,7 +1052,18 @@
       "Fun fact: The midpoint between 0 and infinity is one. Which means every journey starts with a single step.",
       "STOP POSTING ABOUT モエチャッカファイア! I'M TIRED OF HEARING IT!!",
       "*gently jerks your left analog stick off*",
-      "think fast move fast think fast move fast"
+      "think fast move fast think fast move fast",
+      // Christmas tips for December
+      "🎄 Merry Christmas! May your scores be as high as Santa's sleigh!",
+      "❄️ It's snowing in the menu! Don't let it distract you from your quiz.",
+      "🎅 Ho ho ho! Santa's watching your quiz performance. Be good!",
+      "🎁 Christmas special: Answer questions faster for extra holiday cheer!",
+      "🌟 The Christmas lights are shining bright. Can you shine brighter?",
+      "🔔 Jingle all the way to the top of the leaderboards!",
+      "🎄 Deck the halls with high scores and quiz mastery!",
+      "❄️ Winter wonderland mode activated. Stay focused on those questions!",
+      "🎅 Santa's little helper: Practice makes perfect, even during holidays!",
+      "🎁 Gift yourself a perfect score this Christmas season!"
     ];
 
     const tipsContainer = document.getElementById("tipsContainer");

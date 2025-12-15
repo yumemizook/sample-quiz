@@ -370,7 +370,7 @@ async function loadProfile() {
     // Get player name from URL parameter
     const urlParams = new URLSearchParams(window.location.search);
     const playerName = urlParams.get('player');
-    
+
     if (!playerName) {
         const notFoundEl = document.getElementById('playerNotFound');
         if (notFoundEl) {
@@ -378,37 +378,7 @@ async function loadProfile() {
         }
         return;
     }
-    
-    // Fetch all scores
-    const easyModeRef = collection(db, 'scoreseasy');
-    const normalModeRef = collection(db, 'scoresnormal');
-    const masterModeRef = collection(db, 'scoresmaster');
-    const raceModeRef = collection(db, 'scoresrace');
-    const raceEasyModeRef = collection(db, 'scoreseasyrace');
-    const raceHardModeRef = collection(db, 'scoreshardrace');
-    const hellModeRef = collection(db, 'scoresfinal');
-    const deathModeRef = collection(db, 'scoresdeath');
-    
-    const [easySnapshot, normalSnapshot, masterSnapshot, raceSnapshot, raceEasySnapshot, raceHardSnapshot, hellSnapshot, deathSnapshot] = await Promise.all([
-        getDocs(easyModeRef),
-        getDocs(normalModeRef),
-        getDocs(masterModeRef),
-        getDocs(raceModeRef),
-        getDocs(raceEasyModeRef),
-        getDocs(raceHardModeRef),
-        getDocs(hellModeRef),
-        getDocs(deathModeRef)
-    ]);
-    
-    const allEasyScores = easySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allNormalScores = normalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allMasterScores = masterSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allRaceScores = raceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allRaceEasyScores = raceEasySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allRaceHardScores = raceHardSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allHellScores = hellSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    const allDeathScores = deathSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-    
+
     // Check if player exists in userProfiles FIRST to get previous usernames
     // Use retry logic to ensure profile is fetched correctly
     let foundUser = null;
@@ -534,36 +504,8 @@ async function loadProfile() {
         }
     }
     
-    // Build list of all names (current + previous usernames) for score filtering
-    const allPlayerNames = new Set();
-    if (foundUser) {
-        // Add current display name
-        if (foundUser.displayName) {
-            allPlayerNames.add(foundUser.displayName);
-        }
-        // Add email if it's being used as identifier
-        if (isEmail && foundUser.email) {
-            allPlayerNames.add(foundUser.email);
-        }
-        // Add all previous usernames
-        if (foundUser.previousUsernames && Array.isArray(foundUser.previousUsernames)) {
-            foundUser.previousUsernames.forEach(name => {
-                if (name) allPlayerNames.add(name);
-            });
-        }
-    }
-    // Also add the playerName from URL in case it's not in the user profile
-    allPlayerNames.add(playerName);
-    
-    // Filter scores for this player (including all previous usernames)
-    const easyScores = allEasyScores.filter(s => allPlayerNames.has(s.name));
-    const normalScores = allNormalScores.filter(s => allPlayerNames.has(s.name));
-    const masterScores = allMasterScores.filter(s => allPlayerNames.has(s.name));
-    const raceScores = allRaceScores.filter(s => allPlayerNames.has(s.name));
-    const hellScores = allHellScores.filter(s => allPlayerNames.has(s.name));
-    const raceEasyScores = allRaceEasyScores.filter(s => allPlayerNames.has(s.name));
-    const raceHardScores = allRaceHardScores.filter(s => allPlayerNames.has(s.name));
-    const deathScores = allDeathScores.filter(s => allPlayerNames.has(s.name));
+    // Use personal scores directly (no filtering needed since we fetched personal data)
+    // Scores will be assigned after fetching
     
     // If player not found, show not found message
     if (!foundUser) {
@@ -572,7 +514,48 @@ async function loadProfile() {
         document.getElementById('playerBanned').style.display = 'none';
         return;
     }
-    
+
+    // Fetch all scores from personal data (consistent with navbar and stats)
+    const uid = foundUser.uid;
+    const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap, raceEasySnap, raceHardSnap, deathSnap, secretSnap] = await Promise.all([
+        getDocs(collection(db, "playerData", uid, "easy")),
+        getDocs(collection(db, "playerData", uid, "normal")),
+        getDocs(collection(db, "playerData", uid, "master")),
+        getDocs(collection(db, "playerData", uid, "hell")),
+        getDocs(collection(db, "playerData", uid, "race")),
+        getDocs(collection(db, "playerData", uid, "easyrace")).catch(() => ({ empty: true, docs: [] })),
+        getDocs(collection(db, "playerData", uid, "hardrace")).catch(() => ({ empty: true, docs: [] })),
+        getDocs(collection(db, "playerData", uid, "death")).catch(() => ({ empty: true, docs: [] })),
+        getDocs(collection(db, "playerData", uid, "secret")).catch(() => ({ empty: true, docs: [] }))
+    ]);
+
+    const allEasyScores = easySnap.empty ? [] : easySnap.docs.map(doc => doc.data());
+    const allNormalScores = normalSnap.empty ? [] : normalSnap.docs.map(doc => doc.data());
+    const allMasterScores = masterSnap.empty ? [] : masterSnap.docs.map(doc => doc.data());
+    const allHellScores = hellSnap.empty ? [] : hellSnap.docs.map(doc => doc.data());
+    const allRaceScores = raceSnap.empty ? [] : raceSnap.docs.map(doc => doc.data());
+    const allRaceEasyScores = raceEasySnap.empty ? [] : raceEasySnap.docs.map(doc => doc.data());
+    const allRaceHardScores = raceHardSnap.empty ? [] : raceHardSnap.docs.map(doc => doc.data());
+    const allDeathScores = deathSnap.empty ? [] : deathSnap.docs.map(doc => doc.data());
+    const allSecretScores = secretSnap.empty ? [] : secretSnap.docs.map(doc => doc.data());
+
+    const easyScores = allEasyScores;
+    const normalScores = allNormalScores;
+    const masterScores = allMasterScores;
+    const raceScores = allRaceScores;
+    const hellScores = allHellScores;
+    const raceEasyScores = allRaceEasyScores;
+    const raceHardScores = allRaceHardScores;
+    const deathScores = allDeathScores;
+
+    console.log('Scores assigned successfully:', {
+        easyScores: easyScores.length,
+        normalScores: normalScores.length,
+        masterScores: masterScores.length,
+        raceScores: raceScores.length,
+        hellScores: hellScores.length
+    });
+
     // Check if player is banned
     if (foundUser.role === 'banned') {
         document.getElementById('playerNotFound').style.display = 'none';
@@ -603,8 +586,7 @@ async function loadProfile() {
     document.getElementById('profileName').textContent = playerName;
     
     // Calculate level
-    const secretScores = [];
-    const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores, raceEasyScores, raceHardScores, deathScores);
+    const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, allSecretScores, raceScores, raceEasyScores, raceHardScores, deathScores);
     const badge = getBadgeForLevel(playerData.level);
     const badgeName = getBadgeName(playerData.level);
     
@@ -2142,7 +2124,7 @@ async function loadGraphData(mode) {
                 options: {
                     responsive: true,
                     maintainAspectRatio: true,
-                    aspectRatio: 2,
+                    aspectRatio: window.innerWidth < 768 ? 1 : 2,
                     plugins: {
                         legend: { display: false },
                         tooltip: { enabled: false }
@@ -2205,7 +2187,7 @@ async function loadGraphData(mode) {
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
-                aspectRatio: 2,
+                aspectRatio: window.innerWidth < 768 ? 1 : 2,
                 plugins: {
                     legend: {
                         display: false

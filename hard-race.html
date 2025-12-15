@@ -137,6 +137,7 @@
   }
 
   let allQuestions = [];
+  const maxQuestions = 130; // Quiz ends after 130 questions answered, even if more are fetched
   // Add controller indicator to submit button
   const submitBtn = document.querySelector("#btn");
   let controllerIndicator = null;
@@ -199,7 +200,7 @@
   async function fetchQuestions() {
     try {
       // OpenTDB has a 50 question limit per request, so make multiple requests
-      // Fetch 175 questions (50 + 50 + 50 + 25) to account for segment validation feature
+      // Fetch 175 questions to account for segment validation feature (but quiz ends after 130 answered)
       const totalQuestions = 175;
       const questionsPerRequest = 50;
       const numRequests = Math.ceil(totalQuestions / questionsPerRequest);
@@ -363,6 +364,7 @@
   const lives = livesParam === "unlimited" ? -1 : parseInt(livesParam || "-1");
   const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1.0");
   const fadingMode = urlParams.get("fading");
+  const bgmSetParam = localStorage.getItem("bgmSet") || "default";
   
   // Lives system variables
   let currentLives = lives; // Track current lives (-1 means unlimited)
@@ -392,6 +394,7 @@
   let segmentCorrectAnswers = {}; // Track correct answers per segment: {segment1: count, segment2: count, ...}
   let currentQuestionFirstAttempt = true; // Track if current question is first attempt
   let currentQuestionWrongAttempts = 0; // Track wrong attempts for current question
+  let isReplacementQuestion = false; // Track if current question is a replacement due to segment failure
 
   // Gamepad support
   let gamepadConnected = false;
@@ -1126,8 +1129,16 @@
     // Initialize BGM if not already done
     if (!bgm4) {
       const volume = getAudioVolume();
-      bgm4 = new Audio("bgm/stage4.mp3");
-      bgm5 = new Audio("bgm/stage5.mp3");
+      const bgmSet = bgmSetParam || "default";
+      const isAlternative = bgmSet === "alternative";
+
+      if (isAlternative) {
+        bgm4 = new Audio("bgm/TGM/race.mp3");
+        bgm5 = new Audio("bgm/TGM/raceura.mp3");
+      } else {
+        bgm4 = new Audio("bgm/stage4.mp3");
+        bgm5 = new Audio("bgm/stage5.mp3");
+      }
 
       // Set BGM to loop and apply volume
       bgm4.loop = true;
@@ -1137,7 +1148,7 @@
     }
 
     // Check if we're on the final question (stop BGM)
-    if (currQuestion === 129) {
+    if (currQuestion === maxQuestions - 1) {
       // Stop current BGM if playing
       if (currentBGM) {
         currentBGM.pause();
@@ -1738,7 +1749,7 @@
     }
     
     // Check if all questions are completed
-    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1 && allQuestions.length === 130;
+    const allQuestionsCompleted = currQuestion >= maxQuestions - 1;
     
     if (allQuestionsCompleted) {
       return "GM"; // Grant GM for completion
@@ -1763,8 +1774,8 @@
     const gradePointsDisplay = document.getElementById("currentgrade");
     if (!gradeDisplayLeft || !gradePointsDisplay) return;
 
-    // Check if all questions are completed (must have exactly 130 questions and be on/completed the last one)
-    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1 && allQuestions.length === 130;
+    // Check if all questions are completed (must have exactly 130 questions answered and be on/completed the last one)
+    const allQuestionsCompleted = currQuestion >= maxQuestions - 1;
 
     // Get text color (white normally, gold after question 50)
     let textColor = "#ffffff"; // White
@@ -1958,7 +1969,7 @@
     } else if (currQuestion < 100) {
       multiplier = 4;
     } else {
-      multiplier = 5; // Questions 100-130
+      multiplier = 5; // Questions 100-129
     }
 
     // Calculate grade points with remaining time as a factor
@@ -2004,7 +2015,7 @@
     // Check if all questions were completed (in race mode, you can only progress if correct, so completion means all correct)
     // We've completed all questions if: we're on the last question index (129 for 130 questions) AND we've answered it
     // When evalScreen is called from nextQuestion(), currQuestion is still at the last index, so we check if we've reached the end
-    const allQuestionsCompleted = currQuestion >= allQuestions.length - 1 && allQuestions.length === 130;
+    const allQuestionsCompleted = currQuestion >= maxQuestions - 1;
 
     if (!quizAbandoned && allQuestionsCompleted && localStorage.getItem("musicEnabled") !== "false") {
       let completeSound = new Audio("bgm/complete.wav");
@@ -2019,7 +2030,7 @@
     // Use hard-race grade progression (S1, S2, ...) and promote to GM on perfect clear
     let grade = calculateHardRaceGrade() || "";
     let line = "#ffffff";
-    if (allQuestionsCompleted && allQuestions.length === 130 && score === 130) {
+    if (allQuestionsCompleted && score === maxQuestions) {
       grade = "GM";
       line = "#ffd700";
     }
@@ -2272,64 +2283,9 @@
     wrongAnswersForCurrentQuestion = 0;
     questionTimedOut = false; // Reset timeout flag for new question
     
-    if (currQuestion < allQuestions.length - 1) {
+    if (currQuestion < maxQuestions - 1) {
       currQuestion++;
       
-      // Check segment validation at milestones (10, 20, 30, etc.)
-      // Hard mode: required correct answers per 10-question segment (tuned ramp)
-      if (currQuestion % 10 === 0) {
-        const segment = currQuestion / 10;
-        const segmentCorrectArray = {
-          1: 2,
-          2: 2,
-          3: 3,
-          4: 3,
-          5: 4,
-          6: 4,
-          7: 5,
-          8: 5,
-          9: 6,
-          10: 6,
-          11: 7,
-          12: 8,
-        }
-        const requiredCorrect = segmentCorrectArray[segment] || 0;
-        const segmentCorrectCount = segmentCorrectAnswers[segment] || 0;
-        
-        if (segmentCorrectCount < requiredCorrect) {
-          showNotification(`Segment ${segment} failed! Need ${requiredCorrect} correct answers, got ${segmentCorrectCount}. Fetching new question...`, false);
-          
-          // Fetch a new question
-          try {
-            const response = await fetch(
-              `https://opentdb.com/api.php?amount=1&difficulty=medium`
-            );
-            
-            if (response.ok) {
-              const data = await response.json();
-              if (data.results && data.results.length > 0) {
-                // Replace current question with new one
-                allQuestions[currQuestion] = data.results[0];
-                console.log(`Replaced question ${currQuestion + 1} with new question due to segment failure`);
-              }
-            }
-          } catch (error) {
-            console.error("Error fetching replacement question:", error);
-          }
-          
-          // Don't increment score, just load the new question
-          // Play section change sound
-          if (localStorage.getItem("musicEnabled") !== "false") {
-            const sectionChangeSound = new Audio("bgm/sectionchange.wav");
-            sectionChangeSound.volume = getAudioVolume();
-            sectionChangeSound.play().catch(err => console.log("Section change sound play failed:", err));
-          }
-          loadQues();
-          document.querySelector(".correctanswer").innerHTML = "";
-          playBGM();
-          return; // Exit early, don't proceed with normal nextQuestion flow
-        }
-      }
       
       // Play section change sound every 10 questions
       if (currQuestion % 10 === 0 && localStorage.getItem("musicEnabled") !== "false") {
@@ -2437,10 +2393,10 @@
       if (decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer) {
         // Mark question as answered
         currentQuestionAnswered = true;
-        
+
         // Track answer status (correct on first attempt = 'correct', else 'incorrect')
         const answerStatus = currentQuestionFirstAttempt ? 'correct' : 'incorrect';
-        
+
         // Add to recent answer status (keep only last 10)
         recentAnswerStatus.push({
           questionIndex: currQuestion,
@@ -2450,7 +2406,7 @@
         if (recentAnswerStatus.length > 10) {
           recentAnswerStatus.shift(); // Remove oldest if more than 10
         }
-        
+
         // Track segment performance (questions 1-10 = segment 1, 11-20 = segment 2, etc.)
         const segment = Math.floor(currQuestion / 10) + 1;
         if (!segmentCorrectAnswers[segment]) {
@@ -2459,8 +2415,13 @@
         if (currentQuestionFirstAttempt) {
           segmentCorrectAnswers[segment]++;
         }
-        
-        score++;
+
+        // Only increment score if not a replacement question
+        if (!isReplacementQuestion) {
+          score++;
+        }
+        isReplacementQuestion = false; // Reset flag
+
         // Calculate and accumulate grade points for this question
         const questionPoints = internalGrade();
         totalGradePoints += questionPoints;
@@ -2473,6 +2434,69 @@
         showNotification("Correct!", true);
         // Update recent answer status display
         updateRecentAnswerStatusDisplay();
+
+        // Check segment validation after answering milestone questions
+        if ((currQuestion + 1) % 10 === 0) {
+          const segment = (currQuestion + 1) / 10;
+          const segmentCorrectArray = {
+            1: 2,
+            2: 2,
+            3: 3,
+            4: 3,
+            5: 4,
+            6: 4,
+            7: 5,
+            8: 5,
+            9: 6,
+            10: 6,
+            11: 7,
+            12: 8,
+          }
+          const requiredCorrect = segmentCorrectArray[segment] || 0;
+          const segmentCorrectCount = segmentCorrectAnswers[segment] || 0;
+
+          console.log(`Segment ${segment} check: required ${requiredCorrect}, got ${segmentCorrectCount}`);
+
+          // Debug: Count correct in recent 10 answers
+          const recentCorrectCount = recentAnswerStatus.filter(a => a.status === 'correct').length;
+          console.log(`Recent 10 answers: ${recentCorrectCount} correct out of ${recentAnswerStatus.length}`);
+
+          if (segmentCorrectCount < requiredCorrect) {
+            showNotification(`Segment ${segment} failed! Need ${requiredCorrect} correct answers, got ${segmentCorrectCount}. Fetching new question...`, false);
+
+            // Fetch a new question for the next question
+            (async () => {
+              try {
+                const response = await fetch(
+                  `https://opentdb.com/api.php?amount=1&difficulty=medium`
+                );
+
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.results && data.results.length > 0) {
+                    // Replace next question with new one
+                    allQuestions[currQuestion + 1] = data.results[0];
+                    isReplacementQuestion = true;
+                    console.log(`Replaced question ${currQuestion + 2} with new question due to segment failure`);
+                  }
+                }
+              } catch (error) {
+                console.error("Error fetching replacement question:", error);
+              }
+
+              // Play section change sound
+              if (localStorage.getItem("musicEnabled") !== "false") {
+                const sectionChangeSound = new Audio("bgm/sectionchange.wav");
+                sectionChangeSound.volume = getAudioVolume();
+                sectionChangeSound.play().catch(err => console.log("Section change sound play failed:", err));
+              }
+
+              nextQuestion();
+            })();
+            return; // Exit early, nextQuestion will be called after fetch
+          }
+        }
+
         nextQuestion();
       } else {
         // Wrong answer handling

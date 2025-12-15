@@ -99,28 +99,27 @@ document.addEventListener("DOMContentLoaded", () => {
                 const uid = user.uid;
                 
                 // Fetch all mode scores
-                let secretSnap = { empty: true, docs: [] };
-                try {
-                    secretSnap = await getDocs(collection(db, "playerData", uid, "secret"));
-                } catch (e) {
-                    // Secret collection might not exist yet
-                    secretSnap = { empty: true, docs: [] };
-                }
-                
-                const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap] = await Promise.all([
+                const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap, raceEasySnap, raceHardSnap, deathSnap, secretSnap] = await Promise.all([
                     getDocs(collection(db, "playerData", uid, "easy")),
                     getDocs(collection(db, "playerData", uid, "normal")),
                     getDocs(collection(db, "playerData", uid, "master")),
                     getDocs(collection(db, "playerData", uid, "hell")),
-                    getDocs(collection(db, "playerData", uid, "race"))
+                    getDocs(collection(db, "playerData", uid, "race")),
+                    getDocs(collection(db, "playerData", uid, "easyrace")).catch(() => ({ empty: true, docs: [] })),
+                    getDocs(collection(db, "playerData", uid, "hardrace")).catch(() => ({ empty: true, docs: [] })),
+                    getDocs(collection(db, "playerData", uid, "death")).catch(() => ({ empty: true, docs: [] })),
+                    getDocs(collection(db, "playerData", uid, "secret")).catch(() => ({ empty: true, docs: [] }))
                 ]);
-                
+
                 const easyScores = easySnap.empty ? [] : easySnap.docs.map(doc => doc.data());
                 const normalScores = normalSnap.empty ? [] : normalSnap.docs.map(doc => doc.data());
                 const masterScores = masterSnap.empty ? [] : masterSnap.docs.map(doc => doc.data());
                 const hellScores = hellSnap.empty ? [] : hellSnap.docs.map(doc => doc.data());
-                const secretScores = secretSnap.empty ? [] : secretSnap.docs.map(doc => doc.data());
                 const raceScores = raceSnap.empty ? [] : raceSnap.docs.map(doc => doc.data());
+                const raceEasyScores = raceEasySnap.empty ? [] : raceEasySnap.docs.map(doc => doc.data());
+                const raceHardScores = raceHardSnap.empty ? [] : raceHardSnap.docs.map(doc => doc.data());
+                const deathScores = deathSnap.empty ? [] : deathSnap.docs.map(doc => doc.data());
+                const secretScores = secretSnap.empty ? [] : secretSnap.docs.map(doc => doc.data());
                 
                 // Check hell mode completion
                 hasCompletedHell = hellScores.some(score => score.score === 200);
@@ -139,13 +138,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 window.dispatchEvent(new CustomEvent("race-eligibility", { detail: { hasCompletedRace } }));
                 
                 // Calculate total plays
-                const totalPlays = easyScores.length + normalScores.length + masterScores.length + hellScores.length + secretScores.length + raceScores.length;
+                const totalPlays = easyScores.length + normalScores.length + masterScores.length + hellScores.length + secretScores.length + raceScores.length + raceEasyScores.length + raceHardScores.length + deathScores.length;
                 
                 // Calculate main input method
-                const mainInput = calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
+                const mainInput = calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores, raceEasyScores, raceHardScores, deathScores);
                 
                 // Calculate and display player level
-                const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
+                const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores, raceEasyScores, raceHardScores, deathScores);
                 const levelDisplay = document.getElementById("playerLevel");
                 const playerInfo = document.getElementById("playerInfo");
                 if (levelDisplay && playerInfo) {
@@ -605,8 +604,65 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
         });
+    
     });
-
+    
+    // Christmas effects
+    if (new Date().getMonth() === 11) { // December
+        // Only apply to non-gameplay pages
+        const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html', 'easy-race.html', 'hard-race.html', 'death.html'];
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    
+        if (!gameplayPages.includes(currentPage)) {
+            // Add snow CSS
+            const snowCSS = `
+                .snowflake {
+                    position: absolute;
+                    top: -10px;
+                    z-index: 1000;
+                    color: white;
+                    font-size: 20px;
+                    pointer-events: none;
+                    animation: fall linear infinite;
+                }
+                @keyframes fall {
+                    to {
+                        transform: translateY(100vh);
+                    }
+                }
+            `;
+            const style = document.createElement('style');
+            style.textContent = snowCSS;
+            document.head.appendChild(style);
+    
+            // Create snow container
+            const snowContainer = document.createElement('div');
+            snowContainer.id = 'snow-container';
+            snowContainer.style.position = 'fixed';
+            snowContainer.style.top = '0';
+            snowContainer.style.left = '0';
+            snowContainer.style.width = '100%';
+            snowContainer.style.height = '100%';
+            snowContainer.style.pointerEvents = 'none';
+            snowContainer.style.zIndex = '999';
+            document.body.appendChild(snowContainer);
+    
+            // Create snowflakes
+            function createSnowflake() {
+                const snowflake = document.createElement('div');
+                snowflake.className = 'snowflake';
+                snowflake.textContent = '❄';
+                snowflake.style.left = Math.random() * 100 + 'vw';
+                snowflake.style.animationDuration = (Math.random() * 3 + 2) + 's';
+                snowflake.style.fontSize = (Math.random() * 10 + 10) + 'px';
+                snowContainer.appendChild(snowflake);
+                setTimeout(() => {
+                    snowflake.remove();
+                }, 5000);
+            }
+            setInterval(createSnowflake, 200);
+        }
+    }
     // Handle play button
     const playBtn = document.querySelector(".play-btn");
     if (playBtn) {
@@ -621,13 +677,15 @@ document.addEventListener("DOMContentLoaded", () => {
             const timeMultiplier = parseFloat(document.getElementById("timeMultiplier")?.value || "1");
             const fadingMode = document.getElementById("fadingMode")?.value || "off";
             const startQuestion = parseInt(document.getElementById("startQuestion")?.value || "0");
-            
+            const bgmSet = document.getElementById("bgmSet")?.value || "default";
+
             // Build URL parameters
             const params = new URLSearchParams();
             params.set("lives", livesValue);
             params.set("timeMultiplier", timeMultiplier.toString());
             if (fadingMode !== "off") params.set("fading", fadingMode);
             if (startQuestion > 0) params.set("start", startQuestion);
+            params.set("bgmSet", bgmSet);
             
             const queryString = params.toString();
             const urlSuffix = queryString ? `?${queryString}` : "";

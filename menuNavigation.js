@@ -65,7 +65,8 @@ export function updateSettingsItems() {
             document.querySelector('[data-setting="lives"]'),
             document.getElementById("timeMultiplier"),
             document.querySelector('[data-setting="fadingMode"]'),
-            document.querySelector('[data-setting="startQuestion"]')
+            document.querySelector('[data-setting="startQuestion"]'),
+            document.querySelector('[data-setting="bgmSet"]')
         ].filter(item => item !== null);
     } else {
         settingsItems = [];
@@ -435,9 +436,10 @@ function adjustSettingValue(direction) {
     if (arrowSelector) {
         const settingName = arrowSelector.getAttribute('data-setting');
         const select = document.getElementById(settingName);
-        const valueElement = document.getElementById(settingName === 'lives' ? 'livesValue' : 
-                                                      settingName === 'fadingMode' ? 'fadingModeValue' : 
-                                                      'startQuestionValue');
+        const valueElement = document.getElementById(settingName === 'lives' ? 'livesValue' :
+                                                      settingName === 'fadingMode' ? 'fadingModeValue' :
+                                                      settingName === 'startQuestion' ? 'startQuestionValue' :
+                                                      settingName === 'bgmSet' ? 'bgmSetValue' : null);
         
         if (select && valueElement) {
             const options = Array.from(select.options);

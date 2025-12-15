@@ -238,6 +238,52 @@
             box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
         }
 
+        /* Arrow Selector Styles */
+        .arrow-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 150px;
+        }
+
+        .arrow-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 1.2em;
+        }
+
+        .arrow-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: #dbffff;
+            box-shadow: 0 0 8px rgba(219, 255, 255, 0.6);
+        }
+
+        .arrow-btn:active {
+            transform: scale(0.95);
+        }
+
+        .selector-value {
+            flex: 1;
+            text-align: center;
+            font-weight: bold;
+            color: #dbffff;
+            font-size: 1.1em;
+            min-width: 80px;
+        }
+
+        .setting-select-hidden {
+            display: none;
+        }
+
         @media (max-width: 600px) {
             .settings-container {
                 margin: 80px auto 30px;
@@ -361,6 +407,25 @@
                 </div>
             </div>
             <div class="status-message" id="volumeStatus"></div>
+
+            <div class="setting-item">
+                <div>
+                    <span class="setting-label">BGM Set</span>
+                    <p style="font-size: 0.9em; color: #ccc; margin-top: 5px;">
+                        Choose the background music set for all modes.
+                    </p>
+                </div>
+                <div class="arrow-selector" data-setting="bgmSet">
+                    <button class="arrow-btn arrow-left" aria-label="Previous option"><i class="fas fa-chevron-left"></i></button>
+                    <span class="selector-value" id="bgmSetValue">Default</span>
+                    <button class="arrow-btn arrow-right" aria-label="Next option"><i class="fas fa-chevron-right"></i></button>
+                    <select id="bgmSet" class="setting-select-hidden" style="display: none;">
+                        <option value="default">Default (Texmaster)</option>
+                        <option value="alternative">Alternative (TGM)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="status-message" id="bgmSetStatus"></div>
         </div>
 
         <!-- Score Submission Settings -->
@@ -463,6 +528,7 @@
             focusableElements = [
                 document.getElementById("musicToggle"),
                 document.getElementById("volumeSlider"),
+                document.getElementById("bgmSet"),
                 document.getElementById("autoSubmitToggle"),
                 document.getElementById("deleteScoresBtn"),
                 document.getElementById("deleteAccountBtn"),
@@ -766,7 +832,7 @@
         if (volumeSlider) {
             volumeSlider.addEventListener("input", updateVolume);
             volumeSlider.addEventListener("change", updateVolume);
-            
+
             // Keyboard navigation for volume slider
             volumeSlider.addEventListener("keydown", (e) => {
                 if (e.key === "ArrowLeft") {
@@ -779,6 +845,39 @@
                     updateVolume();
                 }
             });
+        }
+
+        // BGM Set Selector
+        const bgmSetSelect = document.getElementById("bgmSet");
+        const bgmSetValue = document.getElementById("bgmSetValue");
+        const bgmSetStatus = document.getElementById("bgmSetStatus");
+
+        // Load BGM set preference from localStorage (default: default)
+        const savedBgmSet = localStorage.getItem("bgmSet") || "default";
+        if (bgmSetSelect) {
+            bgmSetSelect.value = savedBgmSet;
+        }
+        if (bgmSetValue) {
+            bgmSetValue.textContent = savedBgmSet === "default" ? "Default (Texmaster)" : "Alternative (TGM)";
+        }
+
+        function updateBgmSet() {
+            const bgmSet = bgmSetSelect.value;
+            if (bgmSetValue) {
+                bgmSetValue.textContent = bgmSet === "default" ? "Default (Texmaster)" : "Alternative (TGM)";
+            }
+            localStorage.setItem("bgmSet", bgmSet);
+            if (bgmSetStatus) {
+                bgmSetStatus.textContent = `BGM set changed to ${bgmSet === "default" ? "Default (Texmaster)" : "Alternative (TGM)"}`;
+                bgmSetStatus.className = "status-message success";
+                setTimeout(() => {
+                    bgmSetStatus.className = "status-message";
+                }, 2000);
+            }
+        }
+
+        if (bgmSetSelect) {
+            bgmSetSelect.addEventListener("change", updateBgmSet);
         }
 
         // Delete Scores Function
@@ -872,11 +971,74 @@
             window.location.href = "delete-account.html";
         });
 
+        // Cycle through select options
+        function cycleSelectOption(select, direction, valueElement) {
+            const options = Array.from(select.options);
+            const currentIndex = select.selectedIndex;
+            let newIndex;
+
+            if (direction === 'right') {
+                newIndex = (currentIndex + 1) % options.length;
+            } else {
+                newIndex = (currentIndex - 1 + options.length) % options.length;
+            }
+
+            select.selectedIndex = newIndex;
+            const selectedOption = select.options[newIndex];
+
+            if (valueElement) {
+                valueElement.textContent = selectedOption.textContent;
+            }
+
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // Setup arrow button handlers
+        function setupArrowSelectors() {
+            // BGM Set selector
+            const bgmSetSelector = document.querySelector('[data-setting="bgmSet"]');
+            if (bgmSetSelector) {
+                const leftBtn = bgmSetSelector.querySelector('.arrow-left');
+                const rightBtn = bgmSetSelector.querySelector('.arrow-right');
+                const bgmSetSelect = document.getElementById("bgmSet");
+                const bgmSetValue = document.getElementById("bgmSetValue");
+
+                if (leftBtn) {
+                    leftBtn.addEventListener("click", () => {
+                        cycleSelectOption(bgmSetSelect, 'left', bgmSetValue);
+                    });
+                }
+                if (rightBtn) {
+                    rightBtn.addEventListener("click", () => {
+                        cycleSelectOption(bgmSetSelect, 'right', bgmSetValue);
+                    });
+                }
+            }
+        }
+
+        // Initialize arrow selectors
+        function initializeArrowSelectors() {
+            // BGM Set selector
+            const bgmSetSelect = document.getElementById("bgmSet");
+            const bgmSetValue = document.getElementById("bgmSetValue");
+
+            if (bgmSetSelect && bgmSetValue) {
+                const selectedOption = bgmSetSelect.options[bgmSetSelect.selectedIndex];
+                bgmSetValue.textContent = selectedOption.textContent;
+            }
+        }
+
         // Initialize navigation when DOM is ready
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initNavigation);
+            document.addEventListener('DOMContentLoaded', () => {
+                initNavigation();
+                initializeArrowSelectors();
+                setupArrowSelectors();
+            });
         } else {
             initNavigation();
+            initializeArrowSelectors();
+            setupArrowSelectors();
         }
     </script>
 </body>

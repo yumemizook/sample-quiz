@@ -253,6 +253,7 @@
     const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1");
     const fadingMode = urlParams.get("fading");
     const startQuestionParam = parseInt(urlParams.get("start") || "0");
+    const bgmSet = localStorage.getItem("bgmSet") || "default";
     
     let currQuestion = startQuestionParam; // Start at specified question
     let currentLives = lives; // Track current lives (-1 means unlimited)
@@ -996,16 +997,23 @@
             return;
         }
 
+        const isAlternative = bgmSet === "alternative";
+
         if (!normalBGM1) {
             const volume = getAudioVolume();
-            normalBGM1 = new Audio("bgm/stage1.mp3");
-            normalBGM2 = new Audio("bgm/stage2.mp3");
+            if (isAlternative) {
+                normalBGM1 = new Audio("bgm/TGM/normal.mp3");
+                normalBGM2 = new Audio("bgm/TGM/normal2.mp3");
+            } else {
+                normalBGM1 = new Audio("bgm/stage1.mp3");
+                normalBGM2 = new Audio("bgm/stage2.mp3");
+            }
             normalBGM1.loop = true;
             normalBGM1.volume = volume;
             normalBGM2.loop = true;
             normalBGM2.volume = volume;
         }
-        
+
         // Stop BGM on question 49 (final question of stage 1)
         if (currQuestion === 49) {
             if (currentBGM) {
@@ -1016,7 +1024,7 @@
             }
             return;
         }
-        
+
         let targetStage, targetBGM;
         if (currQuestion < 50) {
             targetStage = 1;
@@ -1025,7 +1033,7 @@
             targetStage = 2;
             targetBGM = normalBGM2;
         }
-        
+
         if (currentStage !== targetStage) {
             if (currentBGM) {
                 currentBGM.pause();

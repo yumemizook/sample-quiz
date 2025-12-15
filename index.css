@@ -3832,6 +3832,7 @@ td:first-child {
     width: 150px;
     height: 150px;
     flex-shrink: 0;
+    z-index: 100001;
 }
 
 .profile-avatar,
@@ -3872,7 +3873,7 @@ td:first-child {
     margin-bottom: 15px;
     text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8);
     position: relative;
-    z-index: 10001;
+    z-index: 100001;
 }
 
 .profile-level-display {
