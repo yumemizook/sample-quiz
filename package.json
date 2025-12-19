@@ -1,0 +1,12 @@
+{
+  "name": "sample-quiz",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "serve": "node server.js"
+  },
+  "dependencies": {
+    "@dqcai/vn-lunar": "^1.0.1",
+    "express": "^4.18.2"
+  }
+}
