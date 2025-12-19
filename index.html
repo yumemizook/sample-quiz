@@ -9,6 +9,7 @@
     <script src="https://kit.fontawesome.com/ced4c4a7f8.js" crossorigin="anonymous"></script>
   </head>
   <body>
+    <audio id="intro-audio" src="bgm/intro.mp3" style="display: none;"></audio>
     <div class="status" style="transition: opacity 1s;">
       <a login href="signin.html">Login</a>
       <a signup href="signup.html">Signup</a>
@@ -393,6 +394,9 @@
       <div id="network-status" style="position: absolute; bottom: 20px; left: 20px; color: #dbffff; font-size: 1.1em; font-weight: bold; opacity: 0.8;">Network: Checking...</div>
       <div id="current-time" style="position: absolute; bottom: 20px; right: 20px; color: #dbffff; font-size: 1.1em; font-weight: bold; opacity: 0.8;">Time: Loading...</div>
 
+      <!-- Now Loading text -->
+      <div id="loading-text" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2em; color: #dbffff; z-index: 10;">Now Loading...</div>
+
       <!-- Presents text -->
       <div id="presents-text" style="position: absolute; top: 50%; left: -100%; transform: translate(-50%, -50%); font-size: 2em; font-weight: bold; color: white; opacity: 0; transition: left 2s ease-out, opacity 1s;">Colorbleed Neon presents...</div>
 
@@ -440,6 +444,9 @@
     </div>
 
     <script>
+      // Hide loading text once DOM is loaded
+      document.getElementById('loading-text').style.display = 'none';
+
       function selectIntroOption(optionElement) {
         // Remove selected class from all options
         document.querySelectorAll('#intro-overlay .option').forEach(opt => {
@@ -492,19 +499,44 @@
 
       // Listen for any key press to hide intro
       document.addEventListener('keydown', function(event) {
+        if (!audioPlayed) {
+          introAudio.currentTime = 0;
+          introAudio.muted = false;
+          introAudio.volume = 0.5;
+          introAudio.play();
+          audioPlayed = true;
+        }
         hideIntro();
       });
 
       // Also listen for click/touch to hide, but not on interactive elements
       document.addEventListener('click', function(event) {
         if (!event.target.closest('#intro-overlay .option')) {
+          if (!audioPlayed) {
+            introAudio.currentTime = 0;
+            introAudio.muted = false;
+            introAudio.volume = 0.5;
+            introAudio.play();
+            audioPlayed = true;
+          }
           hideIntro();
         }
       });
 
       // BGM for logo
-      const introAudio = new Audio('bgm/intro.mp3');
+      const introAudio = document.getElementById('intro-audio');
       // introAudio.loop = true; // Removed loop
+      let audioPlayed = false;
+
+      // Debug logging for autoplay bypass verification
+      console.log('Intro audio element:', introAudio);
+      if (introAudio) {
+        console.log('Audio src:', introAudio.src);
+        console.log('Audio readyState:', introAudio.readyState);
+        introAudio.addEventListener('canplay', () => console.log('Audio can play'));
+        introAudio.addEventListener('play', () => console.log('Audio started playing'));
+        introAudio.addEventListener('error', (e) => console.log('Audio error:', e));
+      }
 
       // Cycling between sections
       const sections = ['logo-section', 'demo-section', 'videos-section'];
@@ -605,6 +637,21 @@
           if (line2) line2.style.right = '0';
           firstLogo = false;
         }, 4000);
+
+        // Try to autoplay muted, fallback to play on user interaction
+        console.log('Starting logo intro, attempting autoplay');
+        introAudio.muted = true;
+        introAudio.currentTime = 0;
+        introAudio.play().then(() => {
+          audioPlayed = true;
+          setTimeout(() => {
+            introAudio.muted = false;
+            introAudio.volume = 0.5;
+            console.log('Audio unmuted and volume set to 50%');
+          }, 100);
+        }).catch(e => {
+          console.log('Autoplay failed, will play on user interaction:', e);
+        });
       }
 
       function startDemoSequence() {
