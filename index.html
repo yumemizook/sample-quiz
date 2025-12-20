@@ -406,26 +406,33 @@
           <div class="logo-line2" style="position: relative; right: -100%; background: linear-gradient(135deg, #b8f0e0 0%, #dbffff 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-shadow: 0 0 20px rgba(184, 240, 224, 0.5), 0 0 40px rgba(184, 240, 224, 0.3); animation: logoLine2Anim 6s infinite alternate; transition: right 1s;">Quiz Challenge</div>
         </div>
 
-        <div id="demo-section" class="demo-section" style="background: rgba(0, 0, 0, 0.7); border-radius: 20px; padding: 30px; margin-bottom: 30px; border: 2px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); max-width: 800px; width: 100%; opacity: 1; visibility: hidden; transition: opacity 1s;">
-          <div class="sample-question" style="background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 20px; margin-bottom: 20px; opacity: 1; transition: opacity 1s;">
-            <div class="question-text" style="font-size: 1.4em; margin-bottom: 15px; color: #dbffff;">Sample Question: What is the capital of France?</div>
-            <div class="timer-display" style="font-size: 1.2em; color: #ff6b6b; margin-bottom: 10px; opacity: 0; transition: opacity 1s;">Timer: 10.00s</div>
-            <div class="options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
-              <div class="option" style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 10px; transition: all 0.3s; display: flex; align-items: center; gap: 10px;">
-                <span class="option-label" style="color: #dbffff; font-size: 1.1em;">A) Paris</span>
-              </div>
-              <div class="option" style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 10px; transition: all 0.3s; display: flex; align-items: center; gap: 10px;">
-                <span class="option-label" style="color: #dbffff; font-size: 1.1em;">B) London</span>
-              </div>
-              <div class="option" style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 10px; transition: all 0.3s; display: flex; align-items: center; gap: 10px;">
-                <span class="option-label" style="color: #dbffff; font-size: 1.1em;">C) Berlin</span>
-              </div>
-              <div class="option" style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 10px; transition: all 0.3s; display: flex; align-items: center; gap: 10px;">
-                <span class="option-label" style="color: #dbffff; font-size: 1.1em;">D) Madrid</span>
+        <div id="demo-section" class="demo-section" style="background: rgba(0, 0, 0, 0.7); border-radius: 20px; padding: 30px; margin-bottom: 30px; border: 2px solid rgba(255, 255, 255, 0.1); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); max-width: 1000px; width: 100%; opacity: 1; visibility: hidden; transition: opacity 1s; display: flex; gap: 20px; align-items: flex-start;">
+          <div class="sample-grade" style="background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 20px; min-width: 200px; text-align: center; opacity: 0; transition: opacity 1s;">
+            <div style="font-size: 1.2em; color: #ffd700; font-weight: bold; margin-bottom: 10px;">Current Grade</div>
+            <div class="grade-display" style="font-size: 2em; color: #2ecc71; font-weight: bold;">A</div>
+            <div style="font-size: 0.9em; color: #dbffff; margin-top: 10px;">Score: 85/100</div>
+          </div>
+          <div style="flex: 1;">
+            <div class="sample-question" style="background: rgba(255, 255, 255, 0.05); border-radius: 15px; padding: 20px; margin-bottom: 20px; opacity: 1; transition: opacity 1s;">
+              <div class="question-text" style="font-size: 1.4em; margin-bottom: 15px; color: #dbffff;">Sample Question: What is the capital of France?</div>
+              <div class="timer-display" style="font-size: 1.2em; color: #ff6b6b; margin-bottom: 10px; opacity: 0; transition: opacity 1s;">Timer: 10.00s</div>
+              <div class="options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+                <div class="option" style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 10px; transition: all 0.3s; display: flex; align-items: center; gap: 10px;">
+                  <span class="option-label" style="color: #dbffff; font-size: 1.1em;">A) Paris</span>
+                </div>
+                <div class="option" style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 10px; transition: all 0.3s; display: flex; align-items: center; gap: 10px;">
+                  <span class="option-label" style="color: #dbffff; font-size: 1.1em;">B) London</span>
+                </div>
+                <div class="option" style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 10px; transition: all 0.3s; display: flex; align-items: center; gap: 10px;">
+                  <span class="option-label" style="color: #dbffff; font-size: 1.1em;">C) Berlin</span>
+                </div>
+                <div class="option" style="background: rgba(255, 255, 255, 0.1); border: 2px solid rgba(255, 255, 255, 0.2); border-radius: 10px; padding: 10px; transition: all 0.3s; display: flex; align-items: center; gap: 10px;">
+                  <span class="option-label" style="color: #dbffff; font-size: 1.1em;">D) Madrid</span>
+                </div>
               </div>
             </div>
+            <div class="demo-instruction-text" style="font-size: 1.2em; color: #b8f0e0; font-weight: bold; text-align: center; opacity: 0; transition: opacity 1s;"></div>
           </div>
-          <div class="demo-instruction-text" style="font-size: 1.2em; color: #b8f0e0; font-weight: bold; text-align: center; opacity: 0; transition: opacity 1s;"></div>
         </div>
 
         <div id="videos-section" class="videos-section" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; visibility: hidden; transition: opacity 1s;">
@@ -655,11 +662,13 @@
       }
 
       function startDemoSequence() {
+        const gradeDisplay = document.querySelector('#demo-section .sample-grade');
         const timer = document.querySelector('#demo-section .timer-display');
         const options = document.querySelectorAll('#demo-section .option');
         const instructionText = document.querySelector('#demo-section .demo-instruction-text');
 
         // Reset all
+        gradeDisplay.style.opacity = '0';
         timer.style.opacity = '0';
         instructionText.style.opacity = '0';
         options.forEach(opt => {
@@ -669,9 +678,10 @@
 
         // Sequence
         setTimeout(() => {
+          gradeDisplay.style.opacity = '1';
           instructionText.textContent = 'Answer questions to progress.';
           instructionText.style.opacity = '1';
-        }, 1000); // 1s: show first instruction
+        }, 1000); // 1s: show grade and first instruction
 
         setTimeout(() => {
           timer.style.opacity = '1';
