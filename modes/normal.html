@@ -1,0 +1,1900 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Questions</title>
+    <link rel="stylesheet" href="../index.css">
+    <script src="https://kit.fontawesome.com/ced4c4a7f8.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <div class="status">
+        <a login href="../pages/signin.html">Login</a>
+        <a signup href="../pages/signup.html">Signup</a>
+        <a logout class="hide" href="../index.html">Log out</a>
+        <a giveup href="../index.html" style="display: none;">Give up</a>
+        <div class="player-info hide" id="playerInfo">
+            <div class="player-info-left">
+                <span class="name"></span>
+                <span class="player-level" id="playerLevel"></span>
+            </div>
+            <div class="player-avatar hide" id="playerAvatar">
+                <img id="playerAvatarImg" src="" alt="Avatar" />
+                <div class="player-avatar-placeholder"><i class="fas fa-user"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="container">
+        <div class="question" id="ques"></div>
+        <div class="options" id="opt"></div>
+        <button onclick="checkAns()" id="btn">SUBMIT</button>
+        <div class="correctanswer"></div>
+        <div class="jum" style="display: flex; justify-content: space-between;">
+            <div id="score"></div>
+            <div id="currentgrade" style="font-size: x-large; color: #adffcd; font-weight: bold;"></div>
+            <div id="livesDisplay" style="font-size: x-large; color: #ff6b6b; font-weight: bold;"><i class="fas fa-heart"></i> <span id="livesCount"></span></div>
+            <div id="timeelapsed"></div>
+        </div>
+        <div class="timerifinvalid"></div>
+        <div class="evalscreen" style="display:none"></div>
+        <div id="notification" class="notification hide"></div>
+    </div>
+    <div id="modifierIcons" style="position: fixed; top: 200px; right: 20px; display: flex; flex-direction: row; gap: 8px; z-index: 9998;"></div>
+    <!-- Pause Menu -->
+    <div id="pauseMenu" class="pause-menu" style="display: none;">
+      <div class="pause-menu-content">
+        <h2>PAUSED</h2>
+        <div id="pauseStats" class="pause-stats">
+          <div>Pauses: <span id="pauseCountDisplay">0</span></div>
+          <div>Total Paused Time: <span id="totalPausedTimeDisplay">00:00:00</span></div>
+        </div>
+        <button id="resumeBtn" class="pause-menu-button" tabindex="0">Resume</button>
+        <button id="giveUpPauseBtn" class="pause-menu-button" tabindex="0">Give Up</button>
+      </div>
+    </div>
+    <!-- Pause Button (visible on mobile and desktop) -->
+    <button id="pauseBtn" class="pause-button" style="display: none;">⏸ Pause</button>
+    <script type="module" src="../IR.js"></script>
+    <script type="module" src="../firebase.js"></script>
+    <script type="module" src="../hm.js"></script>
+</body>
+<script type="module">
+
+    import { getAuth, getFirestore, collection, addDoc } from "../firebase.js";
+    const auth = getAuth();
+    
+    // Helper function to get audio volume from settings (0-1 range)
+    function getAudioVolume() {
+        const savedVolume = localStorage.getItem("audioVolume");
+        const volume = savedVolume !== null ? parseInt(savedVolume) : 100;
+        return volume / 100; // Convert 0-100 to 0-1 range
+    }
+    
+    // Detect mobile device
+    function isMobileDevice() {
+        return /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+               (window.matchMedia && window.matchMedia("(max-width: 768px)").matches);
+    }
+    
+    // Track input type used during the quiz
+    let inputType = null; // 'controller', 'keyboard', 'mobile', or 'mouse'
+    
+    // Detect initial input type
+    const isMobile = isMobileDevice();
+    if (isMobile) {
+        inputType = 'mobile';
+    } else {
+        // Default to mouse for desktop users who haven't used keyboard/controller yet
+        inputType = 'mouse';
+    }
+
+    let Questions = [];
+    document.querySelector('#btn').addEventListener('click', checkAns);
+    const ques = document.getElementById("ques");
+
+  
+    async function fetchQuestions() {
+      try {
+        // OpenTDB has a 50 question limit per request, so make multiple requests
+        const totalQuestions = 100;
+        const questionsPerRequest = 50;
+        const numRequests = Math.ceil(totalQuestions / questionsPerRequest);
+        const maxRetries = 3; // Maximum retry attempts per request
+
+        Questions.length = 0; // Clear any previous questions
+        let failedRequests = 0;
+
+        for (let i = 0; i < numRequests; i++) {
+          // Update progress
+          const progress = Math.floor(((i + 1) / numRequests) * 100);
+          ques.innerHTML = `<h5>Please Wait!! Loading Questions... (${progress}%)<br>DO NOT PANIC IF IT LOOKS STUCK</h5>`;
+          
+          // Add delay between API calls to prevent rate limiting (except before first request)
+          if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+          }
+
+          const amount =
+            i === numRequests - 1
+              ? totalQuestions - i * questionsPerRequest
+              : questionsPerRequest;
+
+          let requestSuccess = false;
+          let retryCount = 0;
+
+          // Retry logic for each request
+          while (!requestSuccess && retryCount < maxRetries) {
+            try {
+              const response = await fetch(
+                `https://opentdb.com/api.php?amount=${amount}&difficulty=medium`
+              );
+              
+              if (!response.ok) {
+                throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+              }
+              
+              const data = await response.json();
+              
+              // Check for API error response
+              if (data.response_code && data.response_code !== 0) {
+                throw new Error(`API Error Code: ${data.response_code}`);
+              }
+              
+              if (data.results && data.results.length > 0) {
+                // Validate we got the expected number of questions
+                const receivedCount = data.results.length;
+                if (receivedCount === amount) {
+                  Questions.push(...data.results);
+                  requestSuccess = true;
+                } else {
+                  // Got some questions but not all - add what we got and try to get more
+                  Questions.push(...data.results);
+                  console.warn(
+                    `Request ${i + 1} returned ${receivedCount} questions instead of ${amount}. Got partial results.`
+                  );
+                  
+                  // If we got at least some questions, consider it a partial success
+                  if (receivedCount > 0) {
+                    requestSuccess = true; // Accept partial results
+                  } else {
+                    throw new Error("No questions returned");
+                  }
+                }
+              } else {
+                throw new Error("No results in response");
+              }
+            } catch (requestError) {
+              retryCount++;
+              if (retryCount < maxRetries) {
+                console.warn(
+                  `Request ${i + 1} attempt ${retryCount} failed: ${requestError.message}. Retrying...`
+                );
+                // Exponential backoff: wait longer between retries
+                await new Promise(resolve => setTimeout(resolve, 2000 * retryCount));
+              } else {
+                console.error(
+                  `Request ${i + 1} failed after ${maxRetries} attempts: ${requestError.message}`
+                );
+                failedRequests++;
+              }
+            }
+          }
+        }
+
+        // Validate we got questions
+        if (Questions.length === 0) {
+          throw new Error("Failed to fetch any questions. Please try again.");
+        }
+
+        // Warn if we got fewer questions than expected
+        if (Questions.length < totalQuestions) {
+          console.warn(
+            `Warning: Expected ${totalQuestions} questions but got ${Questions.length}. Continuing with available questions.`
+          );
+          
+          // If we're missing too many questions, try to fetch more
+          if (Questions.length < totalQuestions * 0.8) {
+            console.warn("Missing more than 20% of questions. Attempting to fetch additional questions...");
+            
+            const missingCount = totalQuestions - Questions.length;
+            const additionalRequests = Math.ceil(missingCount / questionsPerRequest);
+            
+            for (let i = 0; i < additionalRequests && Questions.length < totalQuestions; i++) {
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              ques.innerHTML = `<h5>Please Wait!! Fetching Additional Questions...</h5>`;
+              const amount = Math.min(questionsPerRequest, totalQuestions - Questions.length);
+              
+              try {
+                const response = await fetch(
+                  `https://opentdb.com/api.php?amount=${amount}`
+                );
+                
+                if (response.ok) {
+                  const data = await response.json();
+                  if (data.results && data.results.length > 0) {
+                    const needed = totalQuestions - Questions.length;
+                    const toAdd = data.results.slice(0, needed);
+                    Questions.push(...toAdd);
+                    console.log(`Fetched ${toAdd.length} additional questions`);
+                  }
+                }
+              } catch (err) {
+                console.warn(`Failed to fetch additional questions: ${err.message}`);
+                break; // Stop trying if we can't fetch more
+              }
+            }
+          }
+        }
+
+        // Final validation
+        if (Questions.length === 0) {
+          throw new Error("Failed to fetch any questions. Please try again.");
+        }
+
+        console.log(`Successfully loaded ${Questions.length} out of ${totalQuestions} requested questions.`);
+      } catch (error) {
+        console.error("Error fetching questions:", error);
+        document.querySelector('#btn').innerHTML = "Refresh";
+        document.querySelector('#btn').onclick = () => {
+          location.reload();
+        };
+        ques.innerHTML = `<h5 style='color: red'>${
+          error.message || error
+        }</h5>`;
+      }
+    }
+    // Read URL parameters for mode settings
+    const urlParams = new URLSearchParams(window.location.search);
+    const livesParam = urlParams.get("lives") || "unlimited";
+    const lives = livesParam === "unlimited" ? -1 : parseInt(livesParam);
+    const timeMultiplier = parseFloat(urlParams.get("timeMultiplier") || "1");
+    const fadingMode = urlParams.get("fading");
+    const startQuestionParam = parseInt(urlParams.get("start") || "0");
+    const bgmSet = localStorage.getItem("bgmSet") || "default";
+    
+    let currQuestion = startQuestionParam; // Start at specified question
+    let currentLives = lives; // Track current lives (-1 means unlimited)
+    const livesEnabled = lives !== -1; // Check if lives system is enabled
+    let currentQuestionAnswered = false; // Track if current question has been answered correctly
+    let wrongAnswersForCurrentQuestion = 0; // Track wrong answers for current question (max 3 life deductions)
+    let initialLives = lives; // Store initial lives for clear type calculation
+    let totalWrongAnswers = 0; // Track total wrong answers for clear type calculation
+    let questionTimedOut = false; // Track if player ran out of time on a question
+    
+    // Fading mode variables (random fading like race mode)
+    let randomFadeInterval = null;
+    let score = 0;
+    let elapsedQuestions = 0;
+    let quizAbandoned = false; // Track if quiz was abandoned (gave up)
+    let totalGradePoints = 0; // Track accumulated grade points
+    let questionStartTime = null; // Track when each question starts (for time bonus calculation)
+    let timeToAnswer = null; // Track time allocated for current question
+    let initialTimeToAnswer = null; // Track initial time allocated for current question
+    
+    // Gamepad support
+    let gamepadConnected = false;
+    let gamepadPollInterval = null;
+    let lastDpadState = { up: false, down: false, left: false, right: false };
+    let answerOptions = []; // Store current question's answer options for controller support
+    
+    // Pause system variables
+    let isPaused = false;
+    let pausedTime = 0; // Time when paused (elapsed time in seconds)
+    let pauseStartTime = 0;
+    let pausedAnswerTimer = false;
+    let pausedAnswerTime = 0;
+    let timerStartTime = 0;
+    let pauseCount = 0;
+    let totalPausedTime = 0;
+    let selectedPauseButton = 0; // 0 for Resume, 1 for Give Up
+    
+    // Pause menu elements
+    const pauseMenu = document.getElementById("pauseMenu");
+    const pauseBtn = document.getElementById("pauseBtn");
+    const resumeBtn = document.getElementById("resumeBtn");
+    const giveUpPauseBtn = document.getElementById("giveUpPauseBtn");
+    const pauseCountDisplay = document.getElementById("pauseCountDisplay");
+    const totalPausedTimeDisplay = document.getElementById("totalPausedTimeDisplay");
+    const pauseButtons = [resumeBtn, giveUpPauseBtn];
+    
+    // Format paused time for display
+    function formatPausedTime(ms) {
+        const minutes = Math.floor(ms / 60000);
+        const seconds = Math.floor((ms % 60000) / 1000);
+        const centiseconds = Math.floor((ms % 1000) / 10);
+        return `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}:${centiseconds.toString().padStart(2, "0")}`;
+    }
+    
+    // Update pause menu display
+    function updatePauseMenuDisplay() {
+        if (pauseCountDisplay) {
+            pauseCountDisplay.textContent = pauseCount || 0;
+        }
+        if (totalPausedTimeDisplay) {
+            totalPausedTimeDisplay.textContent = formatPausedTime(totalPausedTime || 0);
+        }
+    }
+    
+    // Update pause button highlighting
+    function updatePauseButtonHighlight() {
+        pauseButtons.forEach((btn, index) => {
+            if (btn) {
+                if (index === selectedPauseButton) {
+                    btn.classList.add("pause-button-selected");
+                    btn.focus();
+                } else {
+                    btn.classList.remove("pause-button-selected");
+                }
+            }
+        });
+    }
+    
+    // Function to display modifier icons
+    function updateModifierIconsDisplay() {
+      const modifierIconsContainer = document.getElementById("modifierIcons");
+      if (!modifierIconsContainer) return;
+      
+      // Get pause button height to match icon size
+      const pauseBtnElement = document.getElementById("pauseBtn");
+      let iconSize = 60; // Bigger default size
+      if (pauseBtnElement && pauseBtnElement.offsetHeight > 0) {
+        iconSize = pauseBtnElement.offsetHeight * 1.3; // Make icons 30% bigger than pause button
+      }
+      
+      // Position container below pause button, aligned to the right
+      if (pauseBtnElement) {
+        const pauseBtnTop = pauseBtnElement.offsetTop || 140;
+        const pauseBtnHeight = pauseBtnElement.offsetHeight || 45;
+        modifierIconsContainer.style.top = `${pauseBtnTop + pauseBtnHeight + 8}px`;
+        modifierIconsContainer.style.right = "20px";
+      } else {
+        modifierIconsContainer.style.top = "200px"; // Fallback if pause button not found
+        modifierIconsContainer.style.right = "20px";
+      }
+      
+      // Clear existing icons
+      modifierIconsContainer.innerHTML = "";
+      
+      // Lives icon (only show if not unlimited)
+      if (livesEnabled && currentLives !== -1) {
+        const livesIcon = document.createElement("div");
+        livesIcon.className = "modifier-icon";
+        livesIcon.title = `${currentLives} Lives`;
+        livesIcon.innerHTML = `<span style="font-size: 2.2em;"><i class="fas fa-heart"></i></span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${currentLives === 100 ? "100" : currentLives.toString()}</span>`;
+        livesIcon.style.width = `${iconSize}px`;
+        livesIcon.style.height = `${iconSize}px`;
+        livesIcon.style.display = "flex";
+        livesIcon.style.flexDirection = "column";
+        livesIcon.style.alignItems = "center";
+        livesIcon.style.justifyContent = "center";
+        modifierIconsContainer.appendChild(livesIcon);
+      }
+      
+      // Start question icon (only if not starting from beginning)
+      if (startQuestionParam > 0) {
+        const startIcon = document.createElement("div");
+        startIcon.className = "modifier-icon";
+        startIcon.title = `Start at Question ${startQuestionParam + 1}`;
+        startIcon.innerHTML = `<span style="font-size: 2.2em;"><i class="fas fa-bullseye"></i></span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${startQuestionParam + 1}</span>`;
+        startIcon.style.width = `${iconSize}px`;
+        startIcon.style.height = `${iconSize}px`;
+        startIcon.style.display = "flex";
+        startIcon.style.flexDirection = "column";
+        startIcon.style.alignItems = "center";
+        startIcon.style.justifyContent = "center";
+        modifierIconsContainer.appendChild(startIcon);
+      }
+      
+      // Time multiplier icon (only if not 1x)
+      if (timeMultiplier !== 1) {
+        const timeIcon = document.createElement("div");
+        timeIcon.className = "modifier-icon";
+        timeIcon.title = `Time Multiplier: ${timeMultiplier.toFixed(2)}x`;
+        timeIcon.innerHTML = `<span style="font-size: 2.2em;"><i class="fas fa-stopwatch"></i></span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${timeMultiplier.toFixed(2)}x</span>`;
+        timeIcon.style.width = `${iconSize}px`;
+        timeIcon.style.height = `${iconSize}px`;
+        timeIcon.style.display = "flex";
+        timeIcon.style.flexDirection = "column";
+        timeIcon.style.alignItems = "center";
+        timeIcon.style.justifyContent = "center";
+        modifierIconsContainer.appendChild(timeIcon);
+      }
+      
+      // Fading mode icon (only if enabled)
+      if (fadingMode && fadingMode !== "off") {
+        const fadeIcon = document.createElement("div");
+        fadeIcon.className = "modifier-icon";
+        fadeIcon.title = `Vanish Mode: every ${fadingMode}s`;
+        fadeIcon.innerHTML = `<span style="font-size: 2.2em;"><i class="fas fa-eye" style="color: #a29bfe;"></i></span><br><span style="font-size: 1.1em; font-weight: bold; margin-top: -5px;">${fadingMode}s</span>`;
+        fadeIcon.style.width = `${iconSize}px`;
+        fadeIcon.style.height = `${iconSize}px`;
+        fadeIcon.style.display = "flex";
+        fadeIcon.style.flexDirection = "column";
+        fadeIcon.style.alignItems = "center";
+        fadeIcon.style.justifyContent = "center";
+        modifierIconsContainer.appendChild(fadeIcon);
+      }
+    }
+    
+    // Show pause button
+    if (pauseBtn) {
+        pauseBtn.style.display = "block";
+        pauseBtn.style.position = "fixed";
+        pauseBtn.style.top = "140px";
+        pauseBtn.style.right = "20px";
+        pauseBtn.style.zIndex = "9999";
+        pauseBtn.style.padding = "10px 20px";
+        pauseBtn.style.backgroundColor = "rgba(0, 0, 0, 0.7)";
+        pauseBtn.style.color = "white";
+        pauseBtn.style.border = "2px solid white";
+        pauseBtn.style.borderRadius = "5px";
+        pauseBtn.style.cursor = "pointer";
+        pauseBtn.style.fontSize = "1em";
+        pauseBtn.addEventListener("click", togglePause);
+    }
+    
+    // Resume button
+    if (resumeBtn) {
+        resumeBtn.addEventListener("click", togglePause);
+        resumeBtn.addEventListener("mouseenter", () => {
+            selectedPauseButton = 0;
+            updatePauseButtonHighlight();
+        });
+    }
+    
+    // Give up from pause menu
+    if (giveUpPauseBtn) {
+        giveUpPauseBtn.addEventListener("click", () => {
+            if (confirm("Are you sure you want to give up?")) {
+                location.href = "index.html";
+            }
+        });
+        giveUpPauseBtn.addEventListener("mouseenter", () => {
+            selectedPauseButton = 1;
+            updatePauseButtonHighlight();
+        });
+    }
+    
+    // Handle pause menu button selection
+    function selectPauseButton() {
+        if (selectedPauseButton === 0 && resumeBtn) {
+            togglePause();
+        } else if (selectedPauseButton === 1 && giveUpPauseBtn) {
+            if (confirm("Are you sure you want to give up?")) {
+                location.href = "index.html";
+            }
+        }
+    }
+    
+    // Toggle pause function
+    function togglePause() {
+        if (isPaused) {
+            resumeGame();
+        } else {
+            pauseGame();
+        }
+    }
+    
+    // Pause the game
+    function pauseGame() {
+        if (isPaused) return;
+        
+        const evalDiv = document.querySelector(".evalscreen");
+        if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display === "") {
+            return;
+        }
+        
+        isPaused = true;
+        pauseStartTime = Date.now();
+        pauseCount++;
+        
+        // Pause answer timer
+        if (window.answerTimerId) {
+            pausedAnswerTimer = true;
+            pausedAnswerTime = timeToAnswer || 0;
+            clearInterval(window.answerTimerId);
+            window.answerTimerId = null;
+        }
+        
+        // Pause random fading
+        if (randomFadeInterval) {
+            clearInterval(randomFadeInterval);
+            randomFadeInterval = null;
+        }
+        
+        // Show pause menu
+        if (pauseMenu) {
+            pauseMenu.style.display = "flex";
+            updatePauseMenuDisplay();
+            selectedPauseButton = 0;
+            updatePauseButtonHighlight();
+            
+            // Update pause display periodically while paused
+            if (window.pauseDisplayInterval) {
+                clearInterval(window.pauseDisplayInterval);
+            }
+            window.pauseDisplayInterval = setInterval(() => {
+                if (isPaused && pauseMenu && pauseMenu.style.display !== "none") {
+                    const currentPauseTime = Date.now() - pauseStartTime;
+                    const totalTime = totalPausedTime + currentPauseTime;
+                    if (totalPausedTimeDisplay) {
+                        totalPausedTimeDisplay.textContent = formatPausedTime(totalTime);
+                    }
+                } else {
+                    if (window.pauseDisplayInterval) {
+                        clearInterval(window.pauseDisplayInterval);
+                        window.pauseDisplayInterval = null;
+                    }
+                }
+            }, 100);
+        }
+        
+        // Disable game interaction
+        const container = document.querySelector(".container");
+        if (container) {
+            container.style.pointerEvents = "none";
+            container.style.opacity = "0.5";
+        }
+    }
+    
+    // Resume the game
+    function resumeGame() {
+        if (!isPaused) return;
+        
+        isPaused = false;
+        const pauseDuration = Date.now() - pauseStartTime;
+        totalPausedTime += pauseDuration;
+        
+        // Resume main timer - adjust start time to account for pause duration
+        if (timerStartTime) {
+            timerStartTime += pauseDuration;
+        }
+        
+        // Resume answer timer if it was running
+        if (pausedAnswerTimer && pausedAnswerTime > 0) {
+            timeToAnswer = pausedAnswerTime;
+            const timerDiv = document.querySelector(".timerifinvalid");
+            if (timerDiv) {
+                window.answerTimerId = setInterval(() => {
+                    if (isPaused) return;
+                    if (timeToAnswer > 0) {
+                        timeToAnswer -= 0.01 * timeMultiplier;
+                        timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                    } else {
+                        clearInterval(window.answerTimerId);
+                        evalScreen();
+                    }
+                }, 10);
+            }
+            pausedAnswerTimer = false;
+        }
+        
+        // Resume random fading if fading mode is enabled
+        if (fadingMode && fadingMode !== "off" && !randomFadeInterval) {
+            startRandomFading();
+        }
+        
+        // Hide pause menu
+        if (pauseMenu) {
+            pauseMenu.style.display = "none";
+        }
+        
+        // Clear pause display interval
+        if (window.pauseDisplayInterval) {
+            clearInterval(window.pauseDisplayInterval);
+            window.pauseDisplayInterval = null;
+        }
+        
+        // Re-enable game interaction
+        const container = document.querySelector(".container");
+        if (container) {
+            container.style.pointerEvents = "auto";
+            container.style.opacity = "1";
+        }
+    }
+
+    // Add controller and keyboard indicators to submit button
+    const submitBtn = document.querySelector("#btn");
+    let controllerIndicator = null;
+    let keyboardSubmitIndicator = null;
+    if (submitBtn && !isMobile) {
+        controllerIndicator = document.createElement("img");
+        controllerIndicator.className = "controller-submit-indicator";
+        controllerIndicator.src = "../public/images/btns/cross.png";
+        controllerIndicator.alt = "A/X Button";
+        controllerIndicator.title = "Press A or X button to submit";
+        controllerIndicator.style.cssText = `
+            display: inline-block;
+            margin-left: 8px;
+            width: 28px;
+            height: 28px;
+            vertical-align: middle;
+            object-fit: contain;
+        `;
+        submitBtn.appendChild(controllerIndicator);
+        
+        keyboardSubmitIndicator = document.createElement("span");
+        keyboardSubmitIndicator.className = "keyboard-submit-indicator";
+        keyboardSubmitIndicator.textContent = "Space/Enter";
+        keyboardSubmitIndicator.title = "Press Space or Enter to submit";
+        keyboardSubmitIndicator.style.cssText = `
+            display: inline-block;
+            margin-left: 8px;
+            padding: 4px 8px;
+            background-color: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            border-radius: 4px;
+            font-size: 14px;
+            font-weight: bold;
+            color: white;
+            vertical-align: middle;
+        `;
+        submitBtn.appendChild(keyboardSubmitIndicator);
+    }
+    
+    // Keyboard support
+    function initKeyboard() {
+        document.addEventListener("keydown", (e) => {
+            // Track keyboard input type (override mouse, but not controller)
+            if (inputType !== 'controller' && !isMobile) {
+                inputType = 'keyboard';
+            }
+            
+            // Pause with Escape key
+            if (e.key === "Escape") {
+                const evalDiv = document.querySelector(".evalscreen");
+                if (!evalDiv || evalDiv.style.display === "none" || evalDiv.style.display === "") {
+                    togglePause();
+                    e.preventDefault();
+                }
+                return;
+            }
+            
+            // Handle pause menu navigation
+            if (isPaused && pauseMenu && pauseMenu.style.display !== "none") {
+                if (e.key === "ArrowUp" || e.key === "ArrowDown") {
+                    e.preventDefault();
+                    selectedPauseButton = selectedPauseButton === 0 ? 1 : 0;
+                    updatePauseButtonHighlight();
+                } else if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    selectPauseButton();
+                }
+                return;
+            }
+            
+            const evalDiv = document.querySelector(".evalscreen");
+            if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
+                return;
+            }
+            if (!Questions || Questions.length === 0) {
+                return;
+            }
+            
+            // Don't process other input if paused
+            if (isPaused) {
+                return;
+            }
+            
+            // Input type already set above, no need to set again
+            if (e.key >= "1" && e.key <= "4") {
+                const index = parseInt(e.key) - 1;
+                if (answerOptions && answerOptions[index]) {
+                    answerOptions[index].checked = true;
+                    e.preventDefault();
+                }
+            }
+            if (e.key === " " || e.key === "Enter") {
+                if (submitBtn && submitBtn.style.display !== "none") {
+                    checkAns();
+                    e.preventDefault();
+                }
+            }
+        });
+    }
+    initKeyboard();
+
+    ques.innerHTML = `<h5>Please Wait!! Loading Questions... DO NOT PANIC IF IT LOOKS STUCK</h5>`;
+    document.querySelector('#btn').style.display = "none";
+    
+    // Hide lives display while loading
+    const livesDisplay = document.getElementById("livesDisplay");
+    if (livesDisplay) {
+        livesDisplay.style.display = "none";
+    }
+    
+    // Hide modifier icons (including hearts icon) while loading
+    const modifierIconsContainer = document.getElementById("modifierIcons");
+    if (modifierIconsContainer) {
+        modifierIconsContainer.style.display = "none";
+    }
+    
+    // Handle give up button
+    const giveUpBtn = document.querySelector("[giveup]");
+    if (giveUpBtn) {
+        giveUpBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            if (confirm("Are you sure you want to give up? Your current progress will be saved.")) {
+                quizAbandoned = true; // Mark quiz as abandoned
+                // Hide the question when giving up
+                const ques = document.getElementById("ques");
+                const opt = document.getElementById("opt");
+                const btn = document.getElementById("btn");
+                if (ques) ques.style.display = "none";
+                if (opt) opt.style.display = "none";
+                if (btn) btn.style.display = "none";
+                evalScreen(true); // Pass true to indicate player gave up
+            }
+        });
+    }
+
+    async function startQuiz() {
+        // Reset pause tracking variables
+        pauseCount = 0;
+        totalPausedTime = 0;
+        pausedTime = 0;
+        pausedAnswerTimer = false;
+        pausedAnswerTime = 0;
+        selectedPauseButton = 0;
+        
+        await fetchQuestions();
+        if (Questions.length === 0) {
+            ques.innerHTML = `<h5 style='color: red'>Unable to fetch data, Please try again!!</h5>`;
+            document.querySelector('#btn').style.display = "block";
+            document.querySelector('#btn').innerHTML = "Refresh";
+            document.querySelector('#btn').onclick = () => {
+                location.reload();
+            };
+        } else {
+            loadQues();
+            stopWatch();
+            
+            // Show lives display after questions are loaded (if lives are enabled)
+            const livesDisplay = document.getElementById("livesDisplay");
+            if (livesDisplay && livesEnabled && currentLives !== -1) {
+                livesDisplay.style.display = "";
+            }
+            
+            // Display modifier icons (with slight delay to ensure pause button is rendered)
+            setTimeout(() => {
+              updateModifierIconsDisplay();
+              // Show modifier icons container after questions are loaded
+              const modifierIconsContainer = document.getElementById("modifierIcons");
+              if (modifierIconsContainer) {
+                modifierIconsContainer.style.display = "flex";
+              }
+            }, 100);
+            
+            // Show give up button after questions are loaded
+            const giveUpBtn = document.querySelector("[giveup]");
+            if (giveUpBtn) {
+                giveUpBtn.style.display = "block";
+            }
+        }
+    }
+    startQuiz();
+    
+    // Update indicator visibility based on controller connection
+    function updateIndicatorVisibility() {
+        // Hide all indicators on mobile
+        if (isMobile) {
+            const controllerIndicators = document.querySelectorAll(".controller-indicator, .controller-submit-indicator");
+            const keyboardIndicators = document.querySelectorAll(".keyboard-indicator, .keyboard-submit-indicator");
+            controllerIndicators.forEach(indicator => {
+                indicator.style.display = "none";
+            });
+            keyboardIndicators.forEach(indicator => {
+                indicator.style.display = "none";
+            });
+            return;
+        }
+        
+        const controllerIndicators = document.querySelectorAll(".controller-indicator, .controller-submit-indicator");
+        const keyboardIndicators = document.querySelectorAll(".keyboard-indicator, .keyboard-submit-indicator");
+        
+        if (gamepadConnected) {
+            controllerIndicators.forEach(indicator => {
+                indicator.style.display = "inline-block";
+            });
+            keyboardIndicators.forEach(indicator => {
+                indicator.style.display = "none";
+            });
+        } else {
+            controllerIndicators.forEach(indicator => {
+                indicator.style.display = "none";
+            });
+            keyboardIndicators.forEach(indicator => {
+                indicator.style.display = "inline-block";
+            });
+        }
+    }
+
+    // Gamepad support functions
+    function initGamepad() {
+        window.addEventListener("gamepadconnected", (e) => {
+            gamepadConnected = true;
+            inputType = 'controller';
+            startGamepadPolling();
+            updateIndicatorVisibility();
+        });
+        
+        window.addEventListener("gamepaddisconnected", (e) => {
+            gamepadConnected = false;
+            stopGamepadPolling();
+            updateIndicatorVisibility();
+        });
+        
+        const gamepads = navigator.getGamepads();
+        for (let i = 0; i < gamepads.length; i++) {
+            if (gamepads[i]) {
+                gamepadConnected = true;
+                inputType = 'controller';
+                startGamepadPolling();
+                break;
+            }
+        }
+        updateIndicatorVisibility();
+    }
+    
+    function startGamepadPolling() {
+        if (gamepadPollInterval) return;
+        gamepadPollInterval = setInterval(() => {
+            const gamepads = navigator.getGamepads();
+            for (let i = 0; i < gamepads.length; i++) {
+                const gamepad = gamepads[i];
+                if (gamepad) {
+                    handleGamepadInput(gamepad);
+                    break;
+                }
+            }
+        }, 50);
+    }
+    
+    function stopGamepadPolling() {
+        if (gamepadPollInterval) {
+            clearInterval(gamepadPollInterval);
+            gamepadPollInterval = null;
+        }
+    }
+    
+    function handleGamepadInput(gamepad) {
+        // Pause with Start button (button 9)
+        if (gamepad.buttons[9] && gamepad.buttons[9].pressed) {
+            if (!window.gamepadPausePressed) {
+                window.gamepadPausePressed = true;
+                const evalDiv = document.querySelector(".evalscreen");
+                if (!evalDiv || evalDiv.style.display === "none" || evalDiv.style.display === "") {
+                    togglePause();
+                }
+            }
+        } else {
+            window.gamepadPausePressed = false;
+        }
+        
+        // Handle pause menu navigation with controller
+        if (isPaused && pauseMenu && pauseMenu.style.display !== "none") {
+            let dpadUp = false;
+            let dpadDown = false;
+            
+            if (gamepad.buttons[12]) dpadUp = gamepad.buttons[12].pressed;
+            if (gamepad.buttons[13]) dpadDown = gamepad.buttons[13].pressed;
+            
+            if (gamepad.axes.length >= 10) {
+                const hatY = gamepad.axes[10];
+                if (hatY < -0.5) dpadUp = true;
+                if (hatY > 0.5) dpadDown = true;
+            }
+            
+            if (dpadUp && !lastDpadState.up) {
+                selectedPauseButton = 0;
+                updatePauseButtonHighlight();
+                lastDpadState.up = true;
+            } else if (!dpadUp) {
+                lastDpadState.up = false;
+            }
+            
+            if (dpadDown && !lastDpadState.down) {
+                selectedPauseButton = 1;
+                updatePauseButtonHighlight();
+                lastDpadState.down = true;
+            } else if (!dpadDown) {
+                lastDpadState.down = false;
+            }
+            
+            if ((gamepad.buttons[0] && gamepad.buttons[0].pressed) || 
+                (gamepad.buttons[2] && gamepad.buttons[2].pressed)) {
+                if (!window.gamepadPauseSelectPressed) {
+                    window.gamepadPauseSelectPressed = true;
+                    selectPauseButton();
+                }
+            } else {
+                window.gamepadPauseSelectPressed = false;
+            }
+            
+            return;
+        }
+        
+        // Don't process other input if paused
+        if (isPaused) {
+            return;
+        }
+        
+        let dpadUp = false, dpadDown = false, dpadLeft = false, dpadRight = false;
+        
+        if (gamepad.buttons[12]) dpadUp = gamepad.buttons[12].pressed;
+        if (gamepad.buttons[13]) dpadDown = gamepad.buttons[13].pressed;
+        if (gamepad.buttons[14]) dpadLeft = gamepad.buttons[14].pressed;
+        if (gamepad.buttons[15]) dpadRight = gamepad.buttons[15].pressed;
+        
+        if (gamepad.axes.length >= 10) {
+            const hatX = gamepad.axes[9];
+            const hatY = gamepad.axes[10];
+            if (hatY < -0.5) dpadUp = true;
+            if (hatY > 0.5) dpadDown = true;
+            if (hatX < -0.5) dpadLeft = true;
+            if (hatX > 0.5) dpadRight = true;
+        }
+        
+        if (dpadUp && !lastDpadState.up && answerOptions.length >= 1) {
+            answerOptions[0].checked = true;
+            lastDpadState.up = true;
+        } else if (!dpadUp) {
+            lastDpadState.up = false;
+        }
+        
+        if (dpadRight && !lastDpadState.right && answerOptions.length >= 2) {
+            answerOptions[1].checked = true;
+            lastDpadState.right = true;
+        } else if (!dpadRight) {
+            lastDpadState.right = false;
+        }
+        
+        if (dpadDown && !lastDpadState.down && answerOptions.length >= 3) {
+            answerOptions[2].checked = true;
+            lastDpadState.down = true;
+        } else if (!dpadDown) {
+            lastDpadState.down = false;
+        }
+        
+        if (dpadLeft && !lastDpadState.left && answerOptions.length >= 4) {
+            answerOptions[3].checked = true;
+            lastDpadState.left = true;
+        } else if (!dpadLeft) {
+            lastDpadState.left = false;
+        }
+        
+        if ((gamepad.buttons[0] && gamepad.buttons[0].pressed) || 
+            (gamepad.buttons[2] && gamepad.buttons[2].pressed)) {
+            if (!window.gamepadSubmitPressed) {
+                window.gamepadSubmitPressed = true;
+                checkAns();
+            }
+        } else {
+            window.gamepadSubmitPressed = false;
+        }
+    }
+    
+    initGamepad();
+    
+    // BGM for normal mode (stage 1 for questions 0-49, stage 2 for questions 50+)
+    let normalBGM1 = null;
+    let normalBGM2 = null;
+    let currentBGM = null;
+    let currentStage = -1;
+    
+    function playBGM() {
+        // Check if music is disabled
+        if (localStorage.getItem("musicEnabled") === "false") {
+            if (currentBGM) {
+                currentBGM.pause();
+                currentBGM.currentTime = 0;
+                currentBGM = null;
+                currentStage = -1;
+            }
+            return;
+        }
+
+        const isAlternative = bgmSet === "alternative";
+
+        if (!normalBGM1) {
+            const volume = getAudioVolume();
+            if (isAlternative) {
+                normalBGM1 = new Audio("../public/audio/TGM/normal.mp3");
+                normalBGM2 = new Audio("../public/audio/TGM/normal2.mp3");
+            } else {
+                normalBGM1 = new Audio("../public/audio/stage1.mp3");
+                normalBGM2 = new Audio("../public/audio/stage2.mp3");
+            }
+            normalBGM1.loop = true;
+            normalBGM1.volume = volume;
+            normalBGM2.loop = true;
+            normalBGM2.volume = volume;
+        }
+
+        // Stop BGM on question 49 (final question of stage 1)
+        if (currQuestion === 49) {
+            if (currentBGM) {
+                currentBGM.pause();
+                currentBGM.currentTime = 0;
+                currentBGM = null;
+                currentStage = -1;
+            }
+            return;
+        }
+
+        let targetStage, targetBGM;
+        if (currQuestion < 50) {
+            targetStage = 1;
+            targetBGM = normalBGM1;
+        } else {
+            targetStage = 2;
+            targetBGM = normalBGM2;
+        }
+
+        if (currentStage !== targetStage) {
+            if (currentBGM) {
+                currentBGM.pause();
+                currentBGM.currentTime = 0;
+            }
+            currentBGM = targetBGM;
+            currentStage = targetStage;
+            // Apply volume before playing
+            currentBGM.volume = getAudioVolume();
+            currentBGM.play().catch(err => console.log("BGM play failed:", err));
+        }
+    }
+    
+    function stopBGM() {
+        if (currentBGM) {
+            currentBGM.pause();
+            currentBGM.currentTime = 0;
+            currentBGM = null;
+            currentStage = -1;
+        }
+    }
+
+    function loadQues() {
+        // Reset all text elements opacity at the start of each new question
+        // This ensures all elements are visible when vanish mode is enabled
+        resetAllTextElementsOpacity();
+        
+        // Reset answered flag when loading a new question
+        currentQuestionAnswered = false;
+        wrongAnswersForCurrentQuestion = 0;
+        questionTimedOut = false; // Reset timeout flag for new question
+        
+        const opt = document.getElementById("opt");
+        let currentQuestion = Questions[currQuestion].question;
+        // Decode HTML entities in the question and answers
+        function decodeHTMLEntities(text) {
+            if (!text) return "";
+            const txt = document.createElement('textarea');
+            txt.innerHTML = text;
+            return txt.value;
+        }
+        currentQuestion = decodeHTMLEntities(currentQuestion);
+        ques.innerHTML = currentQuestion;
+        opt.innerHTML = "";
+        loadScore();
+        const correctAnswer = Questions[currQuestion].correct_answer;
+        const incorrectAnswers = Questions[currQuestion].incorrect_answers;
+        const options = [correctAnswer, ...incorrectAnswers];
+        options.sort(() => Math.random() - 0.5);
+        
+        // Store options for controller support
+        answerOptions = [];
+        
+        // Controller button mapping: Up, Right, Down, Left
+        const controllerButtonImages = ["../public/images/btns/up.png", "../public/images/btns/right.png", "../public/images/btns/down.png", "../public/images/btns/left.png"];
+        const controllerLabels = ["D-Pad Up", "D-Pad Right", "D-Pad Down", "D-Pad Left"];
+        
+        options.forEach((option, index) => {
+            const decodedOption = decodeHTMLEntities(option);
+            const choicesdiv = document.createElement("div");
+            const choice = document.createElement("input");
+            const choiceLabel = document.createElement("label");
+            choice.type = "radio";
+            choice.name = "answer";
+            choice.value = decodedOption;
+            choiceLabel.textContent = decodedOption;
+            
+            // Add controller button indicator
+            const controllerIndicator = document.createElement("img");
+            controllerIndicator.className = "controller-indicator";
+            controllerIndicator.src = controllerButtonImages[index] || "";
+            controllerIndicator.alt = controllerLabels[index] || "";
+            controllerIndicator.title = controllerLabels[index] || "";
+            controllerIndicator.style.cssText = `
+                display: inline-block;
+                margin-right: 8px;
+                width: 32px;
+                height: 32px;
+                vertical-align: middle;
+                object-fit: contain;
+            `;
+            
+            // Add keyboard indicator
+            const keyboardIndicator = document.createElement("span");
+            keyboardIndicator.className = "keyboard-indicator";
+            keyboardIndicator.textContent = (index + 1).toString();
+            keyboardIndicator.title = `Press ${index + 1} to select this answer`;
+            keyboardIndicator.style.cssText = `
+                display: inline-block;
+                margin-right: 8px;
+                padding: 4px 8px;
+                background-color: rgba(255, 255, 255, 0.2);
+                border: 2px solid rgba(255, 255, 255, 0.5);
+                border-radius: 4px;
+                font-size: 16px;
+                font-weight: bold;
+                color: white;
+                vertical-align: middle;
+                min-width: 24px;
+                text-align: center;
+            `;
+            
+            choicesdiv.appendChild(choice);
+            choicesdiv.appendChild(controllerIndicator);
+            choicesdiv.appendChild(keyboardIndicator);
+            choicesdiv.appendChild(choiceLabel);
+            opt.appendChild(choicesdiv);
+            document.querySelector('#btn').style.display = "block";
+            
+            // Set initial visibility
+            if (gamepadConnected) {
+                controllerIndicator.style.display = "inline-block";
+                keyboardIndicator.style.display = "none";
+            } else {
+                controllerIndicator.style.display = "none";
+                keyboardIndicator.style.display = "inline-block";
+            }
+            
+            // Make the div clickable to select the option
+            choicesdiv.addEventListener("click", () => {
+                choice.checked = true;
+                // Track mouse input type (only if keyboard/controller hasn't been used)
+                if (!isMobile && inputType !== 'keyboard' && inputType !== 'controller') {
+                    inputType = 'mouse';
+                }
+            });
+            
+            // Store reference for controller support
+            answerOptions.push(choice);
+        });
+        // Clear any existing question timer
+        if (window.questionTimerId) {
+            clearInterval(window.questionTimerId);
+        }
+        
+        const timerDiv = document.querySelector(".timerifinvalid");
+        
+        // Add countdown timer for each question when stopwatch hits 15 minutes
+        if (quizMinutes >= 15) {
+            timeToAnswer = 2; // 2 seconds for normal mode
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "red";
+            
+            window.questionTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+                    timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.questionTimerId);
+                    questionTimedOut = true; // Mark that player ran out of time on this question
+                    evalScreen();
+                }
+            }, 10);
+        } else if (currQuestion >= 50) {
+            // Add 60 second timer after question 50
+            timeToAnswer = 60;
+            initialTimeToAnswer = timeToAnswer; // Store initial time for grade calculation
+            timerDiv.style.display = "block";
+            timerDiv.style.textAlign = "center";
+            timerDiv.style.fontSize = "xx-large";
+            timerDiv.style.color = "white";
+            
+            window.questionTimerId = setInterval(() => {
+                if (timeToAnswer > 0) {
+                    timeToAnswer -= 0.01 * timeMultiplier;
+                    timerDiv.innerHTML = `${timeToAnswer.toFixed(2)}`;
+                } else {
+                    clearInterval(window.questionTimerId);
+                    questionTimedOut = true; // Mark that player ran out of time on this question
+                    evalScreen();
+                }
+            }, 10);
+        } else {
+            timerDiv.style.display = "none";
+        }
+        document.querySelector(".correctanswer").innerHTML = "";
+        
+        // Track question start time for grade points calculation
+        questionStartTime = Date.now();
+        
+        // Update indicator visibility after loading question
+        updateIndicatorVisibility();
+        
+        // Play BGM
+        playBGM();
+        
+        // Start random fading if vanish mode is enabled
+        if (fadingMode && fadingMode !== "off") {
+          if (!randomFadeInterval) {
+            startRandomFading();
+          }
+        } else {
+          // Stop random fading if disabled
+          if (randomFadeInterval) {
+            clearInterval(randomFadeInterval);
+            randomFadeInterval = null;
+          }
+        }
+    }
+    
+    // Function to reset all text elements' opacity
+    function resetAllTextElementsOpacity() {
+      const questionEl = document.getElementById("ques");
+      if (questionEl) {
+        questionEl.style.opacity = "1";
+      }
+
+      const optionsEl = document.getElementById("opt");
+      if (optionsEl) {
+        const labels = optionsEl.querySelectorAll("label");
+        labels.forEach(label => {
+          label.style.opacity = "1";
+        });
+      }
+
+      const scoreEl = document.getElementById("score");
+      if (scoreEl) {
+        scoreEl.style.opacity = "1";
+      }
+
+      const timeElapsedEl = document.getElementById("timeelapsed");
+      if (timeElapsedEl) {
+        timeElapsedEl.style.opacity = "1";
+      }
+    }
+
+    // Function to get all visible text elements (excludes score, timer)
+    function getVisibleTextElements() {
+      const elements = [];
+
+      const questionEl = document.getElementById("ques");
+      if (questionEl && questionEl.style.opacity !== "0" && questionEl.style.display !== "none") {
+        elements.push(questionEl);
+      }
+
+      const optionsEl = document.getElementById("opt");
+      if (optionsEl) {
+        const labels = optionsEl.querySelectorAll("label");
+        labels.forEach(label => {
+          if (label.style.opacity !== "0" && label.style.display !== "none") {
+            elements.push(label);
+          }
+        });
+      }
+
+      // Note: score and timer (timeelapsed) are excluded from fading
+
+      return elements;
+    }
+
+    // Function to start random text fading (uses fadingMode parameter as interval in seconds)
+    function startRandomFading() {
+      if (randomFadeInterval) {
+        clearInterval(randomFadeInterval);
+        randomFadeInterval = null;
+      }
+
+      function fadeRandomElement() {
+        const visibleElements = getVisibleTextElements();
+        if (visibleElements.length === 0) {
+          return; // All elements are already faded
+        }
+
+        // Randomly select one element
+        const randomIndex = Math.floor(Math.random() * visibleElements.length);
+        const element = visibleElements[randomIndex];
+
+        // Fade it to invisible
+        element.style.opacity = "0";
+        element.style.transition = "opacity 0.5s ease";
+      }
+
+      // Use fadingMode parameter as interval (in seconds, convert to milliseconds)
+      const intervalMs = parseFloat(fadingMode) * 1000;
+
+      // Start the interval
+      randomFadeInterval = setInterval(() => {
+        fadeRandomElement();
+      }, intervalMs);
+    }
+    
+    // Calculate grade points for a question (Normal mode: 1x multiplier, 30s time bonus)
+    function internalGrade() {
+        // Validate quiz state
+        if (!Questions || Questions.length === 0) {
+            console.warn("No questions loaded");
+            return 0;
+        }
+        
+        if (currQuestion < 0 || currQuestion >= Questions.length) {
+            console.warn("Invalid question index");
+            return 0;
+        }
+        
+        // Get selected answer from DOM
+        const selectedAns = document.querySelector('input[name="answer"]:checked');
+        if (!selectedAns) {
+            return 0;
+        }
+        
+        // Decode HTML entities for comparison
+        function decodeHTMLEntities(text) {
+            if (!text) return "";
+            const txt = document.createElement("textarea");
+            txt.innerHTML = text;
+            return txt.value;
+        }
+        
+        const answerValue = selectedAns.value;
+        const correctAnswer = Questions[currQuestion].correct_answer;
+        const decodedAnswerValue = decodeHTMLEntities(answerValue);
+        const decodedCorrectAnswer = decodeHTMLEntities(correctAnswer);
+        
+        // Check if answer is correct
+        const isCorrect = decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer;
+        
+        if (!isCorrect) {
+            return 0;
+        }
+        
+        // Calculate time ratio
+        let timeRatio;
+        if (initialTimeToAnswer && initialTimeToAnswer > 0) {
+            // Use actual remaining time from timer (for questions after 50)
+            const remainingTime = Math.max(0, timeToAnswer || 0);
+            timeRatio = remainingTime * 10 / initialTimeToAnswer;
+        } else {
+            // Use 30s time bonus for questions before 50 (no per-question timer)
+            const timeTaken = questionStartTime ? (Date.now() - questionStartTime) / 1000 : 0;
+            const timeBonus = 30; // 30 seconds time bonus for normal mode
+            const remainingTime = Math.max(0, timeBonus - timeTaken);
+            timeRatio = remainingTime * 10 / timeBonus; // Scale to match master mode formula
+        }
+        
+        // Base score for each question
+        const quesScore = 500;
+        
+        // Normal mode: all questions have multiplier 1 (no difficulty scaling)
+        const multiplier = 1;
+        
+        // Calculate grade points
+        const questionPoints = quesScore * multiplier * timeRatio;
+        
+        return Math.round(questionPoints);
+    }
+
+    let quizMinutes = 0; // Global variable to track minutes
+    let timer; // Global variable to store the timer interval
+    function stopWatch() {
+        const startTime = Date.now();
+        timerStartTime = startTime;
+        const timeDisplay = document.getElementById("timeelapsed");
+        timer = setInterval(() => {
+            if (isPaused) return; // Don't update timer when paused
+            const elapsedTime = Date.now() - startTime - totalPausedTime;
+            const miliseconds = Math.floor((elapsedTime % 1000) / 10);
+            const seconds = Math.floor((elapsedTime / 1000) % 60);
+            quizMinutes = Math.floor((elapsedTime / (1000 * 60)) % 60);
+            timeDisplay.innerHTML = `${quizMinutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}:${miliseconds.toString().padStart(2, '0')}`;
+            if (quizMinutes >= 10) {
+                timeDisplay.style.color = "yellow";
+            }
+            if (quizMinutes >= 12) {
+                timeDisplay.style.color = "orange";
+            }
+            if (quizMinutes >= 15) {
+                alert("You took too long! This run has been invalidated.");
+                timeDisplay.style.color = "red";
+                updateGradePointsDisplay(); // Update to show "Invalid"
+            }
+        }, 10);
+        timeDisplay.style.fontSize = "xx-large";
+        timeDisplay.style.textAlign = "center";
+        
+        // Initialize grade points display
+        updateGradePointsDisplay();
+    }
+
+    // Update grade points display in real-time
+    function updateGradePointsDisplay() {
+        const gradeDisplay = document.getElementById("currentgrade");
+        if (!gradeDisplay) return;
+        
+        if (quizMinutes >= 15) {
+            gradeDisplay.innerHTML = "Invalid";
+        } else {
+            gradeDisplay.innerHTML = totalGradePoints.toLocaleString();
+        }
+    }
+
+    function loadScore() {
+        const totalScore = document.getElementById("score");
+        totalScore.innerHTML = `${score} / ${currQuestion + 1}`;
+        totalScore.style.fontSize = "xx-large";
+        totalScore.style.color = "pink";
+        
+        // Update lives display (hide if disabled)
+        const livesDisplay = document.getElementById("livesDisplay");
+        const livesCount = document.getElementById("livesCount");
+        if (livesDisplay) {
+            if (livesEnabled) {
+                livesDisplay.style.display = "block";
+                if (livesCount) {
+                    livesCount.textContent = currentLives;
+                }
+                
+                // Apply color based on lives remaining
+                livesDisplay.classList.remove("lives-green", "lives-yellow", "lives-orange", "lives-red");
+                if (currentLives > 50) {
+                    livesDisplay.classList.add("lives-green");
+                } else if (currentLives > 20) {
+                    livesDisplay.classList.add("lives-yellow");
+                } else if (currentLives > 10) {
+                    livesDisplay.classList.add("lives-orange");
+                } else {
+                    livesDisplay.classList.add("lives-red");
+                }
+            } else {
+                livesDisplay.style.display = "none";
+            }
+        }
+        
+        // Update grade points display in timer bar
+        updateGradePointsDisplay();
+    }
+    function evalScreen(gaveUp = false) {
+        // Resume game if paused
+        if (isPaused) {
+            resumeGame();
+        }
+        
+        // Hide pause button
+        if (pauseBtn) {
+            pauseBtn.style.display = "none";
+        }
+        
+        // Stop BGM when quiz ends
+        stopBGM();
+        
+        // Hide the give up button when evaluation screen is displayed
+        const giveUpBtn = document.querySelector("[giveup]");
+        if (giveUpBtn) {
+            giveUpBtn.style.display = "none";
+        }
+        
+        // Hide grade display when quiz is finished or abandoned
+        const gradeDisplay = document.getElementById("currentgrade");
+        if (gradeDisplay) {
+            gradeDisplay.style.display = "none";
+        }
+        
+        // Check if all questions were completed (reached the last question)
+        const allQuestionsCompleted = currQuestion >= Questions.length - 1;
+        
+        // Play completion sound only if quiz was not abandoned AND all questions were completed
+        if (!gaveUp && !quizAbandoned && allQuestionsCompleted && localStorage.getItem("musicEnabled") !== "false") {
+            let completeSound = new Audio("../public/audio/complete.wav");
+            completeSound.play().catch(err => console.log("Complete sound play failed:", err));
+        }
+        
+        // Play credits BGM (always play, even if abandoned, unless sounds are disabled)
+        if (localStorage.getItem("musicEnabled") !== "false") {
+        let creditsBGM = new Audio("../public/audio/credits.mp3");
+        creditsBGM.play().catch(err => console.log("Credits BGM play failed:", err));
+        }
+        
+        const evalDiv = document.querySelector(".evalscreen");
+        let grade = "";
+        let evalPercent = (score / Questions.length) * 100;
+        if (quizMinutes >= 15) {
+            grade = "Invalid";
+        } else if (evalPercent >= 800 / 9) {
+            grade = "AAA";
+        } else if (evalPercent >= 700 / 9) {
+            grade = "AA";
+        } else if (evalPercent >= 600 / 9) {
+            grade = "A";
+        } else if (evalPercent >= 500 / 9) {
+            grade = "B";
+        } else if (evalPercent >= 400 / 9) {
+            grade = "C";
+        } else if (evalPercent >= 300 / 9) {
+            grade = "D";
+        } else if (evalPercent >= 200 / 9) {
+            grade = "E";
+        } else {
+            grade = "F";
+        }
+        // Clear all timers
+        clearInterval(timer);
+        if (window.questionTimerId) {
+            clearInterval(window.questionTimerId);
+        }
+        
+        // Stop random fading
+        if (randomFadeInterval) {
+            clearInterval(randomFadeInterval);
+            randomFadeInterval = null;
+        }
+        
+        const timeElapsedDiv = document.getElementById("timeelapsed");
+        const timerDiv = document.querySelector(".timerifinvalid");
+        timerDiv.style.display = "none";
+
+        // Change title based on whether player gave up
+        const title = gaveUp ? "Quiz Abandoned" : "Quiz Completed!";
+
+        // Get input type icon
+        let inputTypeIcon = '<i class="fas fa-question-circle" style="color: #dbffff;"></i>';
+        if (inputType === 'controller') inputTypeIcon = '<i class="fas fa-gamepad" style="color: #9b59b6;"></i>';
+        else if (inputType === 'keyboard') inputTypeIcon = '<i class="fas fa-keyboard" style="color: #dbffff;"></i>';
+        else if (inputType === 'mobile') inputTypeIcon = '<i class="fas fa-mobile-alt" style="color: #4a90e2;"></i>';
+        else if (inputType === 'mouse') inputTypeIcon = '<i class="fas fa-mouse" style="color: #dbffff;"></i>';
+        
+        evalDiv.innerHTML = `<h3>${title}</h3>
+                    <p style="font-size:larger">Your score is:</p>
+                    <div class="eval" style="display:flex; justify-content:space-between;">
+                    <div id="score" >
+                    <span class="score" style="font-size:4em">${score}</span> <span style="font-size:xx-large">/ ${Questions.length}</span>
+                    </div>
+                    <div id=grade>
+                    <span class="grade" style="font-size:6em">${grade}</span>
+                    </div>
+                    </div>
+                    <p style="font-size:medium; margin-top: 10px;">Grade Points: ${totalGradePoints.toLocaleString()}</p>
+                    <p>Thank you for playing!</p>
+                <button onclick="location.reload()">Play Again</button>
+                <button class="submitsuffering">Submit your suffe- I mean score</button>
+                <button class="home" onclick="location.href='index.html'">Home</button>`;
+        evalDiv.style.display = "block";
+        evalDiv.style.textAlign = "center";
+        // Attach event listener after button is created
+        const user = auth.currentUser;
+        const submitBtn = document.querySelector(".submitsuffering");
+
+        if (!submitBtn) {
+            return;
+        }
+
+        if (!user) {
+            submitBtn.textContent = "Login to submit score";
+            submitBtn.onclick = () => {
+                location.href = "signin.html";
+            };
+            return;
+        }
+
+        let isSubmitting = false;
+
+        async function submitNormalScore() {
+            if (isSubmitting || submitBtn.disabled) return;
+
+            // Prevent abandoned scores from being submitted
+            if (quizAbandoned) {
+                alert("Abandoned runs cannot be submitted to the leaderboards.");
+                submitBtn.disabled = true;
+                submitBtn.textContent = "Abandoned runs cannot be submitted";
+                submitBtn.style.cursor = "not-allowed";
+                return;
+            }
+
+            // Prevent invalid scores from being submitted
+            if (quizMinutes >= 15) {
+                alert("Invalid run! Scores cannot be submitted for runs that took 15 minutes or longer.");
+                return;
+            }
+            
+            // Only allow submission if starting question is 1 and time multiplier is 1x or higher
+            if (startQuestionParam !== 0) {
+                alert("Scores can only be submitted when starting from question 1.");
+                return;
+            }
+            
+            if (timeMultiplier < 1.0) {
+                alert("Scores can only be submitted when time multiplier is 1x or higher.");
+                return;
+            }
+
+            isSubmitting = true;
+            submitBtn.disabled = true;
+            submitBtn.textContent = "Submitting...";
+
+            try {
+                const db = getFirestore();
+                // Calculate clear type
+                let clearType = "";
+                const ranOutOfLives = livesEnabled && currentLives <= 0;
+                
+                if (ranOutOfLives || questionTimedOut) {
+                    clearType = "Failed";
+                } else if (allQuestionsCompleted) {
+                    if (!livesEnabled) {
+                        clearType = "Clear";
+                    } else if (initialLives === 100) {
+                        clearType = "Hard";
+                    } else if (initialLives === 30) {
+                        clearType = "Brave";
+                    } else if (initialLives === 10) {
+                        clearType = "Absolute";
+                    } else if (initialLives === 5) {
+                        clearType = "Catastrophy";
+                    } else if (initialLives === 1 && totalWrongAnswers === 0) {
+                        clearType = "All Correct!";
+                    } else {
+                        clearType = "Clear"; // Default for other life counts
+                    }
+                } else {
+                    clearType = "Failed"; // Not completed
+                }
+                
+                // Build modifiers object
+                const modifiers = {};
+                if (livesEnabled && initialLives !== -1) {
+                    modifiers.lives = initialLives;
+                }
+                if (timeMultiplier !== 1) {
+                    modifiers.timeMultiplier = timeMultiplier;
+                }
+                if (fadingMode && fadingMode !== "off") {
+                    modifiers.fadingMode = fadingMode;
+                }
+                if (startQuestionParam > 0) {
+                    modifiers.startQuestion = startQuestionParam;
+                }
+                
+                const payload = {
+                    name: user.displayName || user.email,
+                    score: score,
+                    grade: grade,
+                    time: document.getElementById("timeelapsed").textContent,
+                    date: new Date().toLocaleString(),
+                    inputType: inputType || 'mouse',
+                    pauseCount: pauseCount,
+                    totalPausedTime: formatPausedTime(totalPausedTime),
+                    clearType: clearType,
+                    modifiers: modifiers,
+                };
+
+                // Global leaderboard entry
+                await addDoc(collection(db, 'scoresnormal'), payload);
+                // Per‑player data entry
+                await addDoc(collection(db, 'playerData', user.uid, 'normal'), payload);
+                // Player stats entry
+                await addDoc(collection(db, 'playerStats', user.uid, 'normal'), payload);
+
+                alert("Score submitted successfully!");
+                submitBtn.textContent = "Score submitted!";
+                submitBtn.style.backgroundColor = "cyan";
+                submitBtn.style.color = "white";
+                submitBtn.style.cursor = "not-allowed";
+            } catch (error) {
+                console.error("Error submitting score:", error);
+                alert("Failed to submit score. Please try again.");
+                submitBtn.disabled = false;
+                isSubmitting = false;
+                submitBtn.textContent = "Submit your suffe- I mean score";
+            }
+        }
+
+        // Manual click (kept for UX)
+        submitBtn.addEventListener("click", submitNormalScore);
+
+        // Check for invalidating modifiers and disable submit button
+        const hasInvalidModifiers = startQuestionParam !== 0 || timeMultiplier < 1.0;
+        
+        if (hasInvalidModifiers) {
+            submitBtn.disabled = true;
+            if (startQuestionParam !== 0) {
+                submitBtn.textContent = "Cannot submit: started at question " + (startQuestionParam + 1);
+            } else {
+                submitBtn.textContent = "Cannot submit: time multiplier below 1x";
+            }
+            submitBtn.style.cursor = "not-allowed";
+        } else {
+            // Automatic upload for logged‑in users
+            submitNormalScore();
+        }
+
+    }
+    function nextQuestion() {
+        if (currQuestion < Questions.length - 1) {
+            currQuestion++;
+            // Play section change sound every 10 questions
+            if (currQuestion % 10 === 0 && localStorage.getItem("musicEnabled") !== "false") {
+                const sectionChangeSound = new Audio("../public/audio/sectionchange.wav");
+                sectionChangeSound.play().catch(err => console.log("Section change sound play failed:", err));
+            }
+            loadQues();
+            document.querySelector(".correctanswer").innerHTML = "";
+        } else {
+            document.getElementById("opt").remove();
+            document.getElementById("ques").remove();
+            document.getElementById("btn").remove();
+            document.getElementById("score").remove();
+            evalScreen();
+        }
+    }
+
+    function showNotification(message, isSuccess = false) {
+        const notification = document.getElementById("notification");
+        notification.textContent = message;
+        notification.classList.remove("hide", "success");
+        if (isSuccess) {
+            notification.classList.add("success");
+        }
+        setTimeout(() => {
+            notification.classList.add("hide");
+        }, 3000);
+    }
+    
+    function showFailedScreen() {
+        // Pause BGM if it exists
+        if (currentBGM) {
+            currentBGM.pause();
+            currentBGM.currentTime = 0;
+        }
+        
+        // Play fail sound effect
+        const failSound = new Audio("../public/audio/playstop.wav");
+        failSound.volume = getAudioVolume() * 0.7; // 70% of user volume
+        failSound.play().catch(err => console.log("Fail sound play failed:", err));
+        
+        // Create overlay
+        const overlay = document.createElement("div");
+        overlay.className = "failed-overlay";
+        overlay.innerHTML = '<div class="failed-content">FAILED</div>';
+        document.body.appendChild(overlay);
+        
+        // Remove after 5 seconds
+        setTimeout(() => {
+            overlay.classList.add("hide");
+            setTimeout(() => {
+                overlay.remove();
+                evalScreen();
+            }, 300);
+        }, 5000);
+    }
+
+    function checkAns() {
+        // Validate quiz state
+        if (!Questions || Questions.length === 0) {
+            console.warn("No questions loaded");
+            return;
+        }
+        
+        if (currQuestion < 0 || currQuestion >= Questions.length) {
+            console.warn("Invalid question index");
+            return;
+        }
+        
+        // Check if quiz has ended (evalScreen is shown)
+        const evalDiv = document.querySelector(".evalscreen");
+        if (evalDiv && evalDiv.style.display !== "none" && evalDiv.style.display !== "") {
+            return; // Quiz has ended, don't process answers
+        }
+        
+        // Prevent multiple submissions for the same question
+        if (currentQuestionAnswered) {
+            return; // Question already answered, ignore duplicate submissions
+        }
+        
+        const selectedAns = document.querySelector('input[name="answer"]:checked');
+        if (!selectedAns && quizMinutes >= 15) {
+            // If time is invalid and no answer is selected, skip to next question without alert
+            nextQuestion();
+            return;
+        }
+        if (selectedAns) {
+            const answerValue = selectedAns.value;
+            const correctAnswer = Questions[currQuestion].correct_answer;
+            
+            // Decode HTML entities for comparison (answers are stored with entities)
+            function decodeHTMLEntities(text) {
+                if (!text) return "";
+                const txt = document.createElement("textarea");
+                txt.innerHTML = text;
+                return txt.value;
+            }
+            
+            const decodedAnswerValue = decodeHTMLEntities(answerValue);
+            const decodedCorrectAnswer = decodeHTMLEntities(correctAnswer);
+            
+            // Compare both decoded and original values to handle encoding differences
+            if (decodedAnswerValue === decodedCorrectAnswer || answerValue === correctAnswer) {
+                // Mark question as answered
+                currentQuestionAnswered = true;
+                
+                score++;
+                // Calculate and accumulate grade points for this question
+                const questionPoints = internalGrade();
+                totalGradePoints += questionPoints;
+                loadScore(); // Update display with new grade points (includes updateGradePointsDisplay)
+                // Clear the question timer before moving to next question
+                if (window.questionTimerId) {
+                    clearInterval(window.questionTimerId);
+                }
+                showNotification("Correct!", true);
+            }
+            else {
+                // Wrong answer handling
+                totalWrongAnswers++; // Track total wrong answers for clear type
+                
+                if (livesEnabled && wrongAnswersForCurrentQuestion < 3) {
+                    // Deduct life (up to 3 times per question)
+                    wrongAnswersForCurrentQuestion++;
+                    currentLives -= 1;
+                    
+                    // Update lives display
+                    const livesDisplay = document.getElementById("livesDisplay");
+                    const livesCount = document.getElementById("livesCount");
+                    if (livesCount) {
+                        livesCount.textContent = currentLives;
+                    }
+                    
+                    // Apply color based on lives remaining
+                    if (livesDisplay) {
+                        livesDisplay.classList.remove("lives-green", "lives-yellow", "lives-orange", "lives-red");
+                        if (currentLives > 50) {
+                            livesDisplay.classList.add("lives-green");
+                        } else if (currentLives > 20) {
+                            livesDisplay.classList.add("lives-yellow");
+                        } else if (currentLives > 10) {
+                            livesDisplay.classList.add("lives-orange");
+                        } else {
+                            livesDisplay.classList.add("lives-red");
+                        }
+                    }
+                    
+                    if (currentLives <= 0) {
+                        // Out of lives - show FAILED screen
+                        if (window.answerTimerId) {
+                            clearInterval(window.answerTimerId);
+                        }
+                        showFailedScreen();
+                        return;
+                    }
+                    
+                    // Show notification with remaining lives and correct answer
+                    showNotification(`Wrong! ${currentLives} ${currentLives === 1 ? 'life' : 'lives'} remaining. Correct answer: ${decodedCorrectAnswer}`);
+                } else if (livesEnabled && wrongAnswersForCurrentQuestion >= 3) {
+                    // Already deducted max lives for this question
+                    showNotification(`Wrong! Try again next time. Correct answer: ${decodedCorrectAnswer}`);
+                } else {
+                    // Lives disabled - just show wrong notification with correct answer
+                    showNotification(`Wrong! Try again next time. Correct answer: ${decodedCorrectAnswer}`);
+                }
+            }
+            nextQuestion();
+        } else if (!selectedAns && Questions.length > 0) {
+            showNotification("Please select an answer.");
+        }
+    }
+    // Make checkAns available globally for onclick handlers
+    window.checkAns = checkAns;
+
+
+</script>
+
+</html>
+
+

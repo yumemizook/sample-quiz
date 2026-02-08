@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Log in...</title>
+    <script
+      src="https://kit.fontawesome.com/7263e3a28f.js"
+      crossorigin="anonymous"
+    ></script>
+    <link rel="stylesheet" href="../small.css">
+  </head>
+  <body>
+    <div class="container">
+      <div class="auth-header">
+        <h1>Welcome Back</h1>
+        <p class="auth-subtitle">Sign in to continue your quiz journey</p>
+      </div>
+      <form action="" id="login">
+        <div class="form-group">
+          <label for="email">Email</label>
+          <input type="email" id="email" name="email" placeholder="Enter your email" required />
+        </div>
+        <div class="form-group">
+          <label for="pw">Password</label>
+          <input type="password" name="pw" id="pw" placeholder="Enter your password" required />
+        </div>
+        <input type="submit" value="Log In" />
+      </form>
+      <div class="divider">
+        <span>or</span>
+      </div>
+      <button id="googlelog">
+        <i class="fa-brands fa-google"></i> 
+        <span>Sign in with Google</span>
+      </button>
+      <div class="dum">
+        <a href="signup.html" class="redir">Don't have an account? <strong>Sign up</strong></a>
+        <a href="reset.html" class="forgot">Forgot password?</a>
+      </div>
+    </div>
+  </body>
+  <script type="module" src="../firebase.js"></script>
+  <script type="module" src="signin.js"></script>
+</html>
+
+

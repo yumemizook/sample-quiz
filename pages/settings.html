@@ -1,0 +1,1048 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Settings</title>
+    <link rel="stylesheet" href="../index.css">
+    <script src="https://kit.fontawesome.com/ced4c4a7f8.js" crossorigin="anonymous"></script>
+    <style>
+        .settings-container {
+            max-width: 600px;
+            width: 90%;
+            margin: 100px auto 50px;
+            padding: 30px;
+            background-color: rgba(0, 0, 0, 0.8);
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .settings-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .settings-header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .settings-section {
+            margin-bottom: 40px;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+        }
+
+        .settings-section h2 {
+            font-size: 1.5em;
+            margin-bottom: 15px;
+            color: #dbffff;
+        }
+
+        .setting-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            gap: 20px;
+        }
+
+        .setting-item:last-child {
+            border-bottom: none;
+        }
+
+        .setting-item > div:first-child {
+            flex: 1;
+        }
+
+        .setting-label {
+            font-size: 1.1em;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 60px;
+            height: 30px;
+            background-color: #ccc;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            flex-shrink: 0;
+            margin-top: 2px;
+        }
+
+        .toggle-switch.active {
+            background-color: #4CAF50;
+        }
+
+        .toggle-switch::after {
+            content: '';
+            position: absolute;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            background-color: white;
+            top: 2px;
+            left: 2px;
+            transition: left 0.3s;
+        }
+
+        .toggle-switch.active::after {
+            left: 32px;
+        }
+
+        /* Volume Slider Styles */
+        #volumeSlider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            transition: background 0.3s;
+        }
+
+        #volumeSlider:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        #volumeSlider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #dbffff;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        #volumeSlider::-webkit-slider-thumb:hover {
+            background: #ffffff;
+            transform: scale(1.1);
+        }
+
+        #volumeSlider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #dbffff;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        #volumeSlider::-moz-range-thumb:hover {
+            background: #ffffff;
+            transform: scale(1.1);
+        }
+
+        #volumeSlider.keyboard-focus {
+            outline: 3px solid #4CAF50;
+            outline-offset: 3px;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+
+        .danger-zone {
+            border: 2px solid #ff4444;
+            background-color: rgba(255, 68, 68, 0.1);
+        }
+
+        .danger-zone.hide {
+            display: none;
+        }
+
+        .danger-zone h2 {
+            color: #ff4444;
+        }
+
+        .danger-button {
+            background-color: #ff4444;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .danger-button:hover {
+            background-color: #cc0000;
+        }
+
+        .danger-button:disabled {
+            background-color: #666;
+            cursor: not-allowed;
+        }
+
+        .back-button {
+            display: inline-block;
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: white;
+            text-decoration: none;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+        }
+
+        .back-button:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        .status-message {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+
+        .status-message.success {
+            background-color: rgba(76, 175, 80, 0.3);
+            color: #4CAF50;
+            display: block;
+        }
+
+        .status-message.error {
+            background-color: rgba(255, 68, 68, 0.3);
+            color: #ff4444;
+            display: block;
+        }
+
+        .status-message.info {
+            background-color: rgba(33, 150, 243, 0.3);
+            color: #2196F3;
+            display: block;
+        }
+
+        /* Keyboard/Gamepad Focus Styles */
+        .setting-item.keyboard-focus,
+        .danger-button.keyboard-focus,
+        .back-button.keyboard-focus {
+            outline: 3px solid #4CAF50;
+            outline-offset: 3px;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+
+        .toggle-switch.keyboard-focus {
+            outline: 3px solid #4CAF50;
+            outline-offset: 3px;
+            box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+        }
+
+        /* Arrow Selector Styles */
+        .arrow-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 150px;
+        }
+
+        .arrow-btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: white;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            font-size: 1.2em;
+        }
+
+        .arrow-btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+            border-color: #dbffff;
+            box-shadow: 0 0 8px rgba(219, 255, 255, 0.6);
+        }
+
+        .arrow-btn:active {
+            transform: scale(0.95);
+        }
+
+        .selector-value {
+            flex: 1;
+            text-align: center;
+            font-weight: bold;
+            color: #dbffff;
+            font-size: 1.1em;
+            min-width: 80px;
+        }
+
+        .setting-select-hidden {
+            display: none;
+        }
+
+        @media (max-width: 600px) {
+            .settings-container {
+                margin: 80px auto 30px;
+                padding: 20px;
+                width: 95%;
+            }
+
+            .settings-header h1 {
+                font-size: 2em;
+            }
+
+            .settings-section {
+                padding: 15px;
+                margin-bottom: 30px;
+            }
+
+            .settings-section h2 {
+                font-size: 1.3em;
+                margin-bottom: 12px;
+            }
+
+            .setting-item {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 15px;
+                padding: 15px 0;
+            }
+
+            .setting-label {
+                font-size: 1em;
+            }
+
+            .setting-item p {
+                font-size: 0.85em;
+                margin-top: 5px;
+            }
+
+            .toggle-switch {
+                width: 50px;
+                height: 26px;
+                align-self: flex-start;
+            }
+
+            .toggle-switch::after {
+                width: 22px;
+                height: 22px;
+            }
+
+            .toggle-switch.active::after {
+                left: 26px;
+            }
+
+            .danger-button {
+                width: 100%;
+                padding: 14px;
+                font-size: 0.95em;
+                margin-top: 10px;
+            }
+
+            .back-button {
+                width: 100%;
+                text-align: center;
+                padding: 12px;
+                font-size: 1em;
+            }
+
+            .status-message {
+                font-size: 0.9em;
+                padding: 8px;
+                margin-top: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status">
+        <a login href="signin.html">Login</a>
+        <a signup href="signup.html">Signup</a>
+        <a logout class="hide" href="../index.html">Log out</a>
+        <div class="player-info hide" id="playerInfo">
+            <div class="player-info-left">
+                <span class="name"></span>
+                <span class="player-level" id="playerLevel"></span>
+            </div>
+            <div class="player-avatar hide" id="playerAvatar">
+                <img id="playerAvatarImg" src="" alt="Avatar" />
+                <div class="player-avatar-placeholder">👤</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="settings-container">
+        <div class="settings-header">
+            <h1>⚙️ Settings</h1>
+        </div>
+
+        <!-- Music Toggle Section -->
+        <div class="settings-section">
+            <h2>Audio Settings</h2>
+            <div class="setting-item">
+                <div>
+                    <span class="setting-label">All Sounds</span>
+                    <p style="font-size: 0.9em; color: #ccc; margin-top: 5px;">
+                        Toggle background music and sound effects.
+                    </p>
+                </div>
+                <div class="toggle-switch" id="musicToggle" tabindex="0" role="switch" aria-checked="true"></div>
+            </div>
+            <div class="status-message" id="musicStatus"></div>
+            
+            <div class="setting-item">
+                <div>
+                    <span class="setting-label">Volume</span>
+                    <p style="font-size: 0.9em; color: #ccc; margin-top: 5px;">
+                        Adjust the volume for all sounds (0-100%).
+                    </p>
+                </div>
+                <div style="display: flex; align-items: center; gap: 15px; min-width: 200px;">
+                    <input type="range" id="volumeSlider" min="0" max="100" value="100" step="1" style="flex: 1; cursor: pointer;">
+                    <span id="volumeValue" style="min-width: 45px; text-align: right; font-weight: bold; color: #dbffff;">100%</span>
+                </div>
+            </div>
+            <div class="status-message" id="volumeStatus"></div>
+
+            <div class="setting-item">
+                <div>
+                    <span class="setting-label">BGM Set</span>
+                    <p style="font-size: 0.9em; color: #ccc; margin-top: 5px;">
+                        Choose the background music set for all modes.
+                    </p>
+                </div>
+                <div class="arrow-selector" data-setting="bgmSet">
+                    <button class="arrow-btn arrow-left" aria-label="Previous option"><i class="fas fa-chevron-left"></i></button>
+                    <span class="selector-value" id="bgmSetValue">Default</span>
+                    <button class="arrow-btn arrow-right" aria-label="Next option"><i class="fas fa-chevron-right"></i></button>
+                    <select id="bgmSet" class="setting-select-hidden" style="display: none;">
+                        <option value="default">Default (Texmaster)</option>
+                        <option value="alternative">Alternative (TGM)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="status-message" id="bgmSetStatus"></div>
+        </div>
+
+        <!-- Score Submission Settings -->
+        <div class="settings-section">
+            <h2>Score Submission</h2>
+            <div class="setting-item">
+                <div>
+                    <span class="setting-label">Automatic Score Submission</span>
+                    <p style="font-size: 0.9em; color: #ccc; margin-top: 5px;">
+                        Automatically submit scores when completing quizzes. When disabled, you'll need to manually submit scores.
+                    </p>
+                </div>
+                <div class="toggle-switch" id="autoSubmitToggle" tabindex="0" role="switch" aria-checked="true"></div>
+            </div>
+            <div class="status-message" id="autoSubmitStatus"></div>
+        </div>
+
+        <!-- Danger Zone Section -->
+        <div class="settings-section danger-zone hide" id="dangerZone">
+            <h2>⚠️ Danger Zone</h2>
+            
+            <div class="setting-item">
+                <div>
+                    <span class="setting-label">Delete All Scores</span>
+                    <p style="font-size: 0.9em; color: #ccc; margin-top: 5px;">
+                        Permanently delete all your submitted scores from all modes. This action cannot be undone.
+                    </p>
+                </div>
+                <button class="danger-button" id="deleteScoresBtn">Delete Scores</button>
+            </div>
+
+            <div class="setting-item">
+                <div>
+                    <span class="setting-label">Delete Account</span>
+                    <p style="font-size: 0.9em; color: #ccc; margin-top: 5px;">
+                        Permanently delete your account and all associated data. This action cannot be undone.
+                    </p>
+                </div>
+                <button class="danger-button" id="deleteAccountBtn">Delete Account</button>
+            </div>
+
+            <div class="status-message" id="dangerStatus"></div>
+        </div>
+
+        <a href="../index.html" class="back-button">← Back to Home</a>
+    </div>
+
+    <script type="module" src="../firebase.js"></script>
+    <script type="module" src="../hm.js"></script>
+    <script type="module" src="../src/js/loadBackground.js"></script>
+    <script type="module" src="../src/js/loadTheme.js"></script>
+    <script type="module">
+        import { getAuth, onAuthStateChanged } from "../firebase.js";
+        import { getFirestore, collection, getDocs, query, where, deleteDoc, doc, setDoc, getDoc } from "../firebase.js";
+        import { deleteUser } from "../firebase.js";
+
+        const auth = getAuth();
+        const db = getFirestore();
+        
+        // Show/hide danger zone based on auth state
+        onAuthStateChanged(auth, (user) => {
+            const dangerZone = document.getElementById('dangerZone');
+            if (user) {
+                // Show danger zone when logged in
+                if (dangerZone) {
+                    dangerZone.classList.remove('hide');
+                }
+            } else {
+                // Hide danger zone when logged out
+                if (dangerZone) {
+                    dangerZone.classList.add('hide');
+                }
+            }
+        });
+        
+        function showStatus(elementId, message, isError = false) {
+            const statusEl = document.getElementById(elementId);
+            if (!statusEl) return;
+            statusEl.textContent = message;
+            statusEl.className = `status-message ${isError ? 'error' : 'success'}`;
+            setTimeout(() => {
+                statusEl.className = 'status-message';
+                statusEl.textContent = '';
+            }, 5000);
+        }
+
+        // Navigation state for keyboard/gamepad controls
+        let currentFocusIndex = 0;
+        let focusableElements = [];
+        
+        // Gamepad state
+        let gamepadConnected = false;
+        let gamepadPollInterval = null;
+        let lastDpadState = { up: false, down: false, left: false, right: false };
+        let lastButtonState = { a: false, x: false };
+
+        // Initialize navigation
+        function initNavigation() {
+            // Get all focusable elements in order
+            focusableElements = [
+                document.getElementById("musicToggle"),
+                document.getElementById("volumeSlider"),
+                document.getElementById("bgmSet"),
+                document.getElementById("autoSubmitToggle"),
+                document.getElementById("deleteScoresBtn"),
+                document.getElementById("deleteAccountBtn"),
+                document.querySelector(".back-button")
+            ].filter(el => el !== null);
+
+            // Set initial focus
+            updateFocus();
+
+            // Initialize keyboard navigation
+            initKeyboardNavigation();
+
+            // Initialize gamepad navigation
+            initGamepadNavigation();
+        }
+
+        // Initialize keyboard navigation
+        function initKeyboardNavigation() {
+            document.addEventListener("keydown", (e) => {
+                // Prevent default behavior for navigation keys
+                if (["ArrowUp", "ArrowDown", "Enter", " "].includes(e.key)) {
+                    e.preventDefault();
+                }
+
+                switch (e.key) {
+                    case "ArrowUp":
+                        navigateUp();
+                        break;
+                    case "ArrowDown":
+                        navigateDown();
+                        break;
+                    case "Enter":
+                    case " ":
+                        activateCurrent();
+                        break;
+                }
+            });
+        }
+
+        // Initialize gamepad navigation
+        function initGamepadNavigation() {
+            window.addEventListener("gamepadconnected", (e) => {
+                gamepadConnected = true;
+                startGamepadPolling();
+            });
+
+            window.addEventListener("gamepaddisconnected", (e) => {
+                gamepadConnected = false;
+                stopGamepadPolling();
+            });
+
+            // Check for already connected gamepads
+            const gamepads = navigator.getGamepads();
+            for (let i = 0; i < gamepads.length; i++) {
+                if (gamepads[i]) {
+                    gamepadConnected = true;
+                    startGamepadPolling();
+                    break;
+                }
+            }
+        }
+
+        // Start polling gamepad input
+        function startGamepadPolling() {
+            if (gamepadPollInterval) return;
+            
+            gamepadPollInterval = setInterval(() => {
+                const gamepads = navigator.getGamepads();
+                for (let i = 0; i < gamepads.length; i++) {
+                    const gamepad = gamepads[i];
+                    if (gamepad) {
+                        handleGamepadInput(gamepad);
+                        break;
+                    }
+                }
+            }, 50);
+        }
+
+        // Stop polling gamepad input
+        function stopGamepadPolling() {
+            if (gamepadPollInterval) {
+                clearInterval(gamepadPollInterval);
+                gamepadPollInterval = null;
+            }
+        }
+
+        // Handle gamepad input
+        function handleGamepadInput(gamepad) {
+            // D-pad buttons (buttons 12-15)
+            let dpadUp = gamepad.buttons[12]?.pressed || false;
+            let dpadDown = gamepad.buttons[13]?.pressed || false;
+
+            // Check analog stick (axes 0 and 1)
+            const leftStickY = gamepad.axes[1] || 0;
+            
+            // Use stick if D-pad is not pressed
+            if (!dpadUp && !dpadDown && Math.abs(leftStickY) > 0.5) {
+                if (leftStickY < -0.5) dpadUp = true;
+                if (leftStickY > 0.5) dpadDown = true;
+            }
+
+            // Handle D-pad navigation (only on state change)
+            if (dpadUp && !lastDpadState.up) {
+                navigateUp();
+                lastDpadState.up = true;
+            } else if (!dpadUp) {
+                lastDpadState.up = false;
+            }
+
+            if (dpadDown && !lastDpadState.down) {
+                navigateDown();
+                lastDpadState.down = true;
+            } else if (!dpadDown) {
+                lastDpadState.down = false;
+            }
+
+            // Handle A button (button 0) and X button (button 2)
+            const aPressed = gamepad.buttons[0]?.pressed || false;
+            const xPressed = gamepad.buttons[2]?.pressed || false;
+
+            if ((aPressed || xPressed) && !lastButtonState.a && !lastButtonState.x) {
+                activateCurrent();
+                lastButtonState.a = aPressed;
+                lastButtonState.x = xPressed;
+            } else {
+                lastButtonState.a = aPressed;
+                lastButtonState.x = xPressed;
+            }
+        }
+
+        // Navigate up
+        function navigateUp() {
+            if (currentFocusIndex > 0) {
+                currentFocusIndex--;
+                updateFocus();
+            }
+        }
+
+        // Navigate down
+        function navigateDown() {
+            if (currentFocusIndex < focusableElements.length - 1) {
+                currentFocusIndex++;
+                updateFocus();
+            }
+        }
+
+        // Activate current focused item
+        function activateCurrent() {
+            const element = focusableElements[currentFocusIndex];
+            if (element) {
+                if (element.classList.contains("toggle-switch")) {
+                    // Toggle the switch
+                    element.click();
+                } else {
+                    // Click button or link
+                    element.click();
+                }
+            }
+        }
+
+        // Update visual focus
+        function updateFocus() {
+            // Remove focus from all items
+            focusableElements.forEach(el => {
+                if (el) {
+                    el.classList.remove("keyboard-focus");
+                    // Also remove from parent setting-item if it exists
+                    const parentItem = el.closest(".setting-item");
+                    if (parentItem) {
+                        parentItem.classList.remove("keyboard-focus");
+                    }
+                }
+            });
+
+            // Add focus to current item
+            const element = focusableElements[currentFocusIndex];
+            if (element) {
+                element.classList.add("keyboard-focus");
+                // Also add to parent setting-item if it exists
+                const parentItem = element.closest(".setting-item");
+                if (parentItem) {
+                    parentItem.classList.add("keyboard-focus");
+                }
+                // Scroll into view if needed
+                element.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        // Music Toggle
+        const musicToggle = document.getElementById("musicToggle");
+        const musicStatus = document.getElementById("musicStatus");
+
+        // Load music preference from localStorage
+        const musicEnabled = localStorage.getItem("musicEnabled") !== "false";
+        if (musicEnabled) {
+            musicToggle.classList.add("active");
+            musicToggle.setAttribute("aria-checked", "true");
+        } else {
+            musicToggle.setAttribute("aria-checked", "false");
+        }
+
+        function toggleMusic() {
+            const isActive = musicToggle.classList.contains("active");
+            if (isActive) {
+                musicToggle.classList.remove("active");
+                musicToggle.setAttribute("aria-checked", "false");
+                localStorage.setItem("musicEnabled", "false");
+                musicStatus.textContent = "All sounds disabled";
+                musicStatus.className = "status-message info";
+            } else {
+                musicToggle.classList.add("active");
+                musicToggle.setAttribute("aria-checked", "true");
+                localStorage.setItem("musicEnabled", "true");
+                musicStatus.textContent = "All sounds enabled";
+                musicStatus.className = "status-message success";
+            }
+            setTimeout(() => {
+                musicStatus.className = "status-message";
+            }, 3000);
+        }
+
+        musicToggle.addEventListener("click", toggleMusic);
+        musicToggle.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggleMusic();
+            }
+        });
+
+        // Auto-Submit Toggle
+        const autoSubmitToggle = document.getElementById("autoSubmitToggle");
+        const autoSubmitStatus = document.getElementById("autoSubmitStatus");
+
+        // Load auto-submit preference from localStorage (default: enabled)
+        const autoSubmitEnabled = localStorage.getItem("autoSubmitEnabled") !== "false";
+        if (autoSubmitEnabled) {
+            autoSubmitToggle.classList.add("active");
+            autoSubmitToggle.setAttribute("aria-checked", "true");
+        } else {
+            autoSubmitToggle.setAttribute("aria-checked", "false");
+        }
+
+        function toggleAutoSubmit() {
+            const isActive = autoSubmitToggle.classList.contains("active");
+            if (isActive) {
+                autoSubmitToggle.classList.remove("active");
+                autoSubmitToggle.setAttribute("aria-checked", "false");
+                localStorage.setItem("autoSubmitEnabled", "false");
+                autoSubmitStatus.textContent = "Automatic score submission disabled";
+                autoSubmitStatus.className = "status-message info";
+            } else {
+                autoSubmitToggle.classList.add("active");
+                autoSubmitToggle.setAttribute("aria-checked", "true");
+                localStorage.setItem("autoSubmitEnabled", "true");
+                autoSubmitStatus.textContent = "Automatic score submission enabled";
+                autoSubmitStatus.className = "status-message success";
+            }
+            setTimeout(() => {
+                autoSubmitStatus.className = "status-message";
+            }, 3000);
+        }
+
+        autoSubmitToggle.addEventListener("click", toggleAutoSubmit);
+        autoSubmitToggle.addEventListener("keydown", (e) => {
+            if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                toggleAutoSubmit();
+            }
+        });
+
+        // Volume Slider
+        const volumeSlider = document.getElementById("volumeSlider");
+        const volumeValue = document.getElementById("volumeValue");
+        const volumeStatus = document.getElementById("volumeStatus");
+
+        // Load volume preference from localStorage (default: 100)
+        const savedVolume = localStorage.getItem("audioVolume");
+        const currentVolume = savedVolume !== null ? parseInt(savedVolume) : 100;
+        if (volumeSlider) {
+            volumeSlider.value = currentVolume;
+        }
+        if (volumeValue) {
+            volumeValue.textContent = `${currentVolume}%`;
+        }
+
+        function updateVolume() {
+            const volume = parseInt(volumeSlider.value);
+            if (volumeValue) {
+                volumeValue.textContent = `${volume}%`;
+            }
+            localStorage.setItem("audioVolume", volume.toString());
+            if (volumeStatus) {
+                volumeStatus.textContent = `Volume set to ${volume}%`;
+                volumeStatus.className = "status-message success";
+                setTimeout(() => {
+                    volumeStatus.className = "status-message";
+                }, 2000);
+            }
+        }
+
+        if (volumeSlider) {
+            volumeSlider.addEventListener("input", updateVolume);
+            volumeSlider.addEventListener("change", updateVolume);
+
+            // Keyboard navigation for volume slider
+            volumeSlider.addEventListener("keydown", (e) => {
+                if (e.key === "ArrowLeft") {
+                    e.preventDefault();
+                    volumeSlider.value = Math.max(0, parseInt(volumeSlider.value) - 5);
+                    updateVolume();
+                } else if (e.key === "ArrowRight") {
+                    e.preventDefault();
+                    volumeSlider.value = Math.min(100, parseInt(volumeSlider.value) + 5);
+                    updateVolume();
+                }
+            });
+        }
+
+        // BGM Set Selector
+        const bgmSetSelect = document.getElementById("bgmSet");
+        const bgmSetValue = document.getElementById("bgmSetValue");
+        const bgmSetStatus = document.getElementById("bgmSetStatus");
+
+        // Load BGM set preference from localStorage (default: default)
+        const savedBgmSet = localStorage.getItem("bgmSet") || "default";
+        if (bgmSetSelect) {
+            bgmSetSelect.value = savedBgmSet;
+        }
+        if (bgmSetValue) {
+            bgmSetValue.textContent = savedBgmSet === "default" ? "Default (Texmaster)" : "Alternative (TGM)";
+        }
+
+        function updateBgmSet() {
+            const bgmSet = bgmSetSelect.value;
+            if (bgmSetValue) {
+                bgmSetValue.textContent = bgmSet === "default" ? "Default (Texmaster)" : "Alternative (TGM)";
+            }
+            localStorage.setItem("bgmSet", bgmSet);
+            if (bgmSetStatus) {
+                bgmSetStatus.textContent = `BGM set changed to ${bgmSet === "default" ? "Default (Texmaster)" : "Alternative (TGM)"}`;
+                bgmSetStatus.className = "status-message success";
+                setTimeout(() => {
+                    bgmSetStatus.className = "status-message";
+                }, 2000);
+            }
+        }
+
+        if (bgmSetSelect) {
+            bgmSetSelect.addEventListener("change", updateBgmSet);
+        }
+
+        // Delete Scores Function
+        const deleteScoresBtn = document.getElementById("deleteScoresBtn");
+        const deleteAccountBtn = document.getElementById("deleteAccountBtn");
+        const dangerStatus = document.getElementById("dangerStatus");
+
+        deleteScoresBtn.addEventListener("click", async () => {
+            const user = auth.currentUser;
+            if (!user) {
+                dangerStatus.textContent = "Please log in to delete scores.";
+                dangerStatus.className = "status-message error";
+                return;
+            }
+
+            if (!confirm("Are you sure you want to delete ALL your scores? This action cannot be undone.")) {
+                return;
+            }
+
+            if (!confirm("This will permanently delete all your scores from all modes. Are you absolutely sure?")) {
+                return;
+            }
+
+            deleteScoresBtn.disabled = true;
+            deleteScoresBtn.textContent = "Deleting...";
+
+            try {
+                const collections = [
+                    { name: "scores", subcollection: "normal" },
+                    { name: "scoreseasy", subcollection: "easy" },
+                    { name: "scoresmaster", subcollection: "master" },
+                    { name: "scoresfinal", subcollection: "hell" },
+                ];
+
+                let deletedCount = 0;
+
+                // Delete from global leaderboards
+                for (const col of collections) {
+                    const q = query(collection(db, col.name), where("name", "==", user.displayName || user.email));
+                    const querySnapshot = await getDocs(q);
+                    for (const docSnapshot of querySnapshot.docs) {
+                        await deleteDoc(doc(db, col.name, docSnapshot.id));
+                        deletedCount++;
+                    }
+                }
+
+                // Delete from user's personal data
+                const userDataCollections = ["normal", "easy", "master", "hell", "secret"];
+                for (const mode of userDataCollections) {
+                    const userDataRef = collection(db, "playerData", user.uid, mode);
+                    const userDataSnapshot = await getDocs(userDataRef);
+                    for (const docSnapshot of userDataSnapshot.docs) {
+                        await deleteDoc(doc(db, "playerData", user.uid, mode, docSnapshot.id));
+                        deletedCount++;
+                    }
+                }
+
+                dangerStatus.textContent = `Successfully deleted ${deletedCount} score(s).`;
+                dangerStatus.className = "status-message success";
+                deleteScoresBtn.textContent = "Delete Scores";
+            } catch (error) {
+                console.error("Error deleting scores:", error);
+                dangerStatus.textContent = "Error deleting scores. Please try again.";
+                dangerStatus.className = "status-message error";
+                deleteScoresBtn.textContent = "Delete Scores";
+            } finally {
+                deleteScoresBtn.disabled = false;
+            }
+        });
+
+        // Delete Account Function
+        deleteAccountBtn.addEventListener("click", () => {
+            const user = auth.currentUser;
+            if (!user) {
+                dangerStatus.textContent = "Please log in to delete your account.";
+                dangerStatus.className = "status-message error";
+                return;
+            }
+
+            // First confirmation
+            if (!confirm("Are you sure you want to delete your account? This will permanently delete your account and ALL associated data. This action cannot be undone.")) {
+                return;
+            }
+
+            // Second confirmation
+            if (!confirm("This is your last chance. Are you absolutely certain you want to delete your account?")) {
+                return;
+            }
+
+            // Redirect to deletion page
+            window.location.href = "delete-account.html";
+        });
+
+        // Cycle through select options
+        function cycleSelectOption(select, direction, valueElement) {
+            const options = Array.from(select.options);
+            const currentIndex = select.selectedIndex;
+            let newIndex;
+
+            if (direction === 'right') {
+                newIndex = (currentIndex + 1) % options.length;
+            } else {
+                newIndex = (currentIndex - 1 + options.length) % options.length;
+            }
+
+            select.selectedIndex = newIndex;
+            const selectedOption = select.options[newIndex];
+
+            if (valueElement) {
+                valueElement.textContent = selectedOption.textContent;
+            }
+
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+        }
+
+        // Setup arrow button handlers
+        function setupArrowSelectors() {
+            // BGM Set selector
+            const bgmSetSelector = document.querySelector('[data-setting="bgmSet"]');
+            if (bgmSetSelector) {
+                const leftBtn = bgmSetSelector.querySelector('.arrow-left');
+                const rightBtn = bgmSetSelector.querySelector('.arrow-right');
+                const bgmSetSelect = document.getElementById("bgmSet");
+                const bgmSetValue = document.getElementById("bgmSetValue");
+
+                if (leftBtn) {
+                    leftBtn.addEventListener("click", () => {
+                        cycleSelectOption(bgmSetSelect, 'left', bgmSetValue);
+                    });
+                }
+                if (rightBtn) {
+                    rightBtn.addEventListener("click", () => {
+                        cycleSelectOption(bgmSetSelect, 'right', bgmSetValue);
+                    });
+                }
+            }
+        }
+
+        // Initialize arrow selectors
+        function initializeArrowSelectors() {
+            // BGM Set selector
+            const bgmSetSelect = document.getElementById("bgmSet");
+            const bgmSetValue = document.getElementById("bgmSetValue");
+
+            if (bgmSetSelect && bgmSetValue) {
+                const selectedOption = bgmSetSelect.options[bgmSetSelect.selectedIndex];
+                bgmSetValue.textContent = selectedOption.textContent;
+            }
+        }
+
+        // Initialize navigation when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', () => {
+                initNavigation();
+                initializeArrowSelectors();
+                setupArrowSelectors();
+            });
+        } else {
+            initNavigation();
+            initializeArrowSelectors();
+            setupArrowSelectors();
+        }
+    </script>
+</body>
+</html>
+
+
+

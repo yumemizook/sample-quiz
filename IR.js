@@ -1,12 +1,12 @@
 import { getFirestore, collection, getDocs, query, where, getDocs as getDocsQuery, doc, getDoc } from "./firebase.js";
-import { calculatePlayerLevel, getBadgeForLevel, getBadgeName } from "./stats.js";
+import { calculatePlayerLevel, getBadgeForLevel, getBadgeName } from "./pages/stats.js";
 
 const db = getFirestore();
 
 // Format relative timestamp (e.g., "2 days ago", "3 months ago")
 function formatRelativeTime(timestamp) {
     if (!timestamp) return "Unknown";
-    
+
     const now = new Date();
     const then = new Date(timestamp);
     const diffMs = now - then;
@@ -17,7 +17,7 @@ function formatRelativeTime(timestamp) {
     const diffWeeks = Math.floor(diffDays / 7);
     const diffMonths = Math.floor(diffDays / 30);
     const diffYears = Math.floor(diffDays / 365);
-    
+
     if (diffSecs < 60) return "just now";
     if (diffMins < 60) return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
     if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
@@ -72,15 +72,15 @@ let activeFinalMode = 'hell'; // hell | death
 function initTabs() {
     const tabButtons = document.querySelectorAll('.tab-button');
     const tabContents = document.querySelectorAll('.tab-content');
-    
+
     tabButtons.forEach(button => {
         button.addEventListener('click', () => {
             const targetTab = button.getAttribute('data-tab');
-            
+
             // Remove active class from all buttons and contents
             tabButtons.forEach(btn => btn.classList.remove('active'));
             tabContents.forEach(content => content.classList.remove('active'));
-            
+
             // Add active class to clicked button and corresponding content
             button.classList.add('active');
             const targetContent = document.getElementById(`${targetTab}-tab`);
@@ -96,18 +96,18 @@ function extractUniqueValues(scores) {
     const timeMultipliers = new Set();
     const clearTypes = new Set();
     const vanishModes = new Set();
-    
+
     scores.forEach(score => {
         // Extract time multipliers
         if (score.modifiers?.timeMultiplier !== undefined) {
             timeMultipliers.add(score.modifiers.timeMultiplier);
         }
-        
+
         // Extract clear types
         if (score.clearType) {
             clearTypes.add(score.clearType);
         }
-        
+
         // Extract vanish modes (fadingMode)
         const vanishMode = score.modifiers?.fadingMode;
         if (vanishMode && vanishMode !== 'off') {
@@ -116,7 +116,7 @@ function extractUniqueValues(scores) {
             vanishModes.add('off');
         }
     });
-    
+
     return {
         timeMultipliers: Array.from(timeMultipliers).sort((a, b) => a - b),
         clearTypes: Array.from(clearTypes).sort(),
@@ -131,7 +131,7 @@ function extractUniqueValues(scores) {
 // Populate filter dropdowns for a specific mode
 function populateFilterDropdowns(mode, scores) {
     const uniqueValues = extractUniqueValues(scores);
-    
+
     // Populate time multiplier dropdown
     const timeSelect = document.querySelector(`.time-filter-select[data-mode="${mode}"]`);
     if (timeSelect) {
@@ -145,7 +145,7 @@ function populateFilterDropdowns(mode, scores) {
         });
         timeSelect.value = currentValue;
     }
-    
+
     // Populate clear type dropdown
     const clearSelect = document.querySelector(`.clear-filter-select[data-mode="${mode}"]`);
     if (clearSelect) {
@@ -159,7 +159,7 @@ function populateFilterDropdowns(mode, scores) {
         });
         clearSelect.value = currentValue;
     }
-    
+
     // Populate vanish mode dropdown
     const vanishSelect = document.querySelector(`.vanish-filter-select[data-mode="${mode}"]`);
     if (vanishSelect) {
@@ -183,55 +183,55 @@ function initInputFilters() {
         select.addEventListener('change', () => {
             const inputType = select.value;
             const mode = select.getAttribute('data-mode');
-            
+
             // Update filter state
             currentFilter[mode].input = inputType;
-            
+
             // Re-render the table for this mode
             renderTable(mode);
         });
     });
-    
+
     // Time multiplier filter selects
     const timeFilterSelects = document.querySelectorAll('.time-filter-select');
     timeFilterSelects.forEach(select => {
         select.addEventListener('change', () => {
             const timeValue = select.value;
             const mode = select.getAttribute('data-mode');
-            
+
             // Update filter state
             currentFilter[mode].time = timeValue;
-            
+
             // Re-render the table for this mode
             renderTable(mode);
         });
     });
-    
+
     // Clear type filter selects
     const clearFilterSelects = document.querySelectorAll('.clear-filter-select');
     clearFilterSelects.forEach(select => {
         select.addEventListener('change', () => {
             const clearValue = select.value;
             const mode = select.getAttribute('data-mode');
-            
+
             // Update filter state
             currentFilter[mode].clear = clearValue;
-            
+
             // Re-render the table for this mode
             renderTable(mode);
         });
     });
-    
+
     // Vanish mode filter selects
     const vanishFilterSelects = document.querySelectorAll('.vanish-filter-select');
     vanishFilterSelects.forEach(select => {
         select.addEventListener('change', () => {
             const vanishValue = select.value;
             const mode = select.getAttribute('data-mode');
-            
+
             // Update filter state
             currentFilter[mode].vanish = vanishValue;
-            
+
             // Re-render the table for this mode
             renderTable(mode);
         });
@@ -245,7 +245,7 @@ function filterScores(scores, filterState) {
         if (filterState.input !== 'all' && score.inputType !== filterState.input) {
             return false;
         }
-        
+
         // Filter by time multiplier
         if (filterState.time !== 'all') {
             const scoreTimeMultiplier = score.modifiers?.timeMultiplier;
@@ -254,12 +254,12 @@ function filterScores(scores, filterState) {
                 return false;
             }
         }
-        
+
         // Filter by clear type
         if (filterState.clear !== 'all' && score.clearType !== filterState.clear) {
             return false;
         }
-        
+
         // Filter by vanish mode
         if (filterState.vanish !== 'all') {
             const scoreVanishMode = score.modifiers?.fadingMode;
@@ -275,7 +275,7 @@ function filterScores(scores, filterState) {
                 }
             }
         }
-        
+
         return true;
     });
 }
@@ -312,8 +312,8 @@ function renderTable(mode) {
     let tableId = '';
     let hasGrade = false;
     let sortFunction = null;
-    
-    switch(mode) {
+
+    switch (mode) {
         case 'easy':
             scores = filterScores(allEasyScores, filterState);
             tableId = 'scoreTable';
@@ -408,10 +408,10 @@ function renderTable(mode) {
             };
             break;
     }
-    
+
     const table = document.querySelector(`#${tableId}`);
     if (!table) return;
-    
+
     // Clear existing rows
     const tbody = table.querySelector("tbody");
     if (tbody) {
@@ -419,23 +419,23 @@ function renderTable(mode) {
     }
     const newTbody = document.createElement("tbody");
     table.appendChild(newTbody);
-    
+
     if (scores.length === 0) {
         const colspan = hasGrade ? 8 : 7;
         newTbody.innerHTML = `<tr><td colspan="${colspan}" style="text-align: center; padding: 20px; color: rgba(255, 255, 255, 0.7);">No scores available yet</td></tr>`;
         return;
     }
-    
+
     // Sort scores
     const sortedScores = scores.sort(sortFunction);
-    
+
     // Format grade helper
     const formatGrade = (grade) => {
         if (!grade || grade === "-") return "-";
         if (grade === "Grand Master - Infinity") return "GM-∞";
         return grade;
     };
-    
+
     const getLineColor = (entry) => {
         if (!entry || !entry.line) return "#ffffff";
         const lineColor = entry.line;
@@ -443,7 +443,7 @@ function renderTable(mode) {
         if (lineColor === "green") return "#00ff00";
         return "#ffffff";
     };
-    
+
     // Format input type with icon
     const formatInputType = (inputType) => {
         if (!inputType || inputType === 'unknown') return "❓";
@@ -453,7 +453,7 @@ function renderTable(mode) {
         if (inputType === 'mouse') return "🖱️";
         return "❓";
     };
-    
+
     // Format modifiers display
     const formatModifiers = (modifiers) => {
         if (!modifiers || Object.keys(modifiers).length === 0) return "";
@@ -472,27 +472,27 @@ function renderTable(mode) {
         }
         return parts.length > 0 ? `<div style="font-size: 0.75em; color: #aaa; margin-top: 2px; display: flex; gap: 6px; flex-wrap: wrap;">${parts.join(' ')}</div>` : "";
     };
-    
+
     // Render rows
     sortedScores.forEach((scoreData, index) => {
         const rank = index + 1;
         const listItem = document.createElement("tr");
         const inputTypeDisplay = formatInputType(scoreData.inputType);
         const playerName = scoreData.name || '';
-        
+
         // Format pause count display
         const pauseCount = scoreData.pauseCount || 0;
         const pauseDisplay = pauseCount > 0 ? `<div style="font-size: 0.8em; color: #888; margin-top: 2px;">Pauses: ${pauseCount}</div>` : '';
-        
+
         // Format modifiers display
         const modifiersDisplay = formatModifiers(scoreData.modifiers);
-        
+
         // Format clear type display
         const clearTypeDisplay = scoreData.clearType ? `<span style="color: #4CAF50; font-weight: bold;">${scoreData.clearType}</span>` : '';
-        
+
         if (hasGrade) {
-            const gradeDisplay = scoreData.grade 
-                ? `<span class="grade-badge" style="color: ${getLineColor(scoreData)}">${formatGrade(scoreData.grade)}</span>` 
+            const gradeDisplay = scoreData.grade
+                ? `<span class="grade-badge" style="color: ${getLineColor(scoreData)}">${formatGrade(scoreData.grade)}</span>`
                 : "-";
             listItem.innerHTML = `
                 <td>${rank}</td>
@@ -517,7 +517,7 @@ function renderTable(mode) {
         }
         newTbody.appendChild(listItem);
     });
-    
+
     // Attach hover event listeners to player names
     attachPlayerNameHovers();
 }
@@ -536,7 +536,7 @@ let profilePopupTimeout = null;
 // Create profile popup element
 function createProfilePopup() {
     if (profilePopup) return profilePopup;
-    
+
     profilePopup = document.createElement('div');
     profilePopup.id = 'playerProfilePopup';
     profilePopup.className = 'player-profile-popup';
@@ -604,7 +604,7 @@ function findBestScores(playerNames) {
     // Convert single name to array if needed, then to Set for efficient lookup
     const namesArray = Array.isArray(playerNames) ? playerNames : [playerNames];
     const nameSet = new Set(namesArray);
-    
+
     const bestScores = {
         easy: null,
         normal: null,
@@ -615,7 +615,7 @@ function findBestScores(playerNames) {
         hell: null,
         death: null
     };
-    
+
     // Find best easy score
     const easyPlayerScores = allEasyScores.filter(s => nameSet.has(s.name));
     if (easyPlayerScores.length > 0) {
@@ -625,7 +625,7 @@ function findBestScores(playerNames) {
         });
         bestScores.easy = easyPlayerScores[0];
     }
-    
+
     // Find best normal score
     const normalPlayerScores = allNormalScores.filter(s => nameSet.has(s.name));
     if (normalPlayerScores.length > 0) {
@@ -638,7 +638,7 @@ function findBestScores(playerNames) {
         });
         bestScores.normal = normalPlayerScores[0];
     }
-    
+
     // Find best master score
     const masterPlayerScores = allMasterScores.filter(s => nameSet.has(s.name));
     if (masterPlayerScores.length > 0) {
@@ -657,7 +657,7 @@ function findBestScores(playerNames) {
         });
         bestScores.master = masterPlayerScores[0];
     }
-    
+
     // Find best race score
     const racePlayerScores = allRaceScores.filter(s => nameSet.has(s.name));
     if (racePlayerScores.length > 0) {
@@ -687,7 +687,7 @@ function findBestScores(playerNames) {
         });
         bestScores.raceHard = raceHardPlayerScores[0];
     }
-    
+
     // Find best hell score
     const hellPlayerScores = allHellScores.filter(s => nameSet.has(s.name));
     if (hellPlayerScores.length > 0) {
@@ -720,23 +720,23 @@ function findBestScores(playerNames) {
         });
         bestScores.death = deathPlayerScores[0];
     }
-    
+
     return bestScores;
 }
 
 // Load and display player profile
 async function loadPlayerProfile(playerName) {
     if (!playerName) return;
-    
+
     const popup = createProfilePopup();
-    
+
     // Reset avatar to placeholder initially
     const avatarImg = popup.querySelector('.profile-popup-avatar');
     const avatarPlaceholder = popup.querySelector('.profile-popup-avatar-placeholder');
     avatarImg.classList.remove('show');
     avatarPlaceholder.classList.remove('hide');
     avatarImg.src = ''; // Clear any previous image
-    
+
     // First, check userProfiles database to see if player exists
     let displayPlayerName = playerName; // Default to the searched name
     let allPlayerNames = new Set([playerName]); // Start with the original name
@@ -744,14 +744,14 @@ async function loadPlayerProfile(playerName) {
         // Query userProfiles to find user by displayName or email
         const userProfilesRef = collection(db, 'userProfiles');
         const userProfilesSnapshot = await getDocs(userProfilesRef);
-        
+
         let foundUser = null;
         const isEmail = playerName.includes('@');
-        
+
         userProfilesSnapshot.forEach(doc => {
             const data = doc.data();
             // Check if this user's displayName or email matches
-            if (data.displayName === playerName || 
+            if (data.displayName === playerName ||
                 (isEmail && data.email === playerName) ||
                 (isEmail && playerName === data.displayName)) {
                 foundUser = { uid: doc.id, ...data };
@@ -766,7 +766,7 @@ async function loadPlayerProfile(playerName) {
                 displayPlayerName = data.displayName || data.email || playerName;
             }
         });
-        
+
         // If not found by displayName/email, check previous usernames
         if (!foundUser) {
             userProfilesSnapshot.forEach(doc => {
@@ -787,7 +787,7 @@ async function loadPlayerProfile(playerName) {
                 }
             });
         }
-        
+
         // If not found by displayName/email/previousUsernames, try to find by matching the name in scores
         // The name in scores could be either displayName or email from Firebase Auth
         if (!foundUser) {
@@ -795,7 +795,7 @@ async function loadPlayerProfile(playerName) {
             userProfilesSnapshot.forEach(doc => {
                 const data = doc.data();
                 // Check if playerName matches email (if stored) or displayName
-                if ((data.email && data.email === playerName) || 
+                if ((data.email && data.email === playerName) ||
                     (data.displayName && data.displayName === playerName)) {
                     foundUser = { uid: doc.id, ...data };
                     // Build complete list of all usernames (current + previous)
@@ -810,10 +810,10 @@ async function loadPlayerProfile(playerName) {
                 }
             });
         }
-        
+
         // Set player name in popup (use current display name if found via previous username)
         popup.querySelector('.profile-popup-name').textContent = displayPlayerName;
-        
+
         // If player not found in userProfiles, show "Player not found" message
         if (!foundUser) {
             const badgeEl = popup.querySelector('.profile-popup-badge');
@@ -824,34 +824,34 @@ async function loadPlayerProfile(playerName) {
             if (createdTextEl) {
                 createdTextEl.textContent = 'This player does not exist in the database';
             }
-            
+
             // Hide avatar container
             const avatarContainer = popup.querySelector('.profile-popup-avatar-container');
             if (avatarContainer) {
                 avatarContainer.style.display = 'none';
             }
-            
+
             // Hide banner
             const bannerEl = popup.querySelector('.profile-popup-banner');
             if (bannerEl) {
                 bannerEl.style.display = 'none';
             }
-            
+
             // Hide scores section
             const scoresSection = popup.querySelector('.profile-popup-scores');
             if (scoresSection) {
                 scoresSection.style.display = 'none';
             }
-            
+
             // Adjust info margin since avatar is hidden
             const infoEl = popup.querySelector('.profile-popup-info');
             if (infoEl) {
                 infoEl.style.marginTop = '20px';
             }
-            
+
             return;
         }
-        
+
         // Player found in userProfiles - load their profile and scores
         // Display account creation timestamp
         const createdTextEl = popup.querySelector('.profile-popup-created-text');
@@ -860,7 +860,7 @@ async function loadPlayerProfile(playerName) {
         } else if (createdTextEl) {
             createdTextEl.textContent = '';
         }
-        
+
         // Load avatar
         const avatarURL = foundUser.photoURL || foundUser.avatarURL;
         if (avatarURL) {
@@ -881,19 +881,19 @@ async function loadPlayerProfile(playerName) {
             avatarPlaceholder.classList.remove('hide');
             avatarImg.src = ''; // Clear src if no URL
         }
-        
+
         // Show avatar container (it might have been hidden previously)
         const avatarContainer = popup.querySelector('.profile-popup-avatar-container');
         if (avatarContainer) {
             avatarContainer.style.display = '';
         }
-        
+
         // Show scores section (it might have been hidden previously)
         const scoresSection = popup.querySelector('.profile-popup-scores');
         if (scoresSection) {
             scoresSection.style.display = '';
         }
-        
+
         // Load banner
         const bannerEl = popup.querySelector('.profile-popup-banner');
         const infoEl = popup.querySelector('.profile-popup-info');
@@ -919,10 +919,10 @@ async function loadPlayerProfile(playerName) {
                 infoEl.style.marginTop = '130px';
             }
         }
-        
+
         // Find best scores using all names (current + previous usernames)
         const bestScores = findBestScores(Array.from(allPlayerNames));
-        
+
         // Calculate level from scores using the same formula as navbar and stats
         // Filter scores for this player (including all previous usernames)
         const easyScores = allEasyScores.filter(s => allPlayerNames.has(s.name));
@@ -933,20 +933,20 @@ async function loadPlayerProfile(playerName) {
         const raceEasyScores = allRaceEasyScores.filter(s => allPlayerNames.has(s.name));
         const raceHardScores = allRaceHardScores.filter(s => allPlayerNames.has(s.name));
         const deathScores = allDeathScores.filter(s => allPlayerNames.has(s.name));
-        
+
         // Secret scores are not fetched for player profile tooltip
         const secretScores = [];
-        
+
         const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores, raceEasyScores, raceHardScores, deathScores);
         const badge = getBadgeForLevel(playerData.level);
         const badgeName = getBadgeName(playerData.level);
-        
+
         // Update level display
         const badgeEl = popup.querySelector('.profile-popup-badge');
         const levelTextEl = popup.querySelector('.profile-popup-level-text');
         badgeEl.innerHTML = badge;
         levelTextEl.textContent = `Lv. ${playerData.level} (${badgeName})`;
-        
+
         // Update best scores
         const updateScore = (mode, scoreData) => {
             const scoreItem = popup.querySelector(`.profile-popup-score-item[data-mode="${mode}"]`);
@@ -972,7 +972,7 @@ async function loadPlayerProfile(playerName) {
                 }
             }
         };
-        
+
         // Helper to format a value for combined mode display
         const formatScoreValue = (mode, scoreData) => {
             if (!scoreData) return 'No score';
@@ -988,7 +988,7 @@ async function loadPlayerProfile(playerName) {
             }
             return scoreData.score?.toString() || '-';
         };
-        
+
         updateScore('easy', bestScores.easy);
         updateScore('normal', bestScores.normal);
         updateScore('master', bestScores.master);
@@ -1010,7 +1010,7 @@ async function loadPlayerProfile(playerName) {
         let currentRaceMode = popup.dataset.raceMode && raceModes.includes(popup.dataset.raceMode)
             ? popup.dataset.raceMode
             : 'normal';
-        
+
         const setRaceMode = (mode) => {
             currentRaceMode = mode;
             popup.dataset.raceMode = mode;
@@ -1020,7 +1020,7 @@ async function loadPlayerProfile(playerName) {
                 raceModeScores[mode]
             );
         };
-        
+
         const racePrevBtn = popup.querySelector('[data-action="race-prev"]');
         const raceNextBtn = popup.querySelector('[data-action="race-next"]');
         const cycleRace = (direction) => {
@@ -1051,7 +1051,7 @@ async function loadPlayerProfile(playerName) {
         let currentFinalMode = popup.dataset.finalMode && finalModes.includes(popup.dataset.finalMode)
             ? popup.dataset.finalMode
             : 'hell';
-        
+
         const setFinalMode = (mode) => {
             currentFinalMode = mode;
             popup.dataset.finalMode = mode;
@@ -1061,7 +1061,7 @@ async function loadPlayerProfile(playerName) {
                 finalScores[mode]
             );
         };
-        
+
         const finalPrevBtn = popup.querySelector('[data-action="final-prev"]');
         const finalNextBtn = popup.querySelector('[data-action="final-next"]');
         const cycleFinal = (direction) => {
@@ -1076,7 +1076,7 @@ async function loadPlayerProfile(playerName) {
             finalNextBtn.onclick = (e) => { e.stopPropagation(); cycleFinal(1); };
         }
         setFinalMode(currentFinalMode);
-        
+
     } catch (error) {
         console.error('Error loading player profile:', error);
         // On error, show "Player not found" message
@@ -1088,25 +1088,25 @@ async function loadPlayerProfile(playerName) {
         if (createdTextEl) {
             createdTextEl.textContent = 'Error loading player profile';
         }
-        
+
         // Hide avatar container
         const avatarContainer = popup.querySelector('.profile-popup-avatar-container');
         if (avatarContainer) {
             avatarContainer.style.display = 'none';
         }
-        
+
         // Hide banner
         const bannerEl = popup.querySelector('.profile-popup-banner');
         if (bannerEl) {
             bannerEl.style.display = 'none';
         }
-        
+
         // Hide scores section
         const scoresSection = popup.querySelector('.profile-popup-scores');
         if (scoresSection) {
             scoresSection.style.display = 'none';
         }
-        
+
         // Adjust info margin since avatar is hidden
         const infoEl = popup.querySelector('.profile-popup-info');
         if (infoEl) {
@@ -1118,10 +1118,10 @@ async function loadPlayerProfile(playerName) {
 // Attach hover event listeners to player names
 function attachPlayerNameHovers() {
     const playerNames = document.querySelectorAll('.player-name-hover');
-    
+
     playerNames.forEach(nameEl => {
         const playerName = nameEl.getAttribute('data-player-name');
-        
+
         // Make name clickable to redirect to profile page
         // First, check if this is a previous username and get current displayName
         nameEl.style.cursor = 'pointer';
@@ -1133,15 +1133,15 @@ function attachPlayerNameHovers() {
                 const userProfilesRef = collection(db, 'userProfiles');
                 const userProfilesSnapshot = await getDocs(userProfilesRef);
                 let foundUser = null;
-                
+
                 userProfilesSnapshot.forEach(doc => {
                     const data = doc.data();
-                    if (data.displayName === playerName || 
+                    if (data.displayName === playerName ||
                         (playerName.includes('@') && data.email === playerName)) {
                         foundUser = { uid: doc.id, ...data };
                     }
                 });
-                
+
                 // If not found, check previous usernames
                 if (!foundUser) {
                     userProfilesSnapshot.forEach(doc => {
@@ -1156,34 +1156,34 @@ function attachPlayerNameHovers() {
             } catch (error) {
                 console.error('Error checking username:', error);
             }
-            
+
             window.location.href = `profile.html?player=${encodeURIComponent(profilePlayerName)}`;
         });
-        
+
         nameEl.addEventListener('mouseenter', () => {
             if (profilePopupTimeout) {
                 clearTimeout(profilePopupTimeout);
             }
-            
+
             profilePopupTimeout = setTimeout(async () => {
                 const popup = createProfilePopup();
-                
+
                 // First resolve to current username if needed
                 let currentDisplayName = playerName;
                 try {
                     const userProfilesRef = collection(db, 'userProfiles');
                     const userProfilesSnapshot = await getDocs(userProfilesRef);
                     let foundUser = null;
-                    
+
                     userProfilesSnapshot.forEach(doc => {
                         const data = doc.data();
-                        if (data.displayName === playerName || 
+                        if (data.displayName === playerName ||
                             (playerName.includes('@') && data.email === playerName)) {
                             foundUser = { uid: doc.id, ...data };
                             currentDisplayName = data.displayName || data.email || playerName;
                         }
                     });
-                    
+
                     // If not found, check previous usernames
                     if (!foundUser) {
                         userProfilesSnapshot.forEach(doc => {
@@ -1198,32 +1198,32 @@ function attachPlayerNameHovers() {
                 } catch (error) {
                     console.error('Error resolving username:', error);
                 }
-                
+
                 await loadPlayerProfile(playerName);
-                
+
                 // Add click handler to navigate to profile page (use current displayName)
                 popup.onclick = (e) => {
                     e.stopPropagation();
                     window.location.href = `profile.html?player=${encodeURIComponent(currentDisplayName)}`;
                 };
-                
+
                 popup.style.display = 'block';
                 positionPopup(popup, nameEl);
             }, 300); // Small delay to prevent accidental hovers
         });
-        
+
         nameEl.addEventListener('mouseleave', () => {
             if (profilePopupTimeout) {
                 clearTimeout(profilePopupTimeout);
             }
-            
+
             const popup = document.getElementById('playerProfilePopup');
             if (popup) {
                 // Keep popup visible when hovering over it
                 const handlePopupEnter = () => {
                     if (profilePopupTimeout) clearTimeout(profilePopupTimeout);
                 };
-                
+
                 const handlePopupLeave = () => {
                     profilePopupTimeout = setTimeout(() => {
                         if (popup) {
@@ -1231,13 +1231,13 @@ function attachPlayerNameHovers() {
                         }
                     }, 200);
                 };
-                
+
                 // Remove old listeners and add new ones
                 popup.removeEventListener('mouseenter', handlePopupEnter);
                 popup.removeEventListener('mouseleave', handlePopupLeave);
                 popup.addEventListener('mouseenter', handlePopupEnter);
                 popup.addEventListener('mouseleave', handlePopupLeave);
-                
+
                 profilePopupTimeout = setTimeout(() => {
                     if (popup && !popup.matches(':hover')) {
                         popup.style.display = 'none';
@@ -1253,7 +1253,7 @@ function positionPopup(popup, targetElement) {
     const rect = targetElement.getBoundingClientRect();
     const popupRect = popup.getBoundingClientRect();
     const isMobile = window.innerWidth <= 768;
-    
+
     if (isMobile) {
         // On mobile, center the popup on screen
         const left = (window.innerWidth - popupRect.width) / 2;
@@ -1265,27 +1265,27 @@ function positionPopup(popup, targetElement) {
         let left = rect.right + 15;
         // Position above the element instead of at its top
         let top = rect.top - popupRect.height - 10;
-        
+
         // Adjust if popup would go off screen to the right
         if (left + popupRect.width > window.innerWidth) {
             left = rect.left - popupRect.width - 15;
         }
-        
+
         // If popup would go off screen above, position below instead
         if (top < 10) {
             top = rect.bottom + 10;
         }
-        
+
         // If popup would go off screen at the bottom, adjust to fit
         if (top + popupRect.height > window.innerHeight) {
             top = window.innerHeight - popupRect.height - 10;
         }
-        
+
         // Final check to ensure it's not too high
         if (top < 10) {
             top = 10;
         }
-        
+
         popup.style.left = `${left}px`;
         popup.style.top = `${top}px`;
     }
@@ -1300,10 +1300,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         container2.style.display = 'flex';
         container2.style.visibility = 'visible';
     }
-    
+
     // Initialize tabs
     initTabs();
-    
+
     // Initialize input filters and set all to "All" filter
     initInputFilters();
 
@@ -1340,7 +1340,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     updateRaceModeLabel();
     updateFinalModeLabel();
-    
+
     // Ensure all dropdowns default to "All" on page load (already set in HTML, but ensure consistency)
     const allInputSelects = document.querySelectorAll('.input-filter-select');
     allInputSelects.forEach(select => {
@@ -1358,11 +1358,11 @@ document.addEventListener("DOMContentLoaded", async () => {
     allVanishSelects.forEach(select => {
         if (select.value !== 'all') select.value = 'all';
     });
-    
+
     // Automatically fetch and display scores on page load
     try {
         console.log("Fetching scores from Firebase...");
-        
+
         // Fetch all score collections in parallel for better performance
         const [snapshot, masterSnapshot, raceSnapshot, raceEasySnapshot, raceHardSnapshot, easySnapshot, finalSnapshot, deathSnapshot] = await Promise.all([
             getDocs(highScoresRef),
@@ -1374,7 +1374,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             getDocs(finalModeRef),
             getDocs(deathModeRef)
         ]);
-        
+
         // Store raw scores
         allNormalScores = snapshot.empty ? [] : snapshot.docs.map((doc) => doc.data());
         allEasyScores = easySnapshot.empty ? [] : easySnapshot.docs.map((doc) => doc.data());
@@ -1384,29 +1384,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         allRaceEasyScores = raceEasySnapshot.empty ? [] : raceEasySnapshot.docs.map((doc) => doc.data());
         allRaceHardScores = raceHardSnapshot.empty ? [] : raceHardSnapshot.docs.map((doc) => doc.data());
         allDeathScores = deathSnapshot.empty ? [] : deathSnapshot.docs.map((doc) => doc.data());
-        
+
         console.log(`Loaded scores: Easy=${allEasyScores.length}, Normal=${allNormalScores.length}, Master=${allMasterScores.length}, Race=${allRaceScores.length}, Hell=${allHellScores.length}`);
-        
+
         // Load secret scores (for level calculation, but not displayed in rankings)
         // Secret scores are stored per-user, so we need to fetch from all users' playerData
         allSecretScores = []; // Initialize as empty array
         // Note: Secret scores are not displayed in rankings, but are needed for accurate level calculation
         // We'll fetch them on-demand when loading a player profile
-        
+
         // Populate filter dropdowns with unique values from database
         populateFilterDropdowns('easy', allEasyScores);
         populateFilterDropdowns('normal', allNormalScores);
         populateFilterDropdowns('master', allMasterScores);
         populateFilterDropdowns('race', getActiveRaceScores());
         populateFilterDropdowns('hell', getActiveFinalScores());
-        
+
         // Render all tables automatically
         renderTable('easy');
         renderTable('normal');
         renderTable('master');
         renderTable('race');
         renderTable('hell');
-        
+
         console.log("Scores displayed successfully");
     } catch (error) {
         console.error("Error fetching high scores:", error);

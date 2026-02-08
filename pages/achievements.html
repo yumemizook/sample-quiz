@@ -1,0 +1,1444 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Achievements</title>
+    <link rel="stylesheet" href="../index.css" />
+    <script src="https://kit.fontawesome.com/ced4c4a7f8.js" crossorigin="anonymous"></script>
+    <script type="module" src="../firebase.js"></script>
+    <script type="module" src="stats.js"></script>
+    <style>
+      .achievements-container {
+        max-width: 1200px;
+        width: 90%;
+        margin: 40px auto;
+        padding: 30px;
+        background-color: rgba(0, 0, 0, 0.85);
+        border-radius: 15px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(10px);
+      }
+
+      .achievements-header {
+        text-align: center;
+        margin-bottom: 40px;
+      }
+
+      .achievements-header h1 {
+        font-size: 3em;
+        color: #dbffff;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 10px rgba(219, 255, 255, 0.3);
+      }
+
+      .achievements-header p {
+        font-size: 1.2em;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .achievements-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 40px;
+      }
+
+      .achievement-card {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 25px;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .achievement-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(255, 255, 255, 0.4);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.4);
+      }
+
+      .achievement-card.unlocked {
+        border-color: rgba(255, 215, 0, 0.5);
+        background: linear-gradient(
+          135deg,
+          rgba(255, 215, 0, 0.15) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+      }
+
+      .achievement-card.unlocked::before {
+        content: '✓';
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        font-size: 1.5em;
+        color: #ffd700;
+        text-shadow: 0 0 10px rgba(255, 215, 0, 0.8);
+      }
+
+      .achievement-icon {
+        font-size: 4em;
+        text-align: center;
+        margin-bottom: 15px;
+        filter: grayscale(100%);
+        opacity: 0.5;
+        transition: all 0.3s ease;
+      }
+
+      .achievement-card.unlocked .achievement-icon {
+        filter: grayscale(0%);
+        opacity: 1;
+        transform: scale(1.1);
+      }
+
+      .achievement-title {
+        font-size: 1.5em;
+        color: #dbffff;
+        font-weight: bold;
+        margin-bottom: 10px;
+        text-align: center;
+      }
+
+      .achievement-card.unlocked .achievement-title {
+        color: #ffd700;
+      }
+
+      .achievement-description {
+        color: rgba(255, 255, 255, 0.8);
+        line-height: 1.6;
+        text-align: center;
+        font-size: 1em;
+        margin-bottom: 10px;
+      }
+
+      .achievement-progress {
+        color: rgba(255, 255, 255, 0.6);
+        font-size: 0.9em;
+        text-align: center;
+        font-style: italic;
+      }
+
+      .achievement-section {
+        margin-bottom: 50px;
+      }
+
+      .achievement-section h2 {
+        font-size: 2em;
+        color: #dbffff;
+        margin-bottom: 25px;
+        border-bottom: 2px solid rgba(219, 255, 255, 0.3);
+        padding-bottom: 10px;
+      }
+
+      .back-button {
+        display: inline-block;
+        margin-top: 30px;
+        padding: 12px 30px;
+        background: linear-gradient(135deg, #dbffff 0%, #b8f0e0 100%);
+        color: #000;
+        text-decoration: none;
+        border-radius: 8px;
+        font-weight: bold;
+        font-size: 1.1em;
+        transition: all 0.3s;
+        box-shadow: 0 4px 15px rgba(219, 255, 255, 0.3);
+      }
+
+      .back-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(219, 255, 255, 0.5);
+      }
+
+      .stats-summary {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.1) 0%,
+          rgba(255, 255, 255, 0.05) 100%
+        );
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 25px;
+        margin-bottom: 40px;
+        text-align: center;
+      }
+
+      .stats-summary h3 {
+        font-size: 1.5em;
+        color: #dbffff;
+        margin-bottom: 15px;
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 15px;
+        margin-top: 20px;
+      }
+
+      .stat-item {
+        background: rgba(0, 0, 0, 0.3);
+        padding: 15px;
+        border-radius: 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      .stat-label {
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 0.9em;
+        margin-bottom: 5px;
+      }
+
+      .stat-value {
+        color: #dbffff;
+        font-size: 1.5em;
+        font-weight: bold;
+      }
+
+      @media (max-width: 768px) {
+        .achievements-container {
+          padding: 20px;
+          margin: 20px auto;
+        }
+
+        .achievements-header h1 {
+          font-size: 2em;
+        }
+
+        .achievements-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .achievement-section h2 {
+          font-size: 1.5em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="status">
+      <a login href="signin.html">Login</a>
+      <a signup href="signup.html">Signup</a>
+      <a logout class="hide" href="../index.html">Log out</a>
+      <a href="../index.html">Home</a>
+      <div class="player-info hide" id="playerInfo">
+        <div class="player-info-left">
+          <span class="name"></span>
+          <span class="player-level" id="playerLevel"></span>
+        </div>
+        <div class="player-avatar hide" id="playerAvatar">
+          <img id="playerAvatarImg" src="" alt="Avatar" />
+          <div class="player-avatar-placeholder">👤</div>
+        </div>
+      </div>
+    </div>
+    <div class="achievements-container">
+      <div class="achievements-header">
+        <h1><i class="fas fa-trophy" style="color: #ffd700;"></i> Achievements</h1>
+        <p>Track your progress and unlock achievements</p>
+      </div>
+
+      <div class="stats-summary" id="statsSummary" style="display: none;">
+        <h3>Your Progress</h3>
+        <div class="stats-grid" id="statsGrid"></div>
+      </div>
+
+      <div class="achievement-section">
+        <h2><i class="fas fa-gamepad"></i> Mode Completion Achievements</h2>
+        <div class="achievements-grid" id="completionAchievements"></div>
+      </div>
+
+      <div class="achievement-section">
+        <h2><i class="fas fa-star"></i> Level Badges</h2>
+        <div class="achievements-grid" id="levelBadges"></div>
+      </div>
+
+      <div class="achievement-section">
+        <h2><i class="fas fa-bullseye"></i> Special Achievements</h2>
+        <div class="achievements-grid" id="specialAchievements"></div>
+      </div>
+
+      <div class="achievement-section">
+        <h2><i class="fas fa-link"></i> Modifier Combination Achievements</h2>
+        <div class="achievements-grid" id="combinationAchievements"></div>
+      </div>
+
+      <div style="text-align: center;">
+        <a href="../index.html" class="back-button">← Back to Main Menu</a>
+      </div>
+    </div>
+    <div id="notification" class="notification hide"></div>
+
+    <script type="module">
+      import { getAuth, onAuthStateChanged } from "../firebase.js";
+      import { getFirestore, collection, getDocs, doc, getDoc } from "../firebase.js";
+      import { calculatePlayerLevel, getBadgeForLevel, getBadgeName } from "./stats.js";
+
+      const auth = getAuth();
+      const db = getFirestore();
+
+      // getBadgeForLevel and getBadgeName are now imported from stats.js
+
+      // getBadgeName is now imported from stats.js
+
+      // Show notification function
+      function showNotification(message, isSuccess = false) {
+        const notification = document.getElementById("notification");
+        if (!notification) return;
+        
+        notification.textContent = message;
+        notification.classList.remove("hide", "success");
+        if (isSuccess) {
+          notification.classList.add("success");
+        }
+        setTimeout(() => {
+          notification.classList.add("hide");
+        }, 5000); // Show for 5 seconds for login notification
+      }
+
+      async function loadAchievements() {
+        const user = auth.currentUser;
+        if (!user) {
+          // Show notification when logged out
+          showNotification("Please log in to view your achievements and track your progress!", false);
+          // Show achievements but mark all as locked
+          displayAchievements(null, null, null, null, null, null, null, [], false);
+          return;
+        }
+
+        try {
+          // Fetch all scores
+          const [easySnapshot, normalSnapshot, masterSnapshot, raceSnapshot, hellSnapshot] = await Promise.all([
+            getDocs(collection(db, 'scoreseasy')),
+            getDocs(collection(db, 'scoresnormal')),
+            getDocs(collection(db, 'scoresmaster')),
+            getDocs(collection(db, 'scoresrace')),
+            getDocs(collection(db, 'scoresfinal'))
+          ]);
+
+          const allEasyScores = easySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const allNormalScores = normalSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const allMasterScores = masterSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const allRaceScores = raceSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          const allHellScores = hellSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+          // Get user profile to find all usernames
+          const userProfileRef = doc(db, 'userProfiles', user.uid);
+          const userProfileSnap = await getDoc(userProfileRef);
+          let allPlayerNames = new Set();
+          let lastLoginTimestamp = null;
+          let previousLoginTimestamp = null;
+          
+          if (userProfileSnap.exists()) {
+            const userData = userProfileSnap.data();
+            if (userData.displayName) allPlayerNames.add(userData.displayName);
+            if (userData.email) allPlayerNames.add(userData.email);
+            if (userData.previousUsernames && Array.isArray(userData.previousUsernames)) {
+              userData.previousUsernames.forEach(name => {
+                if (name) allPlayerNames.add(name);
+              });
+            }
+            lastLoginTimestamp = userData.lastLoginTimestamp || null;
+            previousLoginTimestamp = userData.previousLoginTimestamp || null;
+          }
+
+          // Filter scores for this player
+          const easyScores = allEasyScores.filter(s => allPlayerNames.has(s.name));
+          const normalScores = allNormalScores.filter(s => allPlayerNames.has(s.name));
+          const masterScores = allMasterScores.filter(s => allPlayerNames.has(s.name));
+          const raceScores = allRaceScores.filter(s => allPlayerNames.has(s.name));
+          const hellScores = allHellScores.filter(s => allPlayerNames.has(s.name));
+
+          // Fetch secret scores from playerData collection
+          let secretScores = [];
+          try {
+            const secretSnapshot = await getDocs(collection(db, 'playerData', user.uid, 'secret'));
+            secretScores = secretSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+          } catch (error) {
+            // Secret collection might not exist yet
+            secretScores = [];
+          }
+
+          // Check if player has unlocked secret mode (completed Hell Mode with score 200)
+          const hasUnlockedSecretMode = hellScores.some(s => s.score === 200);
+
+          // Calculate level
+          const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores);
+
+          // Display achievements
+          displayAchievements(easyScores, normalScores, masterScores, raceScores, hellScores, playerData, allPlayerNames, secretScores, hasUnlockedSecretMode, lastLoginTimestamp, previousLoginTimestamp);
+        } catch (error) {
+          console.error('Error loading achievements:', error);
+          displayAchievements(null, null, null, null, null, null, null, [], false);
+        }
+      }
+
+      // ============================================
+      // ACHIEVEMENTS CONFIGURATION
+      // Easily extensible format for adding/editing achievements
+      // ============================================
+
+      // Mode Completion Achievements
+      const COMPLETION_ACHIEVEMENTS = [
+        {
+          id: 'easy_complete',
+          icon: '<i class="fas fa-check-circle"></i>',
+          title: 'Easy Mode Master',
+          description: 'Complete Easy Mode with a perfect score of 30',
+          unlockedMessage: '<i class="fas fa-gift"></i> Perfect run! You\'ve mastered the basics!',
+          checkUnlocked: (data) => data.easyScores?.some(s => s.score === 30) || false
+        },
+        {
+          id: 'normal_complete',
+          icon: '<i class="fas fa-star"></i>',
+          title: 'Normal Mode Expert',
+          description: 'Complete Normal Mode with a perfect score of 100',
+          unlockedMessage: '<i class="fas fa-star"></i> Flawless execution! You\'re a true expert!',
+          checkUnlocked: (data) => data.normalScores?.some(s => s.score === 100) || false
+        },
+        {
+          id: 'master_complete',
+          icon: '<i class="fas fa-crown"></i>',
+          title: 'Master Mode Champion',
+          description: 'Achieve GM grade in Master Mode',
+          unlockedMessage: '<i class="fas fa-crown"></i> Royal perfection! You\'ve conquered the master challenge!',
+          checkUnlocked: (data) => data.masterScores?.some(s => s.grade === "GM") || false
+        },
+        {
+          id: 'hell_complete',
+          icon: '<i class="fas fa-fire"></i>',
+          title: 'Hell Mode Conqueror',
+          description: 'Complete Hell Mode with a perfect score of 200',
+          unlockedMessage: '<i class="fas fa-fire"></i> Infernal mastery! You\'ve survived the impossible!',
+          checkUnlocked: (data) => data.hellScores?.some(s => s.score === 200) || false
+        },
+        {
+          id: 'race_complete',
+          icon: '<i class="fas fa-flag-checkered"></i>',
+          title: 'Race Mode Grand Master',
+          description: 'Complete Race Mode and achieve GM grade',
+          unlockedMessage: '<i class="fas fa-flag-checkered"></i> Grand Master achieved! The ultimate racing legend!',
+          checkUnlocked: (data) => data.raceScores?.some(s => s.grade === "GM") || false
+        },
+        {
+          id: 'race_high_score',
+          icon: '<i class="fas fa-gem"></i>',
+          title: 'Race Mode Excellence',
+          description: 'Achieve 1,246,000 grade points or higher in Race Mode',
+          unlockedMessage: '<i class="fas fa-gem"></i> Exceptional performance! You\'ve reached the pinnacle!',
+          checkUnlocked: (data) => data.raceScores?.some(s => (s.gradePoints || s.score || 0) >= 1246000) || false
+        },
+        {
+          id: 'secret_complete',
+          icon: '<i class="fas fa-skull"></i>',
+          title: 'Secret Mode Master',
+          description: 'Complete Secret Mode with a perfect score of 300',
+          unlockedMessage: '<i class="fas fa-skull"></i> The ultimate secret revealed! You\'ve conquered the final challenge!',
+          checkUnlocked: (data) => data.secretScores?.some(s => s.score === 300) || false,
+          isHidden: (data) => !data.hasUnlockedSecretMode // Hide if secret mode not unlocked
+        }
+      ];
+
+      // Level Badge Achievements (synced with stats.js thresholds, using shared getBadgeForLevel function)
+      // Generate badges dynamically from thresholds to ensure consistency
+      const LEVEL_BADGES = [
+        { level: 2000, icon: getBadgeForLevel(2000), name: getBadgeName(2000) },
+        { level: 1500, icon: getBadgeForLevel(1500), name: getBadgeName(1500) },
+        { level: 1250, icon: getBadgeForLevel(1250), name: getBadgeName(1250) },
+        { level: 1000, icon: getBadgeForLevel(1000), name: getBadgeName(1000) },
+        { level: 800, icon: getBadgeForLevel(800), name: getBadgeName(800) },
+        { level: 600, icon: getBadgeForLevel(600), name: getBadgeName(600) },
+        { level: 400, icon: getBadgeForLevel(400), name: getBadgeName(400) },
+        { level: 300, icon: getBadgeForLevel(300), name: getBadgeName(300) },
+        { level: 250, icon: getBadgeForLevel(250), name: getBadgeName(250) },
+        { level: 200, icon: getBadgeForLevel(200), name: getBadgeName(200) },
+        { level: 150, icon: getBadgeForLevel(150), name: getBadgeName(150) },
+        { level: 120, icon: getBadgeForLevel(120), name: getBadgeName(120) },
+        { level: 100, icon: getBadgeForLevel(100), name: getBadgeName(100) },
+        { level: 80, icon: getBadgeForLevel(80), name: getBadgeName(80) },
+        { level: 70, icon: getBadgeForLevel(70), name: getBadgeName(70) },
+        { level: 60, icon: getBadgeForLevel(60), name: getBadgeName(60) },
+        { level: 50, icon: getBadgeForLevel(50), name: getBadgeName(50) },
+        { level: 40, icon: getBadgeForLevel(40), name: getBadgeName(40) },
+        { level: 35, icon: getBadgeForLevel(35), name: getBadgeName(35) },
+        { level: 30, icon: getBadgeForLevel(30), name: getBadgeName(30) },
+        { level: 25, icon: getBadgeForLevel(25), name: getBadgeName(25) },
+        { level: 20, icon: getBadgeForLevel(20), name: getBadgeName(20) },
+        { level: 15, icon: getBadgeForLevel(15), name: getBadgeName(15) },
+        { level: 12, icon: getBadgeForLevel(12), name: getBadgeName(12) },
+        { level: 9, icon: getBadgeForLevel(9), name: getBadgeName(9) },
+        { level: 6, icon: getBadgeForLevel(6), name: getBadgeName(6) },
+        { level: 3, icon: getBadgeForLevel(3), name: getBadgeName(3) },
+        { level: 1, icon: getBadgeForLevel(1), name: getBadgeName(1) }
+      ];
+
+      // Helper function to check if a score has a specific clear type
+      function hasClearType(score, clearType) {
+        if (!score || !score.clearType) return false;
+        return score.clearType === clearType;
+      }
+
+      // Helper function to check if a score has 2x time multiplier
+      function has2xTimeMultiplier(score) {
+        if (!score || !score.modifiers) return false;
+        return score.modifiers.timeMultiplier >= 2.0;
+      }
+
+      // Helper function to check if a score has 0.5s vanish timer
+      function has05sVanishTimer(score) {
+        if (!score || !score.modifiers) return false;
+        return score.modifiers.fadingMode === "0.5" || score.modifiers.fadingMode === 0.5;
+      }
+      
+      // Helper function to check modifier combinations across all modes
+      function hasModifierCombination(data, checkFunction) {
+        const allScores = [
+          ...(data.easyScores || []),
+          ...(data.normalScores || []),
+          ...(data.masterScores || []),
+          ...(data.hellScores || []),
+          ...(data.raceScores || [])
+        ];
+        return allScores.some(checkFunction);
+      }
+
+      // Special Achievements
+      const SPECIAL_ACHIEVEMENTS = [
+        {
+          id: 'first_game',
+          icon: '<i class="fas fa-gamepad"></i>',
+          title: 'First Steps',
+          description: 'Complete your first game in any mode',
+          unlockedMessage: '<i class="fas fa-gamepad"></i> Welcome to the journey! Your adventure begins!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames > 0;
+          }
+        },
+        {
+          id: 'all_modes',
+          icon: '<i class="fas fa-star"></i>',
+          title: 'Mode Explorer',
+          description: 'Play at least one game in all 5 game modes',
+          unlockedMessage: '<i class="fas fa-star"></i> True explorer! You\'ve experienced every challenge!',
+          checkUnlocked: (data) => {
+            return (data.easyScores?.length || 0) > 0 && 
+                   (data.normalScores?.length || 0) > 0 && 
+                   (data.masterScores?.length || 0) > 0 && 
+                   (data.raceScores?.length || 0) > 0 && 
+                   (data.hellScores?.length || 0) > 0;
+          }
+        },
+        {
+          id: 'level_10',
+          icon: '<i class="fas fa-star"></i>',
+          title: 'Rising Star',
+          description: 'Reach Level 10',
+          unlockedMessage: '<i class="fas fa-star"></i> Shining bright! You\'re on the rise!',
+          checkUnlocked: (data) => (data.playerData?.level || 0) >= 10
+        },
+        {
+          id: 'level_50',
+          icon: '<i class="fas fa-star"></i>',
+          title: 'Star Player',
+          description: 'Reach Level 50',
+          unlockedMessage: '<i class="fas fa-star"></i> Stellar achievement! You\'re a true star!',
+          checkUnlocked: (data) => (data.playerData?.level || 0) >= 50
+        },
+        {
+          id: 'level_100',
+          icon: '<i class="fas fa-star"></i>',
+          title: 'Sparkle Master',
+          description: 'Reach Level 100',
+          unlockedMessage: '<i class="fas fa-star"></i> Master of sparkles! You\'ve reached greatness!',
+          checkUnlocked: (data) => (data.playerData?.level || 0) >= 100
+        },
+        // 10 Lives Clear Achievements (Absolute)
+        {
+          id: 'easy_10_lives',
+          icon: '<i class="fas fa-crosshairs"></i>',
+          title: 'Easy Mode Absolute',
+          description: 'Clear Easy Mode with 10 lives (Absolute clear)',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
+          checkUnlocked: (data) => data.easyScores?.some(s => hasClearType(s, "Absolute")) || false
+        },
+        {
+          id: 'normal_10_lives',
+          icon: '<i class="fas fa-crosshairs"></i>',
+          title: 'Normal Mode Absolute',
+          description: 'Clear Normal Mode with 10 lives (Absolute clear)',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
+          checkUnlocked: (data) => data.normalScores?.some(s => hasClearType(s, "Absolute")) || false
+        },
+        {
+          id: 'master_10_lives',
+          icon: '<i class="fas fa-crosshairs"></i>',
+          title: 'Master Mode Absolute',
+          description: 'Clear Master Mode with 10 lives (Absolute clear)',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
+          checkUnlocked: (data) => data.masterScores?.some(s => hasClearType(s, "Absolute")) || false
+        },
+        {
+          id: 'hell_10_lives',
+          icon: '<i class="fas fa-crosshairs"></i>',
+          title: 'Hell Mode Absolute',
+          description: 'Clear Hell Mode with 10 lives (Absolute clear)',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
+          checkUnlocked: (data) => data.hellScores?.some(s => hasClearType(s, "Absolute")) || false
+        },
+        {
+          id: 'race_10_lives',
+          icon: '<i class="fas fa-crosshairs"></i>',
+          title: 'Race Mode Absolute',
+          description: 'Clear Race Mode with 10 lives (Absolute clear)',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i> Absolute precision! You\'ve mastered the art of survival!',
+          checkUnlocked: (data) => data.raceScores?.some(s => hasClearType(s, "Absolute")) || false
+        },
+        // 5 Lives Clear Achievements (Catastrophy)
+        {
+          id: 'easy_5_lives',
+          icon: '<i class="fas fa-skull"></i>',
+          title: 'Easy Mode Catastrophy',
+          description: 'Clear Easy Mode with 5 lives (Catastrophy clear)',
+          unlockedMessage: '<i class="fas fa-skull"></i> Catastrophic skill! You\'ve defied all odds!',
+          checkUnlocked: (data) => data.easyScores?.some(s => hasClearType(s, "Catastrophy")) || false
+        },
+        {
+          id: 'normal_5_lives',
+          icon: '<i class="fas fa-skull"></i>',
+          title: 'Normal Mode Catastrophy',
+          description: 'Clear Normal Mode with 5 lives (Catastrophy clear)',
+          unlockedMessage: '<i class="fas fa-skull"></i> Catastrophic skill! You\'ve defied all odds!',
+          checkUnlocked: (data) => data.normalScores?.some(s => hasClearType(s, "Catastrophy")) || false
+        },
+        {
+          id: 'master_5_lives',
+          icon: '<i class="fas fa-skull"></i>',
+          title: 'Master Mode Catastrophy',
+          description: 'Clear Master Mode with 5 lives (Catastrophy clear)',
+          unlockedMessage: '<i class="fas fa-skull"></i> Catastrophic skill! You\'ve defied all odds!',
+          checkUnlocked: (data) => data.masterScores?.some(s => hasClearType(s, "Catastrophy")) || false
+        },
+        {
+          id: 'hell_5_lives',
+          icon: '<i class="fas fa-skull"></i>',
+          title: 'Hell Mode Catastrophy',
+          description: 'Clear Hell Mode with 5 lives (Catastrophy clear)',
+          unlockedMessage: '<i class="fas fa-skull"></i> Catastrophic skill! You\'ve defied all odds!',
+          checkUnlocked: (data) => data.hellScores?.some(s => hasClearType(s, "Catastrophy")) || false
+        },
+        {
+          id: 'race_5_lives',
+          icon: '<i class="fas fa-skull"></i>',
+          title: 'Race Mode Catastrophy',
+          description: 'Clear Race Mode with 5 lives (Catastrophy clear)',
+          unlockedMessage: '<i class="fas fa-skull"></i> Catastrophic skill! You\'ve defied all odds!',
+          checkUnlocked: (data) => data.raceScores?.some(s => hasClearType(s, "Catastrophy")) || false
+        },
+        // 1 Life Clear Achievements (All Correct!)
+        {
+          id: 'easy_1_life',
+          icon: '<i class="fas fa-crown"></i>',
+          title: 'Easy Mode Perfect',
+          description: 'Clear Easy Mode with 1 life and no wrong answers (All Correct!)',
+          unlockedMessage: '<i class="fas fa-crown"></i> Perfect execution! Flawless victory achieved!',
+          checkUnlocked: (data) => data.easyScores?.some(s => hasClearType(s, "All Correct!")) || false
+        },
+        {
+          id: 'normal_1_life',
+          icon: '<i class="fas fa-crown"></i>',
+          title: 'Normal Mode Perfect',
+          description: 'Clear Normal Mode with 1 life and no wrong answers (All Correct!)',
+          unlockedMessage: '<i class="fas fa-crown"></i> Perfect execution! Flawless victory achieved!',
+          checkUnlocked: (data) => data.normalScores?.some(s => hasClearType(s, "All Correct!")) || false
+        },
+        {
+          id: 'master_1_life',
+          icon: '<i class="fas fa-crown"></i>',
+          title: 'Master Mode Perfect',
+          description: 'Clear Master Mode with 1 life and no wrong answers (All Correct!)',
+          unlockedMessage: '<i class="fas fa-crown"></i> Perfect execution! Flawless victory achieved!',
+          checkUnlocked: (data) => data.masterScores?.some(s => hasClearType(s, "All Correct!")) || false
+        },
+        {
+          id: 'hell_1_life',
+          icon: '<i class="fas fa-crown"></i>',
+          title: 'Hell Mode Perfect',
+          description: 'Clear Hell Mode with 1 life and no wrong answers (All Correct!)',
+          unlockedMessage: '<i class="fas fa-crown"></i> Perfect execution! Flawless victory achieved!',
+          checkUnlocked: (data) => data.hellScores?.some(s => hasClearType(s, "All Correct!")) || false
+        },
+        {
+          id: 'race_1_life',
+          icon: '<i class="fas fa-crown"></i>',
+          title: 'Race Mode Perfect',
+          description: 'Clear Race Mode with 1 life and no wrong answers (All Correct!)',
+          unlockedMessage: '<i class="fas fa-crown"></i> Perfect execution! Flawless victory achieved!',
+          checkUnlocked: (data) => data.raceScores?.some(s => hasClearType(s, "All Correct!")) || false
+        },
+        // 2x Time Multiplier Achievements
+        {
+          id: 'easy_2x_time',
+          icon: '<i class="fas fa-bolt"></i>',
+          title: 'Easy Mode Speed Demon',
+          description: 'Clear Easy Mode with 2x time multiplier',
+          unlockedMessage: '<i class="fas fa-bolt"></i> Lightning fast! Time is your enemy, but you conquered it!',
+          checkUnlocked: (data) => data.easyScores?.some(has2xTimeMultiplier) || false
+        },
+        {
+          id: 'normal_2x_time',
+          icon: '<i class="fas fa-bolt"></i>',
+          title: 'Normal Mode Speed Demon',
+          description: 'Clear Normal Mode with 2x time multiplier',
+          unlockedMessage: '<i class="fas fa-bolt"></i> Lightning fast! Time is your enemy, but you conquered it!',
+          checkUnlocked: (data) => data.normalScores?.some(has2xTimeMultiplier) || false
+        },
+        {
+          id: 'master_2x_time',
+          icon: '<i class="fas fa-bolt"></i>',
+          title: 'Master Mode Speed Demon',
+          description: 'Clear Master Mode with 2x time multiplier',
+          unlockedMessage: '<i class="fas fa-bolt"></i> Lightning fast! Time is your enemy, but you conquered it!',
+          checkUnlocked: (data) => data.masterScores?.some(has2xTimeMultiplier) || false
+        },
+        {
+          id: 'hell_2x_time',
+          icon: '<i class="fas fa-bolt"></i>',
+          title: 'Hell Mode Speed Demon',
+          description: 'Clear Hell Mode with 2x time multiplier',
+          unlockedMessage: '<i class="fas fa-bolt"></i> Lightning fast! Time is your enemy, but you conquered it!',
+          checkUnlocked: (data) => data.hellScores?.some(has2xTimeMultiplier) || false
+        },
+        {
+          id: 'race_2x_time',
+          icon: '<i class="fas fa-bolt"></i>',
+          title: 'Race Mode Speed Demon',
+          description: 'Clear Race Mode with 2x time multiplier',
+          unlockedMessage: '<i class="fas fa-bolt"></i> Lightning fast! Time is your enemy, but you conquered it!',
+          checkUnlocked: (data) => data.raceScores?.some(has2xTimeMultiplier) || false
+        },
+        // 0.5s Vanish Timer Achievements
+        {
+          id: 'easy_05s_vanish',
+          icon: '<i class="fas fa-eye"></i>',
+          title: 'Easy Mode Blink Master',
+          description: 'Clear Easy Mode with 0.5s vanish timer',
+          unlockedMessage: '<i class="fas fa-eye"></i> Blink and you\'ll miss it! Your memory is legendary!',
+          checkUnlocked: (data) => data.easyScores?.some(has05sVanishTimer) || false
+        },
+        {
+          id: 'normal_05s_vanish',
+          icon: '<i class="fas fa-eye"></i>',
+          title: 'Normal Mode Blink Master',
+          description: 'Clear Normal Mode with 0.5s vanish timer',
+          unlockedMessage: '<i class="fas fa-eye"></i> Blink and you\'ll miss it! Your memory is legendary!',
+          checkUnlocked: (data) => data.normalScores?.some(has05sVanishTimer) || false
+        },
+        {
+          id: 'master_05s_vanish',
+          icon: '<i class="fas fa-eye"></i>',
+          title: 'Master Mode Blink Master',
+          description: 'Clear Master Mode with 0.5s vanish timer',
+          unlockedMessage: '<i class="fas fa-eye"></i> Blink and you\'ll miss it! Your memory is legendary!',
+          checkUnlocked: (data) => data.masterScores?.some(has05sVanishTimer) || false
+        },
+        {
+          id: 'hell_05s_vanish',
+          icon: '<i class="fas fa-eye"></i>',
+          title: 'Hell Mode Blink Master',
+          description: 'Clear Hell Mode with 0.5s vanish timer',
+          unlockedMessage: '<i class="fas fa-eye"></i> Blink and you\'ll miss it! Your memory is legendary!',
+          checkUnlocked: (data) => data.hellScores?.some(has05sVanishTimer) || false
+        },
+        {
+          id: 'race_05s_vanish',
+          icon: '<i class="fas fa-eye"></i>',
+          title: 'Race Mode Blink Master',
+          description: 'Clear Race Mode with 0.5s vanish timer',
+          unlockedMessage: '<i class="fas fa-eye" style="color: #a29bfe;"></i> Blink and you\'ll miss it! Your memory is legendary!',
+          checkUnlocked: (data) => data.raceScores?.some(has05sVanishTimer) || false
+        },
+        // Total Play Count Achievements
+        {
+          id: 'plays_10',
+          icon: '<i class="fas fa-gamepad"></i>',
+          title: 'Getting Started',
+          description: 'Complete 10 games across all modes',
+          unlockedMessage: '<i class="fas fa-gamepad"></i> You\'re getting the hang of it! Keep playing!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 10;
+          }
+        },
+        {
+          id: 'plays_25',
+          icon: '<i class="fas fa-gamepad"></i>',
+          title: 'Regular Player',
+          description: 'Complete 25 games across all modes',
+          unlockedMessage: '<i class="fas fa-gamepad"></i> Consistency is key! You\'re becoming a regular!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 25;
+          }
+        },
+        {
+          id: 'plays_50',
+          icon: '<i class="fas fa-trophy"></i>',
+          title: 'Dedicated Player',
+          description: 'Complete 50 games across all modes',
+          unlockedMessage: '<i class="fas fa-trophy"></i> Dedication pays off! You\'re truly committed!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 50;
+          }
+        },
+        {
+          id: 'plays_100',
+          icon: '<i class="fas fa-medal"></i>',
+          title: 'Century Club',
+          description: 'Complete 100 games across all modes',
+          unlockedMessage: '<i class="fas fa-medal"></i> Century achieved! You\'ve reached the first milestone!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 100;
+          }
+        },
+        {
+          id: 'plays_250',
+          icon: '<i class="fas fa-star"></i>',
+          title: 'Veteran Player',
+          description: 'Complete 250 games across all modes',
+          unlockedMessage: '<i class="fas fa-star"></i> Veteran status! Your experience shows!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 250;
+          }
+        },
+        {
+          id: 'plays_500',
+          icon: '<i class="fas fa-crown"></i>',
+          title: 'Elite Player',
+          description: 'Complete 500 games across all modes',
+          unlockedMessage: '<i class="fas fa-crown"></i> Elite status! You\'re among the best!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 500;
+          }
+        },
+        {
+          id: 'plays_1000',
+          icon: '<i class="fas fa-gem"></i>',
+          title: 'Master Gamer',
+          description: 'Complete 1,000 games across all modes',
+          unlockedMessage: '<i class="fas fa-gem"></i> Master gamer! You\'ve reached legendary status!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 1000;
+          }
+        },
+        {
+          id: 'plays_2500',
+          icon: '<i class="fas fa-fire"></i>',
+          title: 'Legendary Player',
+          description: 'Complete 2,500 games across all modes',
+          unlockedMessage: '<i class="fas fa-fire"></i> Legendary! Your dedication is unmatched!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 2500;
+          }
+        },
+        {
+          id: 'plays_5000',
+          icon: '<i class="fas fa-skull"></i>',
+          title: 'Immortal Player',
+          description: 'Complete 5,000 games across all modes',
+          unlockedMessage: '<i class="fas fa-skull"></i> Immortal dedication! You\'ve transcended all limits!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 5000;
+          }
+        },
+        {
+          id: 'plays_10000',
+          icon: '<i class="fas fa-award"></i>',
+          title: 'Ultimate Dedication',
+          description: 'Complete 10,000 games across all modes',
+          unlockedMessage: '<i class="fas fa-award"></i> Ultimate dedication! You are the supreme player!',
+          checkUnlocked: (data) => {
+            const totalGames = (data.easyScores?.length || 0) + (data.normalScores?.length || 0) + 
+                              (data.masterScores?.length || 0) + (data.raceScores?.length || 0) + 
+                              (data.hellScores?.length || 0);
+            return totalGames >= 10000;
+          }
+        },
+        {
+          id: 'return_after_21_days',
+          icon: '<i class="fas fa-calendar-check"></i>',
+          title: 'Welcome Back!',
+          description: 'Return to the game after 21 or more days since your last login',
+          unlockedMessage: '<i class="fas fa-calendar-check"></i> Welcome back! We missed you!',
+          checkUnlocked: (data) => {
+            if (!data.lastLoginTimestamp || !data.previousLoginTimestamp) return false;
+            const lastLogin = new Date(data.lastLoginTimestamp);
+            const previousLogin = new Date(data.previousLoginTimestamp);
+            const daysDiff = (lastLogin - previousLogin) / (1000 * 60 * 60 * 24);
+            return daysDiff >= 21;
+          }
+        }
+      ];
+      
+      // Modifier Combination Achievements (can be obtained in any mode)
+      const COMBINATION_ACHIEVEMENTS = [
+        {
+          id: 'vanish_05s_10_lives',
+          icon: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i>',
+          title: 'Absolute Blink',
+          description: 'Clear any mode with 0.5s vanish timer and 10 lives (Absolute clear)',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i> Perfect memory under pressure! Absolute mastery achieved!',
+          checkUnlocked: (data) => hasModifierCombination(data, (score) => 
+            has05sVanishTimer(score) && hasClearType(score, "Absolute")
+          )
+        },
+        {
+          id: 'vanish_05s_5_lives',
+          icon: '<i class="fas fa-skull"></i><i class="fas fa-eye"></i>',
+          title: 'Catastrophic Blink',
+          description: 'Clear any mode with 0.5s vanish timer and 5 lives (Catastrophy clear)',
+          unlockedMessage: '<i class="fas fa-skull"></i><i class="fas fa-eye"></i> Catastrophic memory challenge! You\'ve defied all odds!',
+          checkUnlocked: (data) => hasModifierCombination(data, (score) => 
+            has05sVanishTimer(score) && hasClearType(score, "Catastrophy")
+          )
+        },
+        {
+          id: 'vanish_05s_1_life',
+          icon: '<i class="fas fa-crown"></i><i class="fas fa-eye"></i>',
+          title: 'Perfect Blink',
+          description: 'Clear any mode with 0.5s vanish timer and 1 life (All Correct!)',
+          unlockedMessage: '<i class="fas fa-crown"></i><i class="fas fa-eye"></i> Perfect memory perfection! Flawless blink mastery!',
+          checkUnlocked: (data) => hasModifierCombination(data, (score) => 
+            has05sVanishTimer(score) && hasClearType(score, "All Correct!")
+          )
+        },
+        {
+          id: '2x_time_10_lives',
+          icon: '<i class="fas fa-bolt"></i><i class="fas fa-crosshairs"></i>',
+          title: 'Absolute Speed',
+          description: 'Clear any mode with 2x time multiplier and 10 lives (Absolute clear)',
+          unlockedMessage: '<i class="fas fa-bolt"></i><i class="fas fa-crosshairs"></i> Lightning-fast precision! Absolute speed achieved!',
+          checkUnlocked: (data) => hasModifierCombination(data, (score) => 
+            has2xTimeMultiplier(score) && hasClearType(score, "Absolute")
+          )
+        },
+        {
+          id: '2x_time_5_lives',
+          icon: '<i class="fas fa-bolt"></i><i class="fas fa-skull"></i>',
+          title: 'Catastrophic Speed',
+          description: 'Clear any mode with 2x time multiplier and 5 lives (Catastrophy clear)',
+          unlockedMessage: '<i class="fas fa-bolt"></i><i class="fas fa-skull"></i> Catastrophic speed! You\'ve raced against time itself!',
+          checkUnlocked: (data) => hasModifierCombination(data, (score) => 
+            has2xTimeMultiplier(score) && hasClearType(score, "Catastrophy")
+          )
+        },
+        {
+          id: '2x_time_1_life',
+          icon: '<i class="fas fa-bolt"></i><i class="fas fa-crown"></i>',
+          title: 'Perfect Speed',
+          description: 'Clear any mode with 2x time multiplier and 1 life (All Correct!)',
+          unlockedMessage: '<i class="fas fa-bolt"></i><i class="fas fa-crown"></i> Perfect speed perfection! Flawless lightning mastery!',
+          checkUnlocked: (data) => hasModifierCombination(data, (score) => 
+            has2xTimeMultiplier(score) && hasClearType(score, "All Correct!")
+          )
+        },
+        {
+          id: 'vanish_05s_2x_time',
+          icon: '<i class="fas fa-eye"></i><i class="fas fa-bolt"></i>',
+          title: 'Blink Speed',
+          description: 'Clear any mode with 0.5s vanish timer and 2x time multiplier',
+          unlockedMessage: '<i class="fas fa-eye"></i><i class="fas fa-bolt"></i> Blink-speed mastery! Memory and time combined!',
+          checkUnlocked: (data) => hasModifierCombination(data, (score) => 
+            has05sVanishTimer(score) && has2xTimeMultiplier(score)
+          )
+        },
+        {
+          id: 'vanish_05s_2x_time_10_lives',
+          icon: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i>',
+          title: 'Absolute Blink Speed',
+          description: 'Clear any mode with 0.5s vanish, 2x time, and 10 lives (Absolute clear)',
+          unlockedMessage: '<i class="fas fa-crosshairs"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i> Ultimate challenge conquered! Absolute blink-speed mastery!',
+          checkUnlocked: (data) => hasModifierCombination(data, (score) => 
+            has05sVanishTimer(score) && has2xTimeMultiplier(score) && hasClearType(score, "Absolute")
+          )
+        },
+        {
+          id: 'vanish_05s_2x_time_5_lives',
+          icon: '<i class="fas fa-skull"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i>',
+          title: 'Catastrophic Blink Speed',
+          description: 'Clear any mode with 0.5s vanish, 2x time, and 5 lives (Catastrophy clear)',
+          unlockedMessage: '<i class="fas fa-skull"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i> Catastrophic blink-speed! The ultimate test passed!',
+          checkUnlocked: (data) => hasModifierCombination(data, (score) => 
+            has05sVanishTimer(score) && has2xTimeMultiplier(score) && hasClearType(score, "Catastrophy")
+          )
+        },
+        {
+          id: 'vanish_05s_2x_time_1_life',
+          icon: '<i class="fas fa-crown"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i>',
+          title: 'Perfect Blink Speed',
+          description: 'Clear any mode with 0.5s vanish, 2x time, and 1 life (All Correct!)',
+          unlockedMessage: '<i class="fas fa-crown"></i><i class="fas fa-eye"></i><i class="fas fa-bolt"></i> Perfect blink-speed perfection! The ultimate achievement unlocked!',
+          checkUnlocked: (data) => hasModifierCombination(data, (score) => 
+            has05sVanishTimer(score) && has2xTimeMultiplier(score) && hasClearType(score, "All Correct!")
+          )
+        }
+      ];
+
+      // ============================================
+      // END OF ACHIEVEMENTS CONFIGURATION
+      // ============================================
+
+      // Get theme color helper (defined in theme script, but accessible here)
+      function getThemeColorForRender() {
+        const themeColors = {
+          'green': '#90ee90',
+          'purple': '#dda0dd',
+          'orange': '#ff8c42',
+          'red': '#ff6b6b',
+          'pink': '#ffc0cb',
+          'yellow': '#ffff00',
+          'default': '#dbffff'
+        };
+        const body = document.body;
+        for (const theme in themeColors) {
+          if (theme !== 'default' && body.classList.contains(`theme-${theme}`)) {
+            return themeColors[theme];
+          }
+        }
+        return themeColors['default'];
+      }
+      
+      // Convert icon to FontAwesome format (handles both HTML icons and emojis)
+      function getFontAwesomeIcon(icon) {
+        if (!icon) return '';
+        // If icon is already HTML (contains <i class=), return as-is
+        if (typeof icon === 'string' && icon.includes('<i class=')) {
+          return icon;
+        }
+        // If icon is an emoji or plain text, return as-is
+        return icon;
+      }
+      
+      // Convert message to display icons properly (handles HTML icons in messages)
+      function convertMessageToIcons(message) {
+        if (!message) return '';
+        // Messages may already contain HTML icons, so return as-is
+        return message;
+      }
+      
+      // Render a single achievement card
+      function renderAchievementCard(achievement, unlocked, progressText = null) {
+        let progress;
+        if (unlocked) {
+          // Use custom unlocked message if provided, otherwise use progressText or default
+          const message = achievement.unlockedMessage || progressText || '✓ Unlocked';
+          progress = convertMessageToIcons(message);
+        } else {
+          progress = progressText || 'Locked';
+        }
+        const progressColor = unlocked ? '#ffd700' : 'rgba(255, 255, 255, 0.6)';
+        
+        // Get theme color for title (only if not unlocked)
+        const themeColor = getThemeColorForRender();
+        const titleColor = unlocked ? '#ffd700' : themeColor;
+        
+        // Convert icon to FontAwesome
+        const iconHtml = getFontAwesomeIcon(achievement.icon);
+        
+        return `
+          <div class="achievement-card ${unlocked ? 'unlocked' : ''}">
+            <div class="achievement-icon">${iconHtml}</div>
+            <div class="achievement-title" style="color: ${titleColor};">${achievement.title}</div>
+            <div class="achievement-description">${achievement.description}</div>
+            <div class="achievement-progress" style="color: ${progressColor};">${progress}</div>
+          </div>
+        `;
+      }
+
+      function displayAchievements(easyScores, normalScores, masterScores, raceScores, hellScores, playerData, allPlayerNames, secretScores = [], hasUnlockedSecretMode = false) {
+        const isLoggedIn = easyScores !== null;
+        const currentLevel = isLoggedIn && playerData ? playerData.level : 0;
+
+        // Prepare data object for achievement checks
+        const achievementData = {
+          easyScores,
+          normalScores,
+          masterScores,
+          raceScores,
+          hellScores,
+          secretScores,
+          hasUnlockedSecretMode,
+          playerData,
+          currentLevel,
+          isLoggedIn
+        };
+
+        // Display stats summary if logged in
+        if (isLoggedIn && playerData) {
+          const statsSummary = document.getElementById('statsSummary');
+          const statsGrid = document.getElementById('statsGrid');
+          statsSummary.style.display = 'block';
+          
+          const totalGames = (easyScores?.length || 0) + (normalScores?.length || 0) + 
+                            (masterScores?.length || 0) + (raceScores?.length || 0) + 
+                            (hellScores?.length || 0);
+          
+          // Get theme color for stat values
+          const themeColors = {
+            'green': '#90ee90',
+            'purple': '#dda0dd',
+            'orange': '#ff8c42',
+            'red': '#ff6b6b',
+            'pink': '#ffc0cb',
+            'yellow': '#ffff00',
+            'default': '#dbffff'
+          };
+          const body = document.body;
+          let themeColor = themeColors['default'];
+          for (const theme in themeColors) {
+            if (theme !== 'default' && body.classList.contains(`theme-${theme}`)) {
+              themeColor = themeColors[theme];
+              break;
+            }
+          }
+          
+          statsGrid.innerHTML = `
+            <div class="stat-item">
+              <div class="stat-label">Current Level</div>
+              <div class="stat-value" style="color: ${themeColor};">${getBadgeForLevel(playerData.level)} Lv. ${playerData.level}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Total Experience</div>
+              <div class="stat-value" style="color: ${themeColor};">${playerData.experience.toLocaleString()} XP</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">Total Games</div>
+              <div class="stat-value" style="color: ${themeColor};">${totalGames}</div>
+            </div>
+            <div class="stat-item">
+              <div class="stat-label">XP to Next Level</div>
+              <div class="stat-value" style="color: ${themeColor};">${playerData.xpNeededForNextLevel.toLocaleString()}</div>
+            </div>
+          `;
+        }
+
+        // Render Mode Completion Achievements
+        const completionGrid = document.getElementById('completionAchievements');
+        completionGrid.innerHTML = COMPLETION_ACHIEVEMENTS.map(achievement => {
+          // Hide achievement if it has isHidden function and returns true
+          if (achievement.isHidden && achievement.isHidden(achievementData)) {
+            return ''; // Return empty string to hide the achievement
+          }
+          const unlocked = isLoggedIn && achievement.checkUnlocked(achievementData);
+          return renderAchievementCard(achievement, unlocked);
+        }).filter(html => html !== '').join(''); // Filter out empty strings
+
+        // Render Level Badge Achievements
+        const levelBadgesGrid = document.getElementById('levelBadges');
+        levelBadgesGrid.innerHTML = LEVEL_BADGES.map(badge => {
+          const unlocked = currentLevel >= badge.level;
+          let progressText;
+          if (unlocked) {
+            // Custom message for level badges
+            const levelMessages = {
+              2000: `${getBadgeForLevel(2000)} Cosmic legend! You've transcended all limits!`,
+              1500: `${getBadgeForLevel(1500)} Lunar mastery! You shine in the darkness!`,
+              1250: `${getBadgeForLevel(1250)} Solar brilliance! You're a beacon of excellence!`,
+              1000: `${getBadgeForLevel(1000)} Earthly dominance! You rule this realm!`,
+              800: `${getBadgeForLevel(800)} Planetary prestige! You've reached new worlds!`,
+              600: `${getBadgeForLevel(600)} Stellar achievement! You're among the stars!`,
+              400: `${getBadgeForLevel(400)} Glowing greatness! Your light never fades!`,
+              300: `${getBadgeForLevel(300)} Dizzying heights! You're spinning with success!`,
+              250: `${getBadgeForLevel(250)} Galactic wonder! You've explored the cosmos!`,
+              200: `${getBadgeForLevel(200)} Shooting star! You streak across the sky!`,
+              150: `${getBadgeForLevel(150)} Atomic power! You've split the atom of achievement!`,
+              120: `${getBadgeForLevel(120)} Crystal clarity! Your vision is perfect!`,
+              100: `${getBadgeForLevel(100)} Sparkling success! You've reached the century!`,
+              80: `${getBadgeForLevel(80)} Champion status! You're a true winner!`,
+              70: `${getBadgeForLevel(70)} Royal excellence! You wear the crown!`,
+              60: `${getBadgeForLevel(60)} Diamond quality! You're a rare gem!`,
+              50: `${getBadgeForLevel(50)} Star status! You're shining bright!`,
+              40: `${getBadgeForLevel(40)} Fire of determination! You're burning with skill!`,
+              35: `${getBadgeForLevel(35)} Lightning fast! You strike with precision!`,
+              30: `${getBadgeForLevel(30)} Shining star! You're glowing with achievement!`,
+              25: `${getBadgeForLevel(25)} Rising star! Keep going!`,
+              20: `${getBadgeForLevel(20)} Star quality! You're on the rise!`,
+              15: `${getBadgeForLevel(15)} Glowing progress! You're getting brighter!`,
+              12: `${getBadgeForLevel(12)} Gold medal! You're excelling!`,
+              9: `${getBadgeForLevel(9)} Silver medal! You're improving!`,
+              6: `${getBadgeForLevel(6)} Bronze medal! You're progressing!`,
+              3: `${getBadgeForLevel(3)} Rising star! Keep going!`,
+              1: `${getBadgeForLevel(1)} Seedling start! Your journey begins!`
+            };
+            progressText = levelMessages[badge.level] || `✓ Unlocked at Level ${currentLevel}`;
+          } else {
+            progressText = `Requires Level ${badge.level}`;
+          }
+          return renderAchievementCard(
+            { icon: badge.icon, title: badge.name, description: `Reach Level ${badge.level}` },
+            unlocked,
+            progressText
+          );
+        }).join('');
+
+        // Render Special Achievements
+        const specialGrid = document.getElementById('specialAchievements');
+        specialGrid.innerHTML = SPECIAL_ACHIEVEMENTS.map(achievement => {
+          const unlocked = isLoggedIn && achievement.checkUnlocked(achievementData);
+          return renderAchievementCard(achievement, unlocked);
+        }).join('');
+
+        // Render Modifier Combination Achievements
+        const combinationGrid = document.getElementById('combinationAchievements');
+        combinationGrid.innerHTML = COMBINATION_ACHIEVEMENTS.map(achievement => {
+          const unlocked = isLoggedIn && achievement.checkUnlocked(achievementData);
+          return renderAchievementCard(achievement, unlocked);
+        }).join('');
+      }
+
+      // Load achievements when page loads
+      onAuthStateChanged(auth, (user) => {
+        loadAchievements();
+      });
+
+      // Also try loading immediately
+      if (auth.currentUser) {
+        loadAchievements();
+      }
+    </script>
+    <script type="module" src="../hm.js"></script>
+    <script type="module" src="../src/js/loadBackground.js"></script>
+    <script type="module" src="../src/js/loadTheme.js"></script>
+    <script type="module">
+      // Apply theme colors to achievements page
+      
+      // Theme color mapping
+      const themeColors = {
+        'green': '#90ee90',
+        'purple': '#dda0dd',
+        'orange': '#ff8c42',
+        'red': '#ff6b6b',
+        'pink': '#ffc0cb',
+        'yellow': '#ffff00',
+        'default': '#dbffff'
+      };
+      
+      // Get theme color from body class or user profile
+      function getThemeColor() {
+        // Check body class first (already applied by loadTheme.js)
+        const body = document.body;
+        for (const theme in themeColors) {
+          if (theme !== 'default' && body.classList.contains(`theme-${theme}`)) {
+            return themeColors[theme];
+          }
+        }
+        return themeColors['default'];
+      }
+      
+      // Helper to create a darker shade for gradients
+      function darkenColor(color, percent) {
+        const num = parseInt(color.replace("#", ""), 16);
+        const r = (num >> 16) + Math.floor((255 - (num >> 16)) * percent);
+        const g = ((num >> 8) & 0x00FF) + Math.floor((255 - ((num >> 8) & 0x00FF)) * percent);
+        const b = (num & 0x0000FF) + Math.floor((255 - (num & 0x0000FF)) * percent);
+        return `#${((r << 16) | (g << 8) | b).toString(16).padStart(6, '0')}`;
+      }
+      
+      // Helper to calculate luminance and determine if color is light or dark
+      function getLuminance(hex) {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        // Relative luminance formula
+        const [rs, gs, bs] = [r, g, b].map(val => {
+          val = val / 255;
+          return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+        });
+        return 0.2126 * rs + 0.7152 * gs + 0.0722 * bs;
+      }
+      
+      // Get contrasting text color (black or white) based on background luminance
+      function getContrastTextColor(bgColor) {
+        const luminance = getLuminance(bgColor);
+        // If background is light (luminance > 0.5), use dark text, otherwise use light text
+        return luminance > 0.5 ? '#000000' : '#ffffff';
+      }
+      
+      // Apply theme colors to achievements page
+      function applyThemeToAchievements() {
+        const themeColor = getThemeColor();
+        const darkerColor = darkenColor(themeColor, 0.15);
+        
+        // Apply to headers
+        const headers = document.querySelectorAll('.achievements-header h1, .achievement-section h2, .stats-summary h3');
+        headers.forEach(el => {
+          el.style.color = themeColor;
+        });
+        
+        // Apply to header subtitle
+        const subtitle = document.querySelector('.achievements-header p');
+        if (subtitle) {
+          subtitle.style.color = themeColor;
+          subtitle.style.opacity = '0.8';
+        }
+        
+        // Apply to achievement titles
+        const achievementTitles = document.querySelectorAll('.achievement-title');
+        achievementTitles.forEach(el => {
+          // Only apply if not unlocked (unlocked ones have gold color)
+          if (!el.closest('.achievement-card.unlocked')) {
+            el.style.color = themeColor;
+          }
+        });
+        
+        // Apply to stat labels and values
+        const statLabels = document.querySelectorAll('.stat-label');
+        statLabels.forEach(el => {
+          el.style.color = themeColor;
+          el.style.opacity = '0.7';
+        });
+        
+        const statValues = document.querySelectorAll('.stat-value');
+        statValues.forEach(el => {
+          el.style.color = themeColor;
+        });
+        
+        // Re-apply theme colors when achievements are rendered (in case they're added dynamically)
+        // This ensures newly rendered achievement titles get the theme color
+        const observer = new MutationObserver(() => {
+          const newTitles = document.querySelectorAll('.achievement-title');
+          newTitles.forEach(el => {
+            if (!el.closest('.achievement-card.unlocked')) {
+              el.style.color = themeColor;
+            }
+          });
+          
+          const newStatValues = document.querySelectorAll('.stat-value');
+          newStatValues.forEach(el => {
+            el.style.color = themeColor;
+          });
+        });
+        
+        // Observe the achievement grids for changes
+        const completionGrid = document.getElementById('completionAchievements');
+        const levelBadgesGrid = document.getElementById('levelBadges');
+        const specialGrid = document.getElementById('specialAchievements');
+        const combinationGrid = document.getElementById('combinationAchievements');
+        const statsGrid = document.getElementById('statsGrid');
+        
+        [completionGrid, levelBadgesGrid, specialGrid, combinationGrid, statsGrid].forEach(grid => {
+          if (grid) {
+            observer.observe(grid, {
+              childList: true,
+              subtree: true
+            });
+          }
+        });
+        
+        // Apply to back button
+        const backButton = document.querySelector('.back-button');
+        if (backButton) {
+          // Use a darker shade of the theme color for text (darker than the button background)
+          const textColor = darkenColor(themeColor, 0.4); // 40% darker for good contrast
+          backButton.style.background = `linear-gradient(135deg, ${themeColor} 0%, ${darkerColor} 100%)`;
+          backButton.style.color = textColor;
+          backButton.style.boxShadow = `0 4px 15px ${themeColor}40`;
+        }
+        
+        // Apply hover effect to back button
+        if (backButton) {
+          // Remove existing listeners if any
+          if (backButton._themeHoverEnter) {
+            backButton.removeEventListener('mouseenter', backButton._themeHoverEnter);
+            backButton.removeEventListener('mouseleave', backButton._themeHoverLeave);
+          }
+          
+          backButton._themeHoverEnter = function() {
+            this.style.boxShadow = `0 6px 20px ${themeColor}80`;
+          };
+          backButton._themeHoverLeave = function() {
+            this.style.boxShadow = `0 4px 15px ${themeColor}40`;
+          };
+          
+          backButton.addEventListener('mouseenter', backButton._themeHoverEnter);
+          backButton.addEventListener('mouseleave', backButton._themeHoverLeave);
+        }
+      }
+      
+      // Apply theme when page loads or theme changes
+      function initThemeApplication() {
+        // Wait for body to have theme class
+        const checkTheme = setInterval(() => {
+          if (document.body.classList.length > 0 || document.body.classList.contains('theme-default')) {
+            clearInterval(checkTheme);
+            applyThemeToAchievements();
+          }
+        }, 100);
+        
+        // Also apply after a delay to ensure theme is loaded
+        setTimeout(() => {
+          clearInterval(checkTheme);
+          applyThemeToAchievements();
+        }, 1000);
+      }
+      
+      // Watch for theme class changes
+      const observer = new MutationObserver(() => {
+        applyThemeToAchievements();
+      });
+      
+      if (document.body) {
+        observer.observe(document.body, {
+          attributes: true,
+          attributeFilter: ['class']
+        });
+        initThemeApplication();
+      } else {
+        document.addEventListener('DOMContentLoaded', () => {
+          observer.observe(document.body, {
+            attributes: true,
+            attributeFilter: ['class']
+          });
+          initThemeApplication();
+        });
+      }
+    </script>
+  </body>
+</html>
+
+
+

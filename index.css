@@ -8,13 +8,15 @@
     cursor: pointer;
     font-weight: bold;
 }
+
 .mode-toggle-btn:hover {
     background: rgba(255, 255, 255, 0.2);
 }
+
 /* Embed Gill Sans MT font */
 @font-face {
     font-family: 'Gill Sans MT';
-    src: url('font/GillSansMT.ttf') format('truetype');
+    src: url('public/fonts/GillSansMT.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
     font-display: swap;
@@ -22,7 +24,7 @@
 
 @font-face {
     font-family: 'Gill Sans MT';
-    src: url('font/GillSansMT-Bold.ttf') format('truetype');
+    src: url('public/fonts/GillSansMT-Bold.ttf') format('truetype');
     font-weight: bold;
     font-style: normal;
     font-display: swap;
@@ -35,7 +37,7 @@
 }
 
 body {
-    background-image: url('normal.jpg');
+    background-image: url('public/images/backgrounds/normal.jpg');
     background-size: cover;
     background-position: center;
     background-repeat: no-repeat;
@@ -48,35 +50,35 @@ body {
 
 /* Mode-specific background classes */
 body.mode-easy {
-    background-image: url('easy.jpg');
+    background-image: url('public/images/backgrounds/easy.jpg');
 }
 
 body.mode-normal {
-    background-image: url('normal.jpg');
+    background-image: url('public/images/backgrounds/normal.jpg');
 }
 
 body.mode-master {
-    background-image: url('master.jpg');
+    background-image: url('public/images/backgrounds/master.jpg');
 }
 
 body.mode-master130 {
-    background-image: url('race.jpg');
+    background-image: url('public/images/backgrounds/race.jpg');
 }
 
 body.mode-easy-race {
-    background-image: url('race.jpg');
+    background-image: url('public/images/backgrounds/race.jpg');
 }
 
 body.mode-hard-race {
-    background-image: url('race.jpg');
+    background-image: url('public/images/backgrounds/race.jpg');
 }
 
 body.mode-hell {
-    background-image: url('hell1.jpg');
+    background-image: url('public/images/backgrounds/hell1.jpg');
 }
 
 body.mode-death {
-    background-image: url('hell3.jpg');
+    background-image: url('public/images/backgrounds/hell3.jpg');
 }
 
 body.mode-secret {
@@ -1062,9 +1064,12 @@ body::before {
 }
 
 @keyframes badgePulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.1);
     }
@@ -1193,13 +1198,13 @@ body::before {
 
 /* Override container positioning when inside flex wrapper (master/hell modes) */
 .absolutecontainer,
-body > div[style*="display: flex"][style*="align-items: flex-start"] {
+body>div[style*="display: flex"][style*="align-items: flex-start"] {
     position: relative;
     min-height: 100vh;
 }
 
-.absolutecontainer > .container,
-body > div[style*="display: flex"][style*="align-items: flex-start"] > .container {
+.absolutecontainer>.container,
+body>div[style*="display: flex"][style*="align-items: flex-start"]>.container {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1209,14 +1214,15 @@ body > div[style*="display: flex"][style*="align-items: flex-start"] > .containe
 }
 
 /* Position grade display to the left of container, aligned with container's top */
-.absolutecontainer > #gradeDisplayLeft,
-body > div[style*="display: flex"][style*="align-items: flex-start"] > #gradeDisplayLeft {
+.absolutecontainer>#gradeDisplayLeft,
+body>div[style*="display: flex"][style*="align-items: flex-start"]>#gradeDisplayLeft {
     position: absolute;
-    left: calc(50% - 560px); /* Center - half container width - larger gap */
+    left: calc(50% - 560px);
+    /* Center - half container width - larger gap */
     /* Top position will be set by JavaScript to align with container top */
 }
 
-div[style*="display: flex"] > .container {
+div[style*="display: flex"]>.container {
     position: absolute;
     top: 50%;
     left: 50%;
@@ -1247,26 +1253,27 @@ div[style*="display: flex"] > .container {
 }
 
 @media (max-width: 1024px) {
+
     /* Stack grade display above container on smaller screens */
-    .absolutecontainer > #gradeDisplayLeft {
+    .absolutecontainer>#gradeDisplayLeft {
         position: relative !important;
         top: auto !important;
         left: auto !important;
         transform: none !important;
         margin-bottom: 15px;
     }
-    
-    body > div[style*="display: flex"][style*="align-items: flex-start"] {
+
+    body>div[style*="display: flex"][style*="align-items: flex-start"] {
         flex-direction: column !important;
         align-items: center !important;
         gap: 15px !important;
         padding: 0 10px !important;
         box-sizing: border-box !important;
     }
-    
+
     /* Make container responsive on smaller screens with reduced margins */
-    .absolutecontainer > .container,
-    div[style*="display: flex"] > .container {
+    .absolutecontainer>.container,
+    div[style*="display: flex"]>.container {
         position: relative !important;
         top: auto !important;
         left: auto !important;
@@ -1281,7 +1288,7 @@ div[style*="display: flex"] > .container {
     #gradeDisplayLeft {
         font-size: 2.5em !important;
     }
-    
+
     #gradeText {
         padding: 8px !important;
     }
@@ -1305,7 +1312,7 @@ div[style*="display: flex"] > .container {
         flex-direction: column;
     }
 
-    .absolutecontainer > .container {
+    .absolutecontainer>.container {
         height: calc(100vh - 100px);
         max-height: calc(100vh - 100px);
         overflow-y: auto;
@@ -1329,7 +1336,7 @@ div[style*="display: flex"] > .container {
         flex-direction: column !important;
     }
 
-    div[style*="display: flex"][style*="align-items: flex-start"] > .container {
+    div[style*="display: flex"][style*="align-items: flex-start"]>.container {
         height: calc(100vh - 100px);
         max-height: calc(100vh - 100px);
         overflow-y: auto;
@@ -1346,7 +1353,7 @@ div[style*="display: flex"] > .container {
     }
 
     /* Fix for standalone containers (easy, normal modes) */
-    body > .container:not(.menu-container):not(.tos-container):not(.privacy-container) {
+    body>.container:not(.menu-container):not(.tos-container):not(.privacy-container) {
         height: calc(100vh - 100px);
         max-height: calc(100vh - 100px);
         overflow-y: auto;
@@ -1364,20 +1371,20 @@ div[style*="display: flex"] > .container {
 
     /* Custom scrollbar for containers */
     .container::-webkit-scrollbar,
-    .absolutecontainer > .container::-webkit-scrollbar,
-    div[style*="display: flex"] > .container::-webkit-scrollbar {
+    .absolutecontainer>.container::-webkit-scrollbar,
+    div[style*="display: flex"]>.container::-webkit-scrollbar {
         width: 4px;
     }
 
     .container::-webkit-scrollbar-track,
-    .absolutecontainer > .container::-webkit-scrollbar-track,
-    div[style*="display: flex"] > .container::-webkit-scrollbar-track {
+    .absolutecontainer>.container::-webkit-scrollbar-track,
+    div[style*="display: flex"]>.container::-webkit-scrollbar-track {
         background: rgba(0, 0, 0, 0.3);
     }
 
     .container::-webkit-scrollbar-thumb,
-    .absolutecontainer > .container::-webkit-scrollbar-thumb,
-    div[style*="display: flex"] > .container::-webkit-scrollbar-thumb {
+    .absolutecontainer>.container::-webkit-scrollbar-thumb,
+    div[style*="display: flex"]>.container::-webkit-scrollbar-thumb {
         background: rgba(219, 255, 255, 0.3);
         border-radius: 2px;
     }
@@ -1392,7 +1399,8 @@ div[style*="display: flex"] > .container {
     height: 200px;
     margin: 0;
     padding: 0;
-    z-index: -1; /* Lowest display order - behind all other elements */
+    z-index: -1;
+    /* Lowest display order - behind all other elements */
     overflow: hidden;
 }
 
@@ -1425,17 +1433,17 @@ div[style*="display: flex"] > .container {
     .menu-container::-webkit-scrollbar {
         width: 8px;
     }
-    
+
     .menu-container::-webkit-scrollbar-track {
         background: rgba(0, 0, 0, 0.2);
         border-radius: 4px;
     }
-    
+
     .menu-container::-webkit-scrollbar-thumb {
         background: rgba(219, 255, 255, 0.4);
         border-radius: 4px;
     }
-    
+
     .menu-container::-webkit-scrollbar-thumb:hover {
         background: rgba(219, 255, 255, 0.6);
     }
@@ -1463,6 +1471,7 @@ div[style*="display: flex"] > .container {
         opacity: 0;
         transform: translateX(-50%) translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateX(-50%) translateY(0);
@@ -1670,7 +1679,7 @@ body.mode-hell .mode-selection-title {
         height: 28px;
         font-size: 0.7em;
     }
-    
+
     .mode-modifiers {
         gap: 4px;
         padding: 6px;
@@ -1817,7 +1826,7 @@ body.mode-death .mode-card[data-mode="death"] .mode-name {
 /* ModernDOS font for secret mode */
 @font-face {
     font-family: 'ModernDOS';
-    src: url('font/ModernDOS8x16.ttf') format('truetype');
+    src: url('public/fonts/ModernDOS8x16.ttf') format('truetype');
     font-weight: normal;
     font-style: normal;
 }
@@ -2260,8 +2269,8 @@ body.mode-hell .mode-card[data-mode="hell"] .mode-name {
     font-size: 8em;
     font-weight: bold;
     text-shadow: 0 0 20px rgba(255, 0, 0, 0.8),
-                 0 0 40px rgba(255, 0, 0, 0.6),
-                 0 0 60px rgba(255, 0, 0, 0.4);
+        0 0 40px rgba(255, 0, 0, 0.6),
+        0 0 60px rgba(255, 0, 0, 0.4);
     animation: pulse 1s ease-in-out infinite;
     letter-spacing: 0.1em;
 }
@@ -2270,6 +2279,7 @@ body.mode-hell .mode-card[data-mode="hell"] .mode-name {
     from {
         opacity: 0;
     }
+
     to {
         opacity: 1;
     }
@@ -2279,15 +2289,19 @@ body.mode-hell .mode-card[data-mode="hell"] .mode-name {
     from {
         opacity: 1;
     }
+
     to {
         opacity: 0;
     }
 }
 
 @keyframes pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         transform: scale(1);
     }
+
     50% {
         transform: scale(1.05);
     }
@@ -2297,13 +2311,13 @@ body.mode-hell .mode-card[data-mode="hell"] .mode-name {
     .failed-content {
         font-size: 5em;
     }
-    
+
     .slider-container {
         flex-direction: column;
         align-items: stretch;
         gap: 8px;
     }
-    
+
     .slider-value {
         text-align: center;
     }
@@ -2353,17 +2367,17 @@ body.mode-hell .mode-card[data-mode="hell"] .mode-name {
         padding: 10px;
         font-size: 0.95em;
     }
-    
+
     .arrow-selector {
         min-width: 100%;
     }
-    
+
     .arrow-btn {
         width: 40px;
         height: 40px;
         font-size: 1em;
     }
-    
+
     .selector-value {
         font-size: 0.95em;
         padding: 6px 10px;
@@ -2536,46 +2550,47 @@ body.mode-hell .play-btn:hover {
     .profile-banner img {
         height: 100%;
     }
-    
+
     .menu-container {
-        margin-top: 75px; /* Account for banner height (150px / 2) */
+        margin-top: 75px;
+        /* Account for banner height (150px / 2) */
         padding: 25px 20px;
         width: 95%;
     }
-    
+
     .tips-container {
         bottom: 0;
         padding: 12px 15px;
         max-width: 90%;
         border-radius: 12px 12px 0 0;
     }
-    
+
     .tips-text {
         font-size: 0.85em;
     }
-    
+
     .menu-title {
         font-size: 2.5em;
     }
-    
+
     .menu-subtitle {
         font-size: 1em;
     }
-    
+
     .mode-cards {
         grid-template-columns: 1fr;
         gap: 15px;
     }
-    
+
     .secondary-actions {
         grid-template-columns: 1fr;
     }
-    
+
     .play-btn {
         font-size: 1.2em;
         padding: 16px;
     }
-    
+
     .secondary-btn {
         font-size: 1em;
         padding: 12px;
@@ -2701,6 +2716,7 @@ body.mode-hell .play-btn:hover {
         transform: translateX(100%);
         opacity: 0;
     }
+
     to {
         transform: translateX(0);
         opacity: 1;
@@ -2711,6 +2727,7 @@ body.mode-hell .play-btn:hover {
     from {
         opacity: 1;
     }
+
     to {
         opacity: 0;
         transform: translateX(100%);
@@ -2758,7 +2775,8 @@ table {
     box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
 }
 
-td, th {
+td,
+th {
     border: none;
     padding: 14px 12px;
     text-align: center;
@@ -3196,6 +3214,7 @@ td:first-child {
         opacity: 0;
         transform: translateY(-20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -3207,16 +3226,28 @@ td:first-child {
     opacity: 0;
 }
 
-.stats-card:nth-child(1) { animation-delay: 0.1s; }
-.stats-card:nth-child(2) { animation-delay: 0.2s; }
-.stats-card:nth-child(3) { animation-delay: 0.3s; }
-.stats-card:nth-child(4) { animation-delay: 0.4s; }
+.stats-card:nth-child(1) {
+    animation-delay: 0.1s;
+}
+
+.stats-card:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.stats-card:nth-child(3) {
+    animation-delay: 0.3s;
+}
+
+.stats-card:nth-child(4) {
+    animation-delay: 0.4s;
+}
 
 @keyframes fadeInUp {
     from {
         opacity: 0;
         transform: translateY(20px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -3247,7 +3278,7 @@ td:first-child {
         background-attachment: scroll;
         overflow-x: hidden;
     }
-    
+
     .container {
         width: 95%;
         max-width: 95%;
@@ -3263,14 +3294,14 @@ td:first-child {
         box-sizing: border-box;
         -webkit-overflow-scrolling: touch;
     }
-    
+
     .container2 {
         grid-template-columns: 1fr;
         padding: 20px 15px;
         margin-top: 60px;
         gap: 20px;
     }
-    
+
     .status {
         position: relative;
         top: 0;
@@ -3280,57 +3311,57 @@ td:first-child {
         padding: 8px;
         font-size: 0.9em;
     }
-    
+
     .status .name {
         font-size: 0.9em;
     }
-    
+
     .status a {
         font-size: 0.9em;
         padding: 5px 8px;
     }
-    
+
     .player-info {
         min-width: 100px;
         padding: 6px 10px;
     }
-    
+
     .player-avatar {
         width: 40px;
         height: 40px;
     }
-    
+
     .player-avatar-placeholder {
         font-size: 1.5em;
     }
-    
+
     .question {
         font-size: 1em;
         margin-bottom: 15px;
         padding: 10px;
         line-height: 1.4;
     }
-    
+
     .options {
         gap: 8px;
         margin-bottom: 15px;
     }
-    
+
     .options div {
         padding: 10px;
         font-size: 0.95em;
     }
-    
+
     .options label {
         font-size: 0.95em;
     }
-    
+
     .container button {
         padding: 10px;
         margin-top: 10px;
         font-size: 1em;
     }
-    
+
     .jum {
         margin-top: 15px;
         padding: 8px;
@@ -3338,31 +3369,31 @@ td:first-child {
         flex-wrap: wrap;
         gap: 5px;
     }
-    
+
     #gradeDisplay {
         font-size: 1.2em !important;
         margin-top: 8px !important;
     }
-    
+
     #gradePointsDisplay {
         font-size: 1.2em !important;
         margin-top: 8px !important;
     }
-    
+
     #currentgrade {
         font-size: 1.2em !important;
     }
-    
+
     .correctanswer {
         font-size: 0.9em;
         margin-top: 10px;
     }
-    
+
     .timerifinvalid {
         font-size: 0.85em;
         margin-top: 10px;
     }
-    
+
     .notification {
         position: relative !important;
         top: auto !important;
@@ -3376,46 +3407,57 @@ td:first-child {
         font-size: 0.95em !important;
         animation: slideInMobile 0.3s ease, fadeOutMobile 0.3s ease 2.7s forwards !important;
     }
-    
+
     @keyframes slideInMobile {
         from {
             transform: translateY(-20px);
             opacity: 0;
         }
+
         to {
             transform: translateY(0);
             opacity: 1;
         }
     }
-    
+
     @keyframes fadeOutMobile {
         from {
             opacity: 1;
         }
+
         to {
             opacity: 0;
             transform: translateY(-20px);
         }
     }
-    
+
     .head {
         font-size: 1.8em;
         margin-bottom: 15px;
     }
-    
-    .easy, .normal, .race, .master, .hell {
+
+    .easy,
+    .normal,
+    .race,
+    .master,
+    .hell {
         padding: 20px 15px;
     }
-    
-    .easy h1, .normal h1, .race h1, .master h1, .hell h1 {
+
+    .easy h1,
+    .normal h1,
+    .race h1,
+    .master h1,
+    .hell h1 {
         font-size: 1.5em;
     }
-    
-    td, th {
+
+    td,
+    th {
         padding: 10px 8px;
         font-size: 0.85em;
     }
-    
+
     th {
         font-size: 0.75em;
     }
@@ -3498,7 +3540,7 @@ td:first-child {
     .tabs {
         gap: 5px;
     }
-    
+
     .tab-button {
         padding: 8px 16px;
         font-size: 0.9em;
@@ -3539,6 +3581,7 @@ td:first-child {
         opacity: 0;
         transform: scale(0.9) translateY(-10px);
     }
+
     to {
         opacity: 1;
         transform: scale(1) translateY(0);
@@ -3804,14 +3847,16 @@ td:first-child {
     background: linear-gradient(135deg, rgba(76, 175, 80, 0.3), rgba(69, 160, 73, 0.3));
     background-size: cover;
     background-position: center;
-    z-index: -1; /* Lowest display order - behind all other elements */
+    z-index: -1;
+    /* Lowest display order - behind all other elements */
     margin-bottom: 0;
     border-radius: 0;
 }
 
 /* Add padding to container2 to account for banner when profile content exists */
 .container2.has-profile-banner {
-    padding-top: 350px; /* Banner height (200px) + navbar space (80px) + extra spacing (70px) */
+    padding-top: 350px;
+    /* Banner height (200px) + navbar space (80px) + extra spacing (70px) */
     margin-top: 0;
 }
 
@@ -3824,7 +3869,8 @@ td:first-child {
     align-items: flex-end;
     gap: 30px;
     padding: 0 20px 20px 20px;
-    z-index: 1; /* Above banner (which is z-index: 0) but still below navbar */
+    z-index: 1;
+    /* Above banner (which is z-index: 0) but still below navbar */
 }
 
 .profile-avatar-container {
@@ -4630,7 +4676,7 @@ td:first-child {
         height: 150px;
         margin-bottom: 60px;
     }
-    
+
     .profile-header {
         flex-direction: column;
         align-items: center;
@@ -4638,32 +4684,32 @@ td:first-child {
         margin-top: -75px;
         gap: 20px;
     }
-    
+
     .profile-avatar-container {
         width: 120px;
         height: 120px;
     }
-    
+
     .profile-avatar,
     .profile-avatar-placeholder {
         width: 120px;
         height: 120px;
         font-size: 3em;
     }
-    
+
     .profile-name {
         font-size: 2em;
     }
-    
+
     .profile-level-display {
         font-size: 1.2em;
         justify-content: center;
     }
-    
+
     .profile-scores-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .profile-scores-section h2 {
         font-size: 1.5em;
     }
@@ -4680,18 +4726,18 @@ td:first-child {
         top: 10px !important;
         transform: none !important;
     }
-    
+
     .profile-popup-content {
         padding: 15px;
     }
-    
+
     .profile-popup-avatar-container {
         width: 70px;
         height: 70px;
         top: -35px;
         left: 15px;
     }
-    
+
     .profile-popup-avatar,
     .profile-popup-avatar-placeholder {
         width: 70px;
@@ -4699,24 +4745,24 @@ td:first-child {
         font-size: 2em;
         border-width: 3px;
     }
-    
+
     .profile-popup-info {
         margin-top: 45px;
     }
-    
+
     .profile-popup-name {
         font-size: 1.3em;
     }
-    
+
     .profile-popup-level {
         font-size: 1em;
     }
-    
+
     .profile-popup-scores {
         margin-top: 15px;
         padding-top: 15px;
     }
-    
+
     .profile-popup-score-item {
         font-size: 0.9em;
         padding: 6px 0;
@@ -4732,18 +4778,18 @@ td:first-child {
         top: 8px !important;
         border-radius: 12px;
     }
-    
+
     .profile-popup-content {
         padding: 12px;
     }
-    
+
     .profile-popup-avatar-container {
         width: 60px;
         height: 60px;
         top: -30px;
         left: 12px;
     }
-    
+
     .profile-popup-avatar,
     .profile-popup-avatar-placeholder {
         width: 60px;
@@ -4751,29 +4797,29 @@ td:first-child {
         font-size: 1.8em;
         border-width: 2px;
     }
-    
+
     .profile-popup-info {
         margin-top: 40px;
     }
-    
+
     .profile-popup-name {
         font-size: 1.2em;
         margin-bottom: 8px;
     }
-    
+
     .profile-popup-level {
         font-size: 0.95em;
     }
-    
+
     .profile-popup-badge {
         font-size: 1.3em;
     }
-    
+
     .profile-popup-scores h4 {
         font-size: 1em;
         margin-bottom: 10px;
     }
-    
+
     .profile-popup-score-item {
         font-size: 0.85em;
         padding: 5px 0;
@@ -4788,85 +4834,86 @@ td:first-child {
         margin-bottom: 110px;
         max-height: calc(100vh - 260px);
     }
-    
+
     .question {
         font-size: 0.9em;
         margin-bottom: 12px;
         padding: 8px;
     }
-    
+
     .options div {
         padding: 8px;
         font-size: 0.85em;
     }
-    
+
     .container button {
         padding: 8px;
         font-size: 0.9em;
     }
-    
+
     .jum {
         font-size: 0.8em;
         padding: 6px;
     }
-    
+
     #gradeDisplay {
         font-size: 1em !important;
     }
-    
+
     #gradePointsDisplay {
         font-size: 1em !important;
     }
-    
+
     #currentgrade {
         font-size: 1em !important;
     }
-    
+
     .status {
         font-size: 0.8em;
         padding: 5px;
     }
-    
+
     .status a {
         font-size: 0.8em;
         padding: 4px 6px;
     }
-    
+
     .player-info {
         min-width: 90px;
         padding: 4px 8px;
     }
-    
+
     .player-avatar {
         width: 35px;
         height: 35px;
     }
-    
+
     .player-avatar-placeholder {
         font-size: 1.3em;
     }
-    
+
     .profile-banner {
         height: 120px;
     }
-    
+
     .menu-container {
-        margin-top: 60px; /* Account for banner height (120px / 2) */
+        margin-top: 60px;
+        /* Account for banner height (120px / 2) */
         width: 98%;
         padding: 20px 15px;
     }
-    
+
     .tips-container {
         bottom: 0;
         padding: 10px 12px;
         max-width: 95%;
         border-radius: 10px 10px 0 0;
     }
-    
+
     .tips-text {
         font-size: 0.8em;
     }
-    
+
     .tips-title {
         font-size: 0.8em;
     }
@@ -4967,6 +5014,7 @@ td:first-child {
     0% {
         background-position: 200% 0;
     }
+
     100% {
         background-position: -200% 0;
     }
@@ -5253,9 +5301,12 @@ td:first-child {
 }
 
 @keyframes meteorPulse {
-    0%, 100% {
+
+    0%,
+    100% {
         box-shadow: 0 0 30px rgba(255, 69, 0, 0.8), 0 0 60px rgba(220, 20, 60, 0.7), 0 0 100px rgba(255, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.3);
     }
+
     50% {
         box-shadow: 0 0 40px rgba(255, 69, 0, 1), 0 0 80px rgba(220, 20, 60, 0.9), 0 0 120px rgba(255, 0, 0, 0.7), inset 0 1px 0 rgba(255, 255, 255, 0.5);
     }
@@ -5983,12 +6034,15 @@ body.theme-yellow .status a[href="index.html"]:hover {
         transform: translateY(-100vh) rotate(0deg);
         opacity: 0;
     }
+
     10% {
         opacity: 0.8;
     }
+
     90% {
         opacity: 0.8;
     }
+
     100% {
         transform: translateY(100vh) rotate(360deg);
         opacity: 0;
@@ -6006,12 +6060,15 @@ body.theme-yellow .status a[href="index.html"]:hover {
         transform: scale(0) rotate(0deg);
         opacity: 0;
     }
+
     20% {
         opacity: 1;
     }
+
     80% {
         opacity: 1;
     }
+
     100% {
         transform: scale(1.5) rotate(360deg);
         opacity: 0;

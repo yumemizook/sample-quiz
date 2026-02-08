@@ -1,6 +1,6 @@
 import { getAuth, onAuthStateChanged, signOut } from "./firebase.js";
 import { getFirestore, collection, getDocs, doc, getDoc, setDoc } from "./firebase.js";
-import { calculatePlayerLevel, getBadgeForLevel, getBadgeName, getLevelColorClass } from "./stats.js";
+import { calculatePlayerLevel, getBadgeForLevel, getBadgeName, getLevelColorClass } from "./pages/stats.js";
 
 const auth = getAuth();
 let selectedMode = "normal"; // Default mode
@@ -27,7 +27,7 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
         mobile: 0,
         unknown: 0
     };
-    
+
     // Count input types across all modes
     const allScores = [...easyScores, ...normalScores, ...masterScores, ...hellScores, ...secretScores, ...raceScores];
     allScores.forEach(score => {
@@ -42,11 +42,11 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
             inputCounts.unknown++;
         }
     });
-    
+
     // Determine main input method (highest count)
     let mainInput = "unknown";
     let maxCount = inputCounts.unknown;
-    
+
     if (inputCounts.keyboard > maxCount) {
         mainInput = "keyboard";
         maxCount = inputCounts.keyboard;
@@ -59,7 +59,7 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
         mainInput = "mobile";
         maxCount = inputCounts.mobile;
     }
-    
+
     // Format with icon
     const icons = {
         keyboard: '<i class="fas fa-keyboard" style="color: #dbffff;"></i>',
@@ -67,14 +67,14 @@ function calculateMainInputMethod(easyScores, normalScores, masterScores, hellSc
         mobile: '<i class="fas fa-mobile-alt" style="color: #dbffff;"></i>',
         unknown: '<i class="fas fa-question-circle" style="color: #dbffff;"></i>'
     };
-    
+
     const names = {
         keyboard: "Keyboard",
         controller: "Controller",
         mobile: "Mobile",
         unknown: "Unknown"
     };
-    
+
     return {
         method: mainInput,
         icon: icons[mainInput],
@@ -97,7 +97,7 @@ document.addEventListener("DOMContentLoaded", () => {
             try {
                 const db = getFirestore();
                 const uid = user.uid;
-                
+
                 // Fetch all mode scores
                 const [easySnap, normalSnap, masterSnap, hellSnap, raceSnap, raceEasySnap, raceHardSnap, deathSnap, secretSnap] = await Promise.all([
                     getDocs(collection(db, "playerData", uid, "easy")),
@@ -120,10 +120,10 @@ document.addEventListener("DOMContentLoaded", () => {
                 const raceHardScores = raceHardSnap.empty ? [] : raceHardSnap.docs.map(doc => doc.data());
                 const deathScores = deathSnap.empty ? [] : deathSnap.docs.map(doc => doc.data());
                 const secretScores = secretSnap.empty ? [] : secretSnap.docs.map(doc => doc.data());
-                
+
                 // Check hell mode completion
                 hasCompletedHell = hellScores.some(score => score.score === 200);
-                
+
                 // Master mode completion check removed - race mode is now always accessible
                 // Keep the variable for toggle functionality
                 hasCompletedMaster = true; // Always allow toggle between master and race mode
@@ -136,13 +136,13 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
                 window.hasCompletedRace = hasCompletedRace;
                 window.dispatchEvent(new CustomEvent("race-eligibility", { detail: { hasCompletedRace } }));
-                
+
                 // Calculate total plays
                 const totalPlays = easyScores.length + normalScores.length + masterScores.length + hellScores.length + secretScores.length + raceScores.length + raceEasyScores.length + raceHardScores.length + deathScores.length;
-                
+
                 // Calculate main input method
                 const mainInput = calculateMainInputMethod(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores, raceEasyScores, raceHardScores, deathScores);
-                
+
                 // Calculate and display player level
                 const playerData = calculatePlayerLevel(easyScores, normalScores, masterScores, hellScores, secretScores, raceScores, raceEasyScores, raceHardScores, deathScores);
                 const levelDisplay = document.getElementById("playerLevel");
@@ -189,34 +189,34 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
     const displayNameContainer = document.querySelector(".name");
-    
+
     // Handle authentication state
     onAuthStateChanged(auth, async (user) => {
         const playerInfo = document.getElementById("playerInfo");
         const playerAvatar = document.getElementById("playerAvatar");
-        
+
         if (user && displayNameContainer && playerInfo) {
             const nameSpan = playerInfo.querySelector(".name");
             if (nameSpan) {
                 nameSpan.textContent = user.displayName || user.email || "-no credentials-disabled account-";
             }
-            
+
             playerInfo.classList.remove("hide");
             displayNameContainer.classList.remove("hide");
             document.querySelector("[login]")?.classList.add("hide");
             document.querySelector("[signup]")?.classList.add("hide");
             document.querySelector("[logout]")?.classList.remove("hide");
-            
+
             // Make playerInfo clickable to redirect to profile page
             if (playerInfo) {
                 playerInfo.style.cursor = 'pointer';
                 const playerName = user.displayName || user.email || "-no credentials-disabled account-";
                 playerInfo.onclick = () => {
-                    window.location.href = `profile.html?player=${encodeURIComponent(playerName)}`;
+                    window.location.href = `pages/profile.html?player=${encodeURIComponent(playerName)}`;
                 };
             }
-            
-            
+
+
             // Sync Firebase Auth data to userProfiles (for ranking screen avatar display)
             try {
                 const db = getFirestore();
@@ -250,25 +250,25 @@ document.addEventListener("DOMContentLoaded", () => {
             } catch (error) {
                 console.error('Error syncing user profile:', error);
             }
-            
+
             // Load and display avatar and banner
             try {
                 const db = getFirestore();
                 const userProfileRef = doc(db, 'userProfiles', user.uid);
                 const userProfileSnap = await getDoc(userProfileRef);
-                
+
                 // Load avatar
                 if (playerAvatar) {
                     const avatarImg = playerAvatar.querySelector("#playerAvatarImg");
                     const avatarPlaceholder = playerAvatar.querySelector(".player-avatar-placeholder");
-                    
+
                     let avatarURL = null;
                     if (userProfileSnap.exists() && userProfileSnap.data().avatarURL) {
                         avatarURL = userProfileSnap.data().avatarURL;
                     } else if (user.photoURL) {
                         avatarURL = user.photoURL;
                     }
-                    
+
                     if (avatarURL && avatarImg && avatarPlaceholder) {
                         // Set up image loading with error handling
                         avatarImg.onload = () => {
@@ -290,11 +290,11 @@ document.addEventListener("DOMContentLoaded", () => {
                     }
                     playerAvatar.classList.remove("hide");
                 }
-                
+
                 // Load and display profile banner (only on index.html)
                 const profileBanner = document.getElementById('profileBanner');
                 const bannerImage = document.getElementById('bannerImage');
-                
+
                 // Only handle banner on index.html (which has bannerImage element)
                 // Don't touch profile page banner (profile.html uses profileBanner differently)
                 if (bannerImage) {
@@ -312,7 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // User logged out - remove custom background
             const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html'];
             const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            
+
             if (!gameplayPages.includes(currentPage)) {
                 document.body.style.backgroundImage = '';
                 document.body.style.backgroundSize = '';
@@ -320,7 +320,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 document.body.style.backgroundRepeat = '';
                 document.body.style.backgroundAttachment = '';
             }
-            
+
             // Hide player info when logged out
             if (playerInfo) {
                 playerInfo.classList.add("hide");
@@ -331,13 +331,13 @@ document.addEventListener("DOMContentLoaded", () => {
             if (displayNameContainer) {
                 displayNameContainer.classList.add("hide");
             }
-            
+
             // Hide level when logged out
             const levelDisplay = document.getElementById("playerLevel");
             if (levelDisplay) {
                 levelDisplay.classList.add("hide");
             }
-            
+
             // Hide banner when logged out (only on index.html, not profile page)
             const profileBanner = document.getElementById('profileBanner');
             const bannerImage = document.getElementById('bannerImage');
@@ -369,10 +369,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     // Initialize mode selection with cards
     const modeCards = document.querySelectorAll(".mode-card");
-    
+
     // Master mode completion check removed - race mode is now always accessible
     hasCompletedMaster = true; // Always allow toggle between master and race mode
-    
+
     // Initialize race mode visibility - hide race mode by default
     const raceCard = document.getElementById("raceModeCard");
     const masterCard = document.getElementById("masterModeCard");
@@ -380,7 +380,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // Race mode starts hidden - will be shown when toggled
         raceCard.classList.add("hide");
     }
-    
+
     // Function to update background and styling based on mode
     function updateModeStyling(mode) {
         // Remove all mode classes from body
@@ -388,23 +388,23 @@ document.addEventListener("DOMContentLoaded", () => {
         // Add the appropriate mode class
         document.body.classList.add(`mode-${mode}`);
     }
-    
+
     // Set initial active state and styling
     modeCards.forEach(card => {
         if (card.dataset.mode === selectedMode) {
             card.classList.add("active");
             updateModeStyling(selectedMode);
         }
-        
+
         card.addEventListener("click", (e) => {
             // Helper function to toggle between master and race mode
             function toggleMasterRaceMode() {
                 const masterCard = document.getElementById("masterModeCard");
                 const raceCard = document.getElementById("raceModeCard");
-                
+
                 if (masterCard && raceCard) {
                     isRaceModeVisible = !isRaceModeVisible;
-                    
+
                     if (isRaceModeVisible) {
                         // Show race mode, hide master mode
                         masterCard.classList.add("hide");
@@ -424,7 +424,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         selectedMode = "master";
                         updateModeStyling("master");
                     }
-                    
+
                     // Sync navigation focus - get all visible cards
                     const visibleCards = Array.from(modeCards).filter(c => !c.classList.contains("hide"));
                     const activeCard = isRaceModeVisible ? raceCard : masterCard;
@@ -434,19 +434,19 @@ document.addEventListener("DOMContentLoaded", () => {
                             if (module.syncModeSelection) {
                                 module.syncModeSelection(cardIndex);
                             }
-                        }).catch(() => {});
+                        }).catch(() => { });
                     }
                 }
             }
-            
+
             // Helper function to toggle between hell and secret mode
             function toggleHellSecretMode() {
                 const hellCard = document.querySelector('[data-mode="hell"]');
                 const secretCard = document.getElementById("secretModeCard");
-                
+
                 if (hellCard && secretCard) {
                     isSecretModeVisible = !isSecretModeVisible;
-                    
+
                     if (isSecretModeVisible) {
                         // Show secret mode, hide hell mode
                         hellCard.classList.add("hide");
@@ -466,7 +466,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         selectedMode = "hell";
                         updateModeStyling("hell");
                     }
-                    
+
                     // Sync navigation focus - get all visible cards
                     const visibleCards = Array.from(modeCards).filter(c => !c.classList.contains("hide"));
                     const activeCard = isSecretModeVisible ? secretCard : hellCard;
@@ -476,25 +476,25 @@ document.addEventListener("DOMContentLoaded", () => {
                             if (module.syncModeSelection) {
                                 module.syncModeSelection(cardIndex);
                             }
-                        }).catch(() => {});
+                        }).catch(() => { });
                     }
                 }
             }
-            
+
             // Special handling for hell mode card - 5 clicks to toggle secret mode
             if (card.dataset.mode === "hell" && hasCompletedHell) {
                 hellClickCount++;
-                
+
                 // Clear existing timeout
                 if (hellClickTimeout) {
                     clearTimeout(hellClickTimeout);
                 }
-                
+
                 // Reset counter after 2 seconds of no clicks
                 hellClickTimeout = setTimeout(() => {
                     hellClickCount = 0;
                 }, 2000);
-                
+
                 // If clicked 5 times, toggle between hell and secret mode
                 if (hellClickCount >= 5) {
                     e.stopPropagation(); // Prevent normal click handling
@@ -504,21 +504,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     return; // Don't process as normal click
                 }
             }
-            
+
             // Special handling for secret mode card - 5 clicks to toggle back to hell mode
             if (card.dataset.mode === "secret" && hasCompletedHell) {
                 secretClickCount++;
-                
+
                 // Clear existing timeout
                 if (secretClickTimeout) {
                     clearTimeout(secretClickTimeout);
                 }
-                
+
                 // Reset counter after 2 seconds of no clicks
                 secretClickTimeout = setTimeout(() => {
                     secretClickCount = 0;
                 }, 2000);
-                
+
                 // If clicked 5 times, toggle back to hell mode
                 if (secretClickCount >= 5) {
                     e.stopPropagation(); // Prevent normal click handling
@@ -528,21 +528,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     return; // Don't process as normal click
                 }
             }
-            
+
             // Special handling for master mode card - 5 clicks to toggle race mode
             if (card.dataset.mode === "master") {
                 masterClickCount++;
-                
+
                 // Clear existing timeout
                 if (masterClickTimeout) {
                     clearTimeout(masterClickTimeout);
                 }
-                
+
                 // Reset counter after 2 seconds of no clicks
                 masterClickTimeout = setTimeout(() => {
                     masterClickCount = 0;
                 }, 2000);
-                
+
                 // If clicked 5 times, toggle between master and race mode
                 if (masterClickCount >= 5) {
                     e.stopPropagation(); // Prevent normal click handling
@@ -552,21 +552,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     return; // Don't process as normal click
                 }
             }
-            
+
             // Special handling for race mode card - 5 clicks to toggle back to master mode
             if (card.dataset.mode === "master130") {
                 masterClickCount++;
-                
+
                 // Clear existing timeout
                 if (masterClickTimeout) {
                     clearTimeout(masterClickTimeout);
                 }
-                
+
                 // Reset counter after 2 seconds of no clicks
                 masterClickTimeout = setTimeout(() => {
                     masterClickCount = 0;
                 }, 2000);
-                
+
                 // If clicked 5 times, toggle back to master mode
                 if (masterClickCount >= 5) {
                     e.stopPropagation(); // Prevent normal click handling
@@ -576,12 +576,12 @@ document.addEventListener("DOMContentLoaded", () => {
                     return; // Don't process as normal click
                 }
             }
-            
+
             // Normal click handling - skip if card is hidden
             if (card.classList.contains("hide")) {
                 return;
             }
-            
+
             // Remove active class from all cards
             modeCards.forEach(c => c.classList.remove("active"));
             // Add active class to clicked card
@@ -589,13 +589,13 @@ document.addEventListener("DOMContentLoaded", () => {
             selectedMode = card.dataset.mode;
             // Update background and styling
             updateModeStyling(selectedMode);
-            
+
             // Sync navigation focus with clicked card
             const visibleCards = Array.from(modeCards).filter(c => !c.classList.contains("hide"));
             const cardIndex = visibleCards.indexOf(card);
             if (cardIndex !== -1) {
                 // Sync navigation focus (menuNavigation.js should be loaded)
-                import("./menuNavigation.js").then(module => {
+                import("./src/js/menuNavigation.js").then(module => {
                     if (module.syncModeSelection) {
                         module.syncModeSelection(cardIndex);
                     }
@@ -604,15 +604,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
             }
         });
-    
+
     });
-    
+
     // Christmas effects
     if (new Date().getMonth() === 11) { // December
         // Only apply to non-gameplay pages
         const gameplayPages = ['master.html', 'easy.html', 'normal.html', 'hell.html', 'master130.html', 'secret.html', 'easy-race.html', 'hard-race.html', 'death.html'];
         const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-    
+
         if (!gameplayPages.includes(currentPage)) {
             // Add snow CSS
             const snowCSS = `
@@ -634,7 +634,7 @@ document.addEventListener("DOMContentLoaded", () => {
             const style = document.createElement('style');
             style.textContent = snowCSS;
             document.head.appendChild(style);
-    
+
             // Create snow container
             const snowContainer = document.createElement('div');
             snowContainer.id = 'snow-container';
@@ -646,7 +646,7 @@ document.addEventListener("DOMContentLoaded", () => {
             snowContainer.style.pointerEvents = 'none';
             snowContainer.style.zIndex = '999';
             document.body.appendChild(snowContainer);
-    
+
             // Create snowflakes
             function createSnowflake() {
                 const snowflake = document.createElement('div');
@@ -671,7 +671,7 @@ document.addEventListener("DOMContentLoaded", () => {
             // race/hell variants (easy/hard, death) are respected.
             const activeCard = document.querySelector(".mode-card.active");
             const activeMode = activeCard?.dataset.mode || selectedMode;
-            
+
             // Get mode settings
             const livesValue = document.getElementById("lives")?.value || "unlimited";
             const timeMultiplier = parseFloat(document.getElementById("timeMultiplier")?.value || "1");
@@ -686,29 +686,25 @@ document.addEventListener("DOMContentLoaded", () => {
             if (fadingMode !== "off") params.set("fading", fadingMode);
             if (startQuestion > 0) params.set("start", startQuestion);
             params.set("bgmSet", bgmSet);
-            
+
             const queryString = params.toString();
             const urlSuffix = queryString ? `?${queryString}` : "";
-            
-            if (activeMode === "normal") {
-                window.location.href = "normal.html" + urlSuffix;
-            } else if (activeMode === "master") {
-                window.location.href = "master.html" + urlSuffix;
-            } else if (activeMode === "hell") {
-                window.location.href = "hell.html" + urlSuffix;
-            } else if (activeMode === "easy") {
-                window.location.href = "easy.html" + urlSuffix;
-            } else if (activeMode === "easy-race") {
-                window.location.href = "easy-race.html" + urlSuffix;
-            } else if (activeMode === "hard-race") {
-                window.location.href = "hard-race.html" + urlSuffix;
-            } else if (activeMode === "secret") {
-                window.location.href = "secret.html" + urlSuffix;
-            } else if (activeMode === "master130") {
-                window.location.href = "master130.html" + urlSuffix;
-            } else if (activeMode === "death") {
-                window.location.href = "death.html" + urlSuffix;
-            }
+
+            // Navigate to mode-specific file in modes/ subfolder
+            const modeFiles = {
+                "easy": "modes/easy.html",
+                "normal": "modes/normal.html",
+                "master": "modes/master.html",
+                "master130": "modes/master130.html",
+                "hell": "modes/hell.html",
+                "death": "modes/death.html",
+                "secret": "modes/secret.html",
+                "easy-race": "modes/easy-race.html",
+                "hard-race": "modes/hard-race.html"
+            };
+
+            const targetFile = modeFiles[activeMode] || "modes/normal.html";
+            window.location.href = targetFile + urlSuffix;
         });
     }
 
@@ -716,7 +712,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const hiscoreBtn = document.querySelector(".hiscore");
     if (hiscoreBtn) {
         hiscoreBtn.addEventListener("click", () => {
-            window.location.href = "IR.html";
+            window.location.href = "pages/IR.html";
         });
     }
 
@@ -724,7 +720,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const statsBtn = document.querySelector(".stats");
     if (statsBtn) {
         statsBtn.addEventListener("click", () => {
-            window.location.href = "stats.html";
+            window.location.href = "pages/stats.html";
         });
     }
 
@@ -732,8 +728,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const wikiBtn = document.querySelector(".wiki");
     if (wikiBtn) {
         wikiBtn.addEventListener("click", () => {
-            window.location.href = "wiki.html"; // Change this URL to your wiki page
+            window.location.href = "pages/wiki.html"; // Change this URL to your wiki page
         });
     }
-    
+
 });

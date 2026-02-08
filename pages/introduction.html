@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" type="image/x-icon" href="../favicon.ico">
+    <title>Welcome</title>
+    <link rel="stylesheet" href="../index.css">
+    <script src="https://kit.fontawesome.com/ced4c4a7f8.js" crossorigin="anonymous"></script>
+    <style>
+        .menu-container {
+            max-height: 90vh;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+
+        .menu-container::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .menu-container::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        .menu-container::-webkit-scrollbar-thumb {
+            background: rgba(219, 255, 255, 0.3);
+            border-radius: 4px;
+        }
+
+        .menu-container::-webkit-scrollbar-thumb:hover {
+            background: rgba(219, 255, 255, 0.5);
+        }
+
+        .intro-container {
+            max-width: 1000px;
+            width: 100%;
+            padding: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+            margin: 0 auto;
+        }
+
+        .intro-title {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #dbffff 0%, #b8f0e0 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .intro-subtitle {
+            font-size: 1.2em;
+            color: #dbffff;
+            margin-bottom: 30px;
+            opacity: 0.9;
+        }
+
+        .intro-content {
+            text-align: left;
+            color: #dbffff;
+            line-height: 1.6;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 25px;
+        }
+
+        .intro-section {
+            margin-bottom: 0;
+        }
+
+        .intro-section h3 {
+            color: #b8f0e0;
+            font-size: 1.3em;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .intro-section p {
+            color: #dbffff;
+            font-size: 1em;
+            margin-bottom: 8px;
+            padding-left: 25px;
+        }
+
+        .intro-button {
+            background: linear-gradient(135deg, #dbffff 0%, #b8f0e0 100%);
+            color: #000;
+            border: none;
+            padding: 12px 35px;
+            font-size: 1.1em;
+            font-weight: bold;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 15px rgba(219, 255, 255, 0.3);
+        }
+
+        .intro-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(219, 255, 255, 0.5);
+        }
+
+        @media (max-width: 1024px) {
+            .intro-content {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .intro-container {
+                padding: 25px 20px;
+            }
+
+            .intro-title {
+                font-size: 2em;
+            }
+
+            .intro-subtitle {
+                font-size: 1.1em;
+                margin-bottom: 25px;
+            }
+
+            .intro-section h3 {
+                font-size: 1.2em;
+            }
+
+            .intro-section p {
+                font-size: 0.95em;
+                padding-left: 20px;
+            }
+
+            .intro-button {
+                padding: 10px 30px;
+                font-size: 1em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="status">
+        <a logout class="hide" href="../index.html">Log out</a>
+        <div class="player-info hide" id="playerInfo">
+            <div class="player-info-left">
+                <span class="name"></span>
+                <span class="player-level" id="playerLevel"></span>
+            </div>
+            <div class="player-avatar hide" id="playerAvatar">
+                <img id="playerAvatarImg" src="" alt="Avatar" />
+                <div class="player-avatar-placeholder"><i class="fas fa-user" style="color: #dbffff;"></i></div>
+            </div>
+        </div>
+    </div>
+    <div class="container menu-container">
+        <div class="intro-container">
+            <h1 class="intro-title">Welcome to Icy's Quiz Challenge!</h1>
+            <p class="intro-subtitle">Get ready to test your knowledge and climb the leaderboards</p>
+            
+            <div class="intro-content">
+                <div class="intro-section">
+                    <h3><i class="fas fa-gamepad" style="color: #9b59b6;"></i> How to Play</h3>
+                    <p>• Select a difficulty mode that suits your skill level</p>
+                    <p>• Answer questions as quickly and accurately as possible</p>
+                    <p>• Earn points and XP to level up your account</p>
+                    <p>• Compete with others on the global leaderboards</p>
+                </div>
+
+                <div class="intro-section">
+                    <h3><i class="fas fa-star" style="color: #ffd700;"></i> Game Modes</h3>
+                    <p>• <strong>Easy:</strong> Perfect for beginners - 30 easy questions</p>
+                    <p>• <strong>Normal:</strong> Standard challenge - answer as many as you can</p>
+                    <p>• <strong>Master:</strong> Expert level - time limits shrink as you progress</p>
+                    <p>• <strong>Race:</strong> Speed challenge - 7-minute countdown to answer as many questions as possible</p>
+                    <p>• <strong>Hell:</strong> Ultimate challenge - extremely difficult with tight time limits</p>
+                </div>
+
+                <div class="intro-section">
+                    <h3><i class="fas fa-trophy" style="color: #ffd700;"></i> Progression System</h3>
+                    <p>• Earn XP by completing quizzes and achieving milestones</p>
+                    <p>• Level up to unlock new badges and show off your progress</p>
+                    <p>• Track your stats and see how you improve over time</p>
+                    <p>• Customize your profile with avatars and banners</p>
+                </div>
+
+                <div class="intro-section">
+                    <h3><i class="fas fa-lightbulb" style="color: #ffd700;"></i> Tips</h3>
+                    <p>• Read questions carefully before answering</p>
+                    <p>• Speed matters, but accuracy is more important</p>
+                    <p>• Practice regularly to improve your reaction time</p>
+                    <p>• Check the Wiki for detailed game mechanics</p>
+                </div>
+            </div>
+
+            <div class="tos-section" style="margin-top: 30px; padding: 20px; background: rgba(0, 0, 0, 0.4); border-radius: 10px; border: 1px solid rgba(219, 255, 255, 0.2); text-align: left;">
+                <h3 style="color: #b8f0e0; font-size: 1.2em; margin-bottom: 12px; display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-file-contract" style="color: #dbffff;"></i> Terms of Service
+                </h3>
+                <p style="color: #dbffff; font-size: 0.9em; line-height: 1.6; margin-bottom: 8px;">
+                    By using Icy's Quiz Challenge, you agree to our Terms of Service. The service is provided "as is" without warranties. We reserve the right to modify or discontinue the service at any time. Your gameplay data is stored securely and not shared with third parties without consent.
+                </p>
+                <p style="color: #dbffff; font-size: 0.85em; opacity: 0.8; margin-top: 10px;">
+                    <a href="privacy.html" style="color: #b8f0e0; text-decoration: underline;">View full Privacy Policy & Terms of Service</a>
+                </p>
+            </div>
+
+            <button class="intro-button" onclick="window.location.href='index.html'">Start Playing</button>
+        </div>
+    </div>
+
+    <script type="module" src="../firebase.js"></script>
+    <script type="module" src="../hm.js"></script>
+    <script type="module" src="../src/js/loadBackground.js"></script>
+    <script type="module" src="../src/js/loadTheme.js"></script>
+    <script type="module">
+        import { getAuth, onAuthStateChanged } from "../firebase.js";
+        import { getFirestore, doc, setDoc, getDoc } from "../firebase.js";
+
+        const auth = getAuth();
+        const db = getFirestore();
+
+        // Mark user as having seen introduction
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                try {
+                    const userProfileRef = doc(db, 'userProfiles', user.uid);
+                    const userProfileSnap = await getDoc(userProfileRef);
+                    
+                    if (!userProfileSnap.exists() || !userProfileSnap.data().hasSeenIntro) {
+                        // Mark as having seen intro
+                        await setDoc(userProfileRef, { hasSeenIntro: true }, { merge: true });
+                    }
+                } catch (error) {
+                    console.error('Error updating intro status:', error);
+                }
+            }
+        });
+    </script>
+</body>
+</html>
+
+
+
